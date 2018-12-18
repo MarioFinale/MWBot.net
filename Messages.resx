@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BotEngine" xml:space="preserve">
+    <value>MWBot.net</value>
+  </data>
+  <data name="CheckingUsers" xml:space="preserve">
+    <value>Checking users.</value>
+  </data>
+  <data name="ConfigError" xml:space="preserve">
+    <value>Malformed config file.</value>
+  </data>
+  <data name="DoneXPagesReturned" xml:space="preserve">
+    <value>Done, {0} pages returned.</value>
+  </data>
+  <data name="GetLastrevIDs" xml:space="preserve">
+    <value>Getting the last revid of {0} pages.</value>
+  </data>
+  <data name="GetPageExtract" xml:space="preserve">
+    <value>Loading page extract of '{0}'.</value>
+  </data>
+  <data name="GetPagesExtract" xml:space="preserve">
+    <value>Loading {0} pages extract.</value>
+  </data>
+  <data name="GreetingMsg" xml:space="preserve">
+    <value>==================== PeriodiBOT {0} ====================</value>
+  </data>
+  <data name="InvalidUrl" xml:space="preserve">
+    <value>The url is invalid.</value>
+  </data>
+  <data name="InvalidUser" xml:space="preserve">
+    <value>The user '{0}' is invalid.</value>
+  </data>
+  <data name="LoadingConfig" xml:space="preserve">
+    <value>Loading config</value>
+  </data>
+  <data name="LoginError" xml:space="preserve">
+    <value>Login failed</value>
+  </data>
+  <data name="LoginID" xml:space="preserve">
+    <value>Login ID: </value>
+  </data>
+  <data name="LoginResult" xml:space="preserve">
+    <value>Login result: </value>
+  </data>
+  <data name="NetworkError" xml:space="preserve">
+    <value>Network error: </value>
+  </data>
+  <data name="NewBotName" xml:space="preserve">
+    <value>Bot name: </value>
+  </data>
+  <data name="NewBotPassword" xml:space="preserve">
+    <value>Wiki BOT password: </value>
+  </data>
+  <data name="NewConfigFileError" xml:space="preserve">
+    <value>Error creating a new config file</value>
+  </data>
+  <data name="NewConfigMessage" xml:space="preserve">
+    <value>There is no config file, please fill the following data or close the program and manually create a new config file.</value>
+  </data>
+  <data name="NewUserName" xml:space="preserve">
+    <value>Wiki user name: </value>
+  </data>
+  <data name="NewWikiMainApiUrl" xml:space="preserve">
+    <value>Wiki API Url: </value>
+  </data>
+  <data name="NewWikiMainUrl" xml:space="preserve">
+    <value>Wiki Url: </value>
+  </data>
+  <data name="NoConfigFile" xml:space="preserve">
+    <value>No config file</value>
+  </data>
+  <data name="OresQueryError" xml:space="preserve">
+    <value>Server error on ORES query score from revid {0} (invalid diff?)</value>
+  </data>
+  <data name="OresQueryEx" xml:space="preserve">
+    <value>ORES query from revid {0} EX: {1}</value>
+  </data>
+  <data name="OresQueryResult" xml:space="preserve">
+    <value>ORES query for revid {0} done. GF: {1} DMG: {2}</value>
+  </data>
+  <data name="PageLoaded" xml:space="preserve">
+    <value>Page '{0}' loaded.</value>
+  </data>
+  <data name="PressKey" xml:space="preserve">
+    <value>Press any key to exit</value>
+  </data>
+  <data name="Reason" xml:space="preserve">
+    <value>Reason: </value>
+  </data>
+  <data name="RequestingToken" xml:space="preserve">
+    <value>Requesting token</value>
+  </data>
+  <data name="SaveConfigError" xml:space="preserve">
+    <value>Error saving the config.</value>
+  </data>
+  <data name="SigninIn" xml:space="preserve">
+    <value>Signing in</value>
+  </data>
+  <data name="SuccessfulOperation" xml:space="preserve">
+    <value>Successful operation.</value>
+  </data>
+  <data name="TextReplaced" xml:space="preserve">
+    <value>(Bot) Replacing '{0}' with '{1}' {2}.</value>
+  </data>
+  <data name="TokenObtained" xml:space="preserve">
+    <value>Token obtained</value>
+  </data>
+  <data name="TryingToSave" xml:space="preserve">
+    <value>Trying to save '{0}'.</value>
+  </data>
+  <data name="UnsuccessfulOperation" xml:space="preserve">
+    <value>Unsuccessful operation.</value>
+  </data>
+  <data name="UserInactive" xml:space="preserve">
+    <value>User {0} is inactive.</value>
+  </data>
+  <data name="UserJustEdited" xml:space="preserve">
+    <value>{0} has just edited.</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>User name: </value>
+  </data>
+  <data name="AbuseFilter" xml:space="preserve">
+    <value>Abuse filter triggered on '{0}'.</value>
+  </data>
+  <data name="DefaultSumm" xml:space="preserve">
+    <value>Bot edit.</value>
+  </data>
+  <data name="EditConflict" xml:space="preserve">
+    <value>Edit conflit on '{0}'.</value>
+  </data>
+  <data name="FileCreateErr" xml:space="preserve">
+    <value>Error creating file '{0}'.</value>
+  </data>
+  <data name="FileSaveErr" xml:space="preserve">
+    <value>Error saving '{0}'.</value>
+  </data>
+  <data name="LoadingOres" xml:space="preserve">
+    <value>Loading ORES score from revid {0}.</value>
+  </data>
+  <data name="MaxRetryCount" xml:space="preserve">
+    <value>Max retry count reached on {0}.</value>
+  </data>
+  <data name="NoBots" xml:space="preserve">
+    <value>This bot cannot edit on '{0}'.</value>
+  </data>
+  <data name="OresFailed" xml:space="preserve">
+    <value>Cannot get ORES score of revid {0}. EX: {1}</value>
+  </data>
+  <data name="OresLoaded" xml:space="preserve">
+    <value>ORES score from revid {0}. DMG:{1} /GF:{2} </value>
+  </data>
+  <data name="PageDoesNotExist" xml:space="preserve">
+    <value>Warning: The page '{0}' does not exist yet!</value>
+  </data>
+  <data name="PageNoThumb" xml:space="preserve">
+    <value>Notice: The page '{0}' does not have a thumbnail.</value>
+  </data>
+  <data name="POSTEX" xml:space="preserve">
+    <value>POST exception on '{0}'. EX: {1}</value>
+  </data>
+  <data name="PRevLoaded" xml:space="preserve">
+    <value>Page with revid {0} loaded.</value>
+  </data>
+  <data name="RemovingRefs" xml:space="preserve">
+    <value>Removing all references to '{0}'.</value>
+  </data>
+  <data name="SpamBlackList" xml:space="preserve">
+    <value>Anti spam abuse filter triggered on '{0}'.</value>
+  </data>
+  <data name="SuccessfulEdit" xml:space="preserve">
+    <value>Edit on '{0}' successful.</value>
+  </data>
+  <data name="UnexpectedEX" xml:space="preserve">
+    <value>Unexpected exception: {0}</value>
+  </data>
+  <data name="NoDateMatch" xml:space="preserve">
+    <value>No text with date format found</value>
+  </data>
+  <data name="NewArchiveBoxTemplate" xml:space="preserve">
+    <value>Archive box page name (with namespace):</value>
+  </data>
+  <data name="NewArchiveMessageTemplate" xml:space="preserve">
+    <value>Archive page message (with namespace):</value>
+  </data>
+  <data name="NewAutoArchiveDoNotArchivePageName" xml:space="preserve">
+    <value>Auto archive 'do not archive' page name (with namespace):</value>
+  </data>
+  <data name="NewAutoArchiveProgrammedArchivePageName" xml:space="preserve">
+    <value>Auto archive 'programmed archive' page name (with namespace):</value>
+  </data>
+  <data name="NewAutoArchiveTemplatePagename" xml:space="preserve">
+    <value>Auto archive template page name (with namespace): </value>
+  </data>
+  <data name="NewAutoSignatureTemplatePageName" xml:space="preserve">
+    <value>Auto signature template page name (with namespace):</value>
+  </data>
+  <data name="CheckingUser" xml:space="preserve">
+    <value>Checking user {0}</value>
+  </data>
+  <data name="UserBlocked" xml:space="preserve">
+    <value>User {0} is blocked.</value>
+  </data>
+  <data name="UserInexistent" xml:space="preserve">
+    <value>User {0} does not exist.</value>
+  </data>
+</root>
