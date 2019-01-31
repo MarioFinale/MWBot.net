@@ -181,7 +181,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a ==================== PeriodiBOT {0} ====================.
+    '''  Busca una cadena traducida similar a ==================== MWBot.net {0} ====================.
     '''</summary>
     Public Shared ReadOnly Property GreetingMsg() As String
         Get

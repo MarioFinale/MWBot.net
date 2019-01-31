@@ -139,7 +139,7 @@
     <value>Cargando {0} extractos de páginas.</value>
   </data>
   <data name="GreetingMsg" xml:space="preserve">
-    <value>==================== PeriodiBOT {0} ====================</value>
+    <value>==================== MWBot.net {0} ====================</value>
   </data>
   <data name="InvalidUrl" xml:space="preserve">
     <value>La url ingresada es inválida</value>

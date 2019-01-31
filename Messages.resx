@@ -139,7 +139,7 @@
     <value>Loading {0} pages extract.</value>
   </data>
   <data name="GreetingMsg" xml:space="preserve">
-    <value>==================== PeriodiBOT {0} ====================</value>
+    <value>==================== MWBot.net {0} ====================</value>
   </data>
   <data name="InvalidUrl" xml:space="preserve">
     <value>The url is invalid.</value>

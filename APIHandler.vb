@@ -223,6 +223,9 @@ Namespace WikiBot
                 Catch ex As WebException
                     Utils.EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
                     Utils.EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                    If ex.Message.Contains("404") Then
+                        Return String.Empty
+                    End If
                     tryCount += 1
                 End Try
             Loop

@@ -411,6 +411,16 @@ Public NotInheritable Class Utils
     End Function
 
     ''' <summary>
+    ''' Normaliza el texto ASCII con códigos unicodes escapados con el formato \\u(número)
+    ''' </summary>
+    ''' <param name="stringToNormalize"></param>
+    ''' <returns></returns>
+    Public Shared Function NormalizeHexScapedString(ByVal stringToNormalize As String) As String
+        Dim temptext As String = Regex.Replace(stringToNormalize, "\\u([\dA-Fa-f]{4})", Function(v) ChrW(Convert.ToInt32(v.Groups(1).Value, 16)))
+        Return temptext
+    End Function
+
+    ''' <summary>
     ''' Codifica una cadena de texto en URLENCODE.
     ''' </summary>
     ''' <param name="textToEncode">Texto a codificar.</param>
