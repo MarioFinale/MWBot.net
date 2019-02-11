@@ -197,6 +197,12 @@ Namespace WikiBot
                 Return GetLastTimeStamp()
             End Get
         End Property
+
+        Public ReadOnly Property URL As String
+            Get
+                Return _bot.WikiUri.OriginalString & "wiki/" & Title.Replace(" ", "_")
+            End Get
+        End Property
 #End Region
         ''' <summary>
         ''' Inicializa una nueva página, por lo general no se llama de forma directa. Se puede obtener una página creandola con Bot.Getpage.
@@ -630,7 +636,7 @@ Namespace WikiBot
         ''' <param name="Pagename">Título exacto de la página</param>
         Private Overloads Sub PageInfoData(ByVal pageName As String)
 
-            Dim querystring As String = String.Format(SStrings.PageInfo, pageName)
+            Dim querystring As String = String.Format(SStrings.PageInfo, Utils.UrlWebEncode(pageName))
             Dim QueryText As String = _bot.GETQUERY(querystring)
 
             Dim PageID As String = "-1"
@@ -660,7 +666,7 @@ Namespace WikiBot
             End Try
 
             If Utils.TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
-                PageImage = Utils.TextInBetween(QueryText, """pageimage"":""", """")(0)
+                PageImage = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """pageimage"":""", """")(0))
             Else
                 Utils.EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End If

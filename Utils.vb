@@ -297,6 +297,22 @@ Public NotInheritable Class Utils
     End Function
 
     ''' <summary>
+    ''' Reeplaza la última ocurrencia de una cadena dada en la cadena de entrada.
+    ''' </summary>
+    ''' <param name="text">Cadena de texto a modificar.</param>
+    ''' <param name="search">Cadena texto a buscar.</param>
+    ''' <param name="replace">Cadena texto de reemplazo.</param>
+    ''' <returns></returns>
+    Public Shared Function ReplaceLast(ByVal text As String, ByVal search As String, ByVal replace As String) As String
+        Dim pos As Integer = text.LastIndexOf(search)
+        If pos < 0 Then
+            Return text
+        End If
+        Return text.Substring(0, pos) & replace & text.Substring(pos + search.Length)
+    End Function
+
+
+    ''' <summary>
     ''' Retorna las líneas contenidas en una cadena de texto.
     ''' </summary>
     ''' <param name="text">Texto a evaluar.</param>
@@ -558,6 +574,20 @@ Public NotInheritable Class Utils
         End If
     End Function
 
+    ''' <summary>
+    ''' Retorna el destino del enlace interno y el texto del mismo. Debe pasarse como parámetro una cadena de texto con formato de enlace wiki. Debe cumplir con la expresión regular "(\[\[)(.+?)(\]\]))".
+    ''' </summary>
+    ''' <param name="tlink"></param>
+    ''' <returns></returns>
+    Public Shared Function GetLinkText(ByVal tlink As String) As Tuple(Of String, String)
+        Dim tstr As String = tlink.Replace("[[", "").Replace("]]", "")
+        If tstr.Contains("|") Then
+            Dim tval As Tuple(Of String, String) = New Tuple(Of String, String)(tstr.Split("|"c)(0).Trim(), tstr.Split("|"c)(1).Trim())
+            Return tval
+        End If
+        Return New Tuple(Of String, String)(tstr, tstr)
+    End Function
+
 #End Region
 
 #Region "Math Functions"
@@ -764,25 +794,56 @@ Public NotInheritable Class Utils
     Public Shared Function GetPageThreads(ByVal pagetext As String) As String()
         Dim temptext As String = pagetext
         Dim commentMatch As MatchCollection = Regex.Matches(temptext, "(<!--)[\s\S]*?(-->)")
-        Dim NowikiMatch As MatchCollection = Regex.Matches(temptext, "(<[nN]owiki>)([\s\S]+?)(<\/[Nn]owiki>)")
-        Dim CodeMatch As MatchCollection = Regex.Matches(temptext, "(<[cC]ode>)([\s\S]+?)(<\/[Cc]ode>)")
+        Dim NowikiMatch As MatchCollection = Regex.Matches(temptext, "(<[nN]owiki>)([\s\S]+?)(<\/[nN]owiki>)")
+        Dim CodeMatch As MatchCollection = Regex.Matches(temptext, "(<[cC]ode>)([\s\S]+?)(<\/[cC]ode>)")
+        Dim PreMatch As MatchCollection = Regex.Matches(temptext, "(<[pP]re>)([\s\S]+?)(<\/[pP]re>)")
+        Dim SrcMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]ource>)([\s\S]+?)(<\/[sS]ource>)")
+        Dim SyntaxHlMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]yntaxhighlight>)([\s\S]+?)(<\/[sS]yntaxhighlight>)")
 
+        'Comentarios
         Dim CommentsList As New List(Of String)
+        'Nowiki
         Dim NowikiList As New List(Of String)
+        'Code
         Dim CodeList As New List(Of String)
+        'Pre
+        Dim Prelist As New List(Of String)
+        'Src
+        Dim SrcList As New List(Of String)
+        'SynHL
+        Dim SyntaxHlList As New List(Of String)
 
+        'Comentarios
         For i As Integer = 0 To commentMatch.Count - 1
             CommentsList.Add(commentMatch(i).Value)
             temptext = temptext.Replace(commentMatch(i).Value, ColoredText("PERIODIBOT::::COMMENTREPLACE::::" & i, 4))
         Next
+        'Nowiki
         For i As Integer = 0 To NowikiMatch.Count - 1
             NowikiList.Add(NowikiMatch(i).Value)
             temptext = temptext.Replace(NowikiMatch(i).Value, ColoredText("PERIODIBOT::::NOWIKIREPLACE::::" & i, 4))
         Next
+        'Code
         For i As Integer = 0 To CodeMatch.Count - 1
             CodeList.Add(CodeMatch(i).Value)
             temptext = temptext.Replace(CodeMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
         Next
+        'Pre
+        For i As Integer = 0 To PreMatch.Count - 1
+            SyntaxHlList.Add(PreMatch(i).Value)
+            temptext = temptext.Replace(PreMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
+        Next
+        'Src
+        For i As Integer = 0 To SrcMatch.Count - 1
+            SrcList.Add(SrcMatch(i).Value)
+            temptext = temptext.Replace(SrcMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
+        Next
+        'SynHL
+        For i As Integer = 0 To SyntaxHlMatch.Count - 1
+            SyntaxHlList.Add(SyntaxHlMatch(i).Value)
+            temptext = temptext.Replace(SyntaxHlMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
+        Next
+
 
         Dim mc As MatchCollection = Regex.Matches(temptext, "([\n\r]|^)((==(?!=)).+?(==(?!=)))(( +)*)([\n\r]|$)")
 
@@ -817,17 +878,35 @@ Public NotInheritable Class Utils
         Dim EndThreadList As New List(Of String)
         For Each t As String In threadlist
             Dim nthreadtext As String = t
+            'Comentarios
             For i As Integer = 0 To commentMatch.Count - 1
                 Dim commenttext As String = ColoredText("PERIODIBOT::::COMMENTREPLACE::::" & i, 4)
                 nthreadtext = nthreadtext.Replace(commenttext, CommentsList(i))
             Next
+            'Nowiki
             For i As Integer = 0 To NowikiMatch.Count - 1
                 Dim codetext As String = ColoredText("PERIODIBOT::::NOWIKIREPLACE::::" & i, 4)
                 nthreadtext = nthreadtext.Replace(codetext, NowikiList(i))
             Next
+            'Code
             For i As Integer = 0 To CodeMatch.Count - 1
                 Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
                 nthreadtext = nthreadtext.Replace(codetext, CodeList(i))
+            Next
+            'Pre
+            For i As Integer = 0 To PreMatch.Count - 1
+                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
+                nthreadtext = nthreadtext.Replace(codetext, Prelist(i))
+            Next
+            'Src
+            For i As Integer = 0 To SrcMatch.Count - 1
+                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
+                nthreadtext = nthreadtext.Replace(codetext, SrcList(i))
+            Next
+            'SynHL
+            For i As Integer = 0 To SyntaxHlMatch.Count - 1
+                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
+                nthreadtext = nthreadtext.Replace(codetext, SyntaxHlList(i))
             Next
             EndThreadList.Add(nthreadtext)
         Next
