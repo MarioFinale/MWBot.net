@@ -830,7 +830,7 @@ Public NotInheritable Class Utils
         Next
         'Pre
         For i As Integer = 0 To PreMatch.Count - 1
-            SyntaxHlList.Add(PreMatch(i).Value)
+            Prelist.Add(PreMatch(i).Value)
             temptext = temptext.Replace(PreMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
         Next
         'Src
