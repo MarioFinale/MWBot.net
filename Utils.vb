@@ -797,8 +797,8 @@ Public NotInheritable Class Utils
         Dim NowikiMatch As MatchCollection = Regex.Matches(temptext, "(<[nN]owiki>)([\s\S]+?)(<\/[nN]owiki>)")
         Dim CodeMatch As MatchCollection = Regex.Matches(temptext, "(<[cC]ode>)([\s\S]+?)(<\/[cC]ode>)")
         Dim PreMatch As MatchCollection = Regex.Matches(temptext, "(<[pP]re>)([\s\S]+?)(<\/[pP]re>)")
-        Dim SrcMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]ource>)([\s\S]+?)(<\/[sS]ource>)")
-        Dim SyntaxHlMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]yntaxhighlight>)([\s\S]+?)(<\/[sS]yntaxhighlight>)")
+        Dim SrcMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]ource.+>)([\s\S]+?)(<\/[sS]ource>)")
+        Dim SyntaxHlMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]yntaxhighlight.+>)([\s\S]+?)(<\/[sS]yntaxhighlight>)")
 
         'Comentarios
         Dim CommentsList As New List(Of String)
