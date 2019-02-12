@@ -84,14 +84,14 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Guarda la imagen (en jpg ignorando la extensión).
+        ''' Guarda la imagen (en png ignorando la extensión).
         ''' </summary>
         ''' <param name="Path"></param>
         Public Sub Save(ByVal Path As String)
             Dim tex As String() = Path.Split("."c)
             Dim ext As String = "." & tex(tex.Count - 1)
-            Dim endname As String = Utils.ReplaceLast(Path, ext, ".jpg")
-            Image.Save(endname, Imaging.ImageFormat.Jpeg)
+            Dim endname As String = Utils.ReplaceLast(Path, ext, ".png")
+            Image.Save(endname, Imaging.ImageFormat.Png)
         End Sub
 
     End Class
