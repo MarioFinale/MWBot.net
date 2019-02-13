@@ -508,13 +508,13 @@ Public NotInheritable Class Utils
     ''' <summary>
     ''' Cuenta las veces que se repite una cadena de texto en otra cadena de texto.
     ''' </summary>
-    ''' <param name="StToSerach"></param>
+    ''' <param name="StToSearch"></param>
     ''' <param name="StToLookFor"></param>
     ''' <returns></returns>
-    Public Shared Function CountOccurrences(ByVal StToSerach As String, StToLookFor As String) As Integer
-        Dim txtlen As Integer = StToSerach.Length
+    Public Shared Function CountOccurrences(ByVal StToSearch As String, StToLookFor As String) As Integer
+        Dim txtlen As Integer = StToSearch.Length
         Dim strlen As Integer = StToLookFor.Length
-        Dim newstring As String = StToSerach.Replace(StToLookFor, String.Empty)
+        Dim newstring As String = StToSearch.Replace(StToLookFor, String.Empty)
         Dim newtxtlen As Integer = newstring.Length
         Dim lenghtdiff As Integer = txtlen - newtxtlen
         Dim occurences As Integer = CInt(lenghtdiff / strlen)

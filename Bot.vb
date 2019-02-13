@@ -601,6 +601,112 @@ Namespace WikiBot
         End Function
 
 
+        Function GetWikiExtractFromPageNames(ByVal pages As String(), ByVal charLimit As Integer) As SortedList(Of String, String)
+            Dim tpageres As New SortedList(Of String, String)
+            For Each page As String In pages
+                Dim tpage As Page = Getpage(page)
+                If tpage.Exists Then
+                    Dim textract As WikiExtract = GetWikiExtractFromPage(tpage, charLimit)
+                    tpageres.Add(page, textract.ExtractContent)
+                End If
+            Next
+            Return tpageres
+        End Function
+
+        ''' <summary>
+        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias.
+        ''' </summary>
+        ''' <returns></returns>
+        Function GetWikiExtractFromPages(ByVal pages As String(), ByVal charLimit As Integer) As HashSet(Of WikiExtract)
+            Dim tlist As New List(Of Page)
+            For Each page As String In pages
+                Dim tpage As Page = Getpage(page)
+                If tpage.Exists Then
+                    tlist.Add(tpage)
+                End If
+            Next
+            Return GetWikiExtractFromPages(tlist.ToArray, charLimit)
+        End Function
+
+        ''' <summary>
+        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias.
+        ''' </summary>
+        ''' <returns></returns>
+        Function GetWikiExtractFromPages(ByVal pages As Page(), ByVal charLimit As Integer) As HashSet(Of WikiExtract)
+            Dim tset As New HashSet(Of WikiExtract)
+            For Each page As Page In pages
+                Dim textract As WikiExtract = GetWikiExtractFromPage(page, charLimit)
+                If Not textract Is Nothing Then
+                    tset.Add(textract)
+                End If
+            Next
+            Return tset
+        End Function
+
+        ''' <summary>
+        ''' Obtiene la entradilla de una página manteniendo el wikitexto pero eliminando plantillas y referencias.
+        ''' </summary>
+        ''' <param name="page"></param>
+        ''' <param name="charLimit"></param>
+        ''' <returns></returns>
+        Function GetWikiExtractFromPage(ByVal page As Page, ByVal charLimit As Integer) As WikiExtract
+            If page.Exists Then
+                Dim pagethreads As String() = page.Threads
+                Dim TreatedExtract As String = page.Content
+                For Each thread As String In pagethreads
+                    TreatedExtract = TreatedExtract.Replace(thread, "")
+                Next
+                Dim templates As String() = Template.GetTemplateTextArray(TreatedExtract).ToArray
+                For Each temp As String In templates
+                    If Not (temp.ToUpper.StartsWith("{{IPA|") Or
+                    temp.ToUpper.StartsWith("{{NR|") Or
+                    temp.ToUpper.StartsWith("{{MP|") Or
+                    temp.ToUpper.StartsWith("{{NIHONGO|")) Then 'Mantener pantillas de texto comunes
+                        TreatedExtract = TreatedExtract.Replace(temp, "").Trim()
+                    End If
+                Next
+                TreatedExtract = Regex.Replace(TreatedExtract, "(\n\{\|)([\s\S]+?)(\n\|\})", "")
+                TreatedExtract = Regex.Replace(TreatedExtract, "<[rR]ef ?(|.+)>([\s\S]+?|)<\/[rR]ef>", "")
+                TreatedExtract = Regex.Replace(TreatedExtract, "(<[Rr]ef.+?)(\/>)", "")
+                TreatedExtract = Regex.Replace(TreatedExtract, "(\[\[[Cc]ategoría:)(.+?)(\]\])", "")
+                TreatedExtract = Regex.Replace(TreatedExtract, "\[nota\ [0-9]+\]", "")
+                TreatedExtract = Utils.RemoveExcessOfSpaces(TreatedExtract)
+                TreatedExtract = Removefiles(TreatedExtract)
+                TreatedExtract = TreatedExtract.Trim()
+
+                If TreatedExtract.Length > charLimit Then
+                    TreatedExtract = SafeTrimExtract(TreatedExtract.Substring(0, charLimit + 1), charLimit)
+                End If
+                'Si el título de la página está en el resumen, coloca en negritas la primera ocurrencia
+                Dim Extract As New WikiExtract With {
+                        .ExtractContent = TreatedExtract,
+                        .PageName = page.Title}
+                Return Extract
+            End If
+            Return Nothing
+        End Function
+
+
+        Private Function Removefiles(ByVal str As String) As String
+            Dim tstr As String = str
+            Do While True
+                Dim match As Match = Regex.Match(tstr, "\[\[([Aa]rchivo:|[Ff]ile).+?\]\]")
+                If Not match.Success Then
+                    Exit Do
+                End If
+                Do While True
+                    Dim tmatch As Match = Regex.Match(tstr, "\[\[([Aa]rchivo:|[Ff]ile).+?\]\]")
+                    If (Utils.CountOccurrences(tmatch.Value, "[[") = Utils.CountOccurrences(tmatch.Value, "]]")) Then
+                        tstr = tstr.Replace(tmatch.Value, "")
+                        Exit Do
+                    End If
+                    Dim fixedmatch As String = Utils.ReplaceLast(Utils.ReplaceLast(tmatch.Value, "[[", ""), "]]", "")
+                    tstr = tstr.Replace(tmatch.Value, fixedmatch)
+                Loop
+            Loop
+            Return tstr
+        End Function
+
         ''' <summary>
         ''' Retorna los resúmenes de las páginas indicadas en el array de entrada como SortedList (con el formato {Página,Resumen}), los nombres de página deben ser distintos. 
         ''' En caso de no existir el la página o el resumen, no lo retorna.
