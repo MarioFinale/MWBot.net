@@ -251,7 +251,7 @@ Namespace WikiBot
             _siteuri = site
             PageInfoData(PageTitle)
             _sections = Utils.GetPageThreads(_content)
-            Utils.EventLogger.Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            Utils.EventLogger.Debug_Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Return True
         End Function
 
