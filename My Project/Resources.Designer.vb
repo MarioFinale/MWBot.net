@@ -84,30 +84,5 @@ Namespace My.Resources
                 Return ResourceManager.GetString("Messages", resourceCulture)
             End Get
         End Property
-        
-        '''<summary>
-        '''  Busca una cadena traducida similar a &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-        '''&lt;root&gt;
-        '''  &lt;!-- 
-        '''    Microsoft ResX Schema 
-        '''    
-        '''    Version 2.0
-        '''    
-        '''    The primary goals of this format is to allow a simple XML format 
-        '''    that is mostly human readable. The generation and parsing of the 
-        '''    various data types are done through the TypeConverter classes 
-        '''    associated with the data types.
-        '''    
-        '''    Example:
-        '''    
-        '''    ... ado.net/XML headers &amp; schema ...
-        '''    &lt;resheader name=&quot;resmimetype&quot;&gt;text/microsoft-resx&lt;/resheader&gt;
-        '''    &lt;resheader n [resto de la cadena truncado]&quot;;.
-        '''</summary>
-        Friend ReadOnly Property Messages_es() As String
-            Get
-                Return ResourceManager.GetString("Messages_es", resourceCulture)
-            End Get
-        End Property
     End Module
 End Namespace

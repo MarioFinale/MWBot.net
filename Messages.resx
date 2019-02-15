@@ -121,204 +121,204 @@
     <value>MWBot.net</value>
   </data>
   <data name="CheckingUsers" xml:space="preserve">
-    <value>Checking users.</value>
+    <value>Comprobando usuarios.</value>
   </data>
   <data name="ConfigError" xml:space="preserve">
-    <value>Malformed config file.</value>
+    <value>Archivo de configuraciones corrupto.</value>
   </data>
   <data name="DoneXPagesReturned" xml:space="preserve">
-    <value>Done, {0} pages returned.</value>
+    <value>Hecho, retornando {0} páginas.</value>
   </data>
   <data name="GetLastrevIDs" xml:space="preserve">
-    <value>Getting the last revid of {0} pages.</value>
+    <value>Obteniendo el ultimo revid de {0} páginas.</value>
   </data>
   <data name="GetPageExtract" xml:space="preserve">
-    <value>Loading page extract of '{0}'.</value>
+    <value>Cargando el extracto de la página '{0}'.</value>
   </data>
   <data name="GetPagesExtract" xml:space="preserve">
-    <value>Loading {0} pages extract.</value>
+    <value>Cargando {0} extractos de páginas.</value>
   </data>
   <data name="GreetingMsg" xml:space="preserve">
     <value>==================== MWBot.net {0} ====================</value>
   </data>
   <data name="InvalidUrl" xml:space="preserve">
-    <value>The url is invalid.</value>
+    <value>La url ingresada es inválida</value>
   </data>
   <data name="InvalidUser" xml:space="preserve">
-    <value>The user '{0}' is invalid.</value>
+    <value>El usuario '{0}' es inválido.</value>
   </data>
   <data name="LoadingConfig" xml:space="preserve">
-    <value>Loading config</value>
+    <value>Cargando configuraciones</value>
   </data>
   <data name="LoginError" xml:space="preserve">
-    <value>Login failed</value>
+    <value>Falló el inicio de sesión</value>
   </data>
   <data name="LoginID" xml:space="preserve">
-    <value>Login ID: </value>
+    <value>ID de usuario: </value>
   </data>
   <data name="LoginResult" xml:space="preserve">
-    <value>Login result: </value>
+    <value>Resultado: </value>
   </data>
   <data name="NetworkError" xml:space="preserve">
-    <value>Network error: </value>
+    <value>Error de conexión: </value>
   </data>
   <data name="NewBotName" xml:space="preserve">
-    <value>Bot name: </value>
+    <value>Nombre del bot: </value>
   </data>
   <data name="NewBotPassword" xml:space="preserve">
-    <value>Wiki BOT password: </value>
+    <value>Contraseña de BOT en la Wiki: </value>
   </data>
   <data name="NewConfigFileError" xml:space="preserve">
-    <value>Error creating a new config file</value>
+    <value>Error al crear un nuevo archivo de configuraciones</value>
   </data>
   <data name="NewConfigMessage" xml:space="preserve">
-    <value>There is no config file, please fill the following data or close the program and manually create a new config file.</value>
+    <value>El archivo de configuraciones no existe, por favor completa los siguientes campos o cierra el programa y crea el archivo manualmente.</value>
   </data>
   <data name="NewUserName" xml:space="preserve">
-    <value>Wiki user name: </value>
+    <value>Nombre de usuario en la Wiki: </value>
   </data>
   <data name="NewWikiMainApiUrl" xml:space="preserve">
-    <value>Wiki API Url: </value>
+    <value>URL de la API de la Wiki: </value>
   </data>
   <data name="NewWikiMainUrl" xml:space="preserve">
-    <value>Wiki Url: </value>
+    <value>URL principal de la Wiki: </value>
   </data>
   <data name="NoConfigFile" xml:space="preserve">
-    <value>No config file</value>
+    <value>El archivo de configuraciones no existe</value>
   </data>
   <data name="OresQueryError" xml:space="preserve">
-    <value>Server error on ORES query score from revid {0} (invalid diff?)</value>
+    <value>Error de servidor en la query del puntaje ORES desde el revid {0} (diff inválido?)</value>
   </data>
   <data name="OresQueryEx" xml:space="preserve">
-    <value>ORES query from revid {0} EX: {1}</value>
+    <value>Excepción al obtener el puntaje ORES del revid {0}. EX: {1}</value>
   </data>
   <data name="OresQueryResult" xml:space="preserve">
-    <value>ORES query for revid {0} done. GF: {1} DMG: {2}</value>
+    <value>Query del puntaje ORES del revid {0} completada. GF: {1} DMG: {2}</value>
   </data>
   <data name="PageLoaded" xml:space="preserve">
-    <value>Page '{0}' loaded.</value>
+    <value>Página '{0}' cargada.</value>
   </data>
   <data name="PressKey" xml:space="preserve">
-    <value>Press any key to exit</value>
+    <value>Presione cualquier tecla para salir</value>
   </data>
   <data name="Reason" xml:space="preserve">
-    <value>Reason: </value>
+    <value>Motivo: </value>
   </data>
   <data name="RequestingToken" xml:space="preserve">
-    <value>Requesting token</value>
+    <value>Obteniendo token</value>
   </data>
   <data name="SaveConfigError" xml:space="preserve">
-    <value>Error saving the config.</value>
+    <value>Error al guardar las configuraciones.</value>
   </data>
   <data name="SigninIn" xml:space="preserve">
-    <value>Signing in</value>
+    <value>Iniciando sesión</value>
   </data>
   <data name="SuccessfulOperation" xml:space="preserve">
-    <value>Successful operation.</value>
+    <value>Operación exitosa.</value>
   </data>
   <data name="TextReplaced" xml:space="preserve">
-    <value>(Bot) Replacing '{0}' with '{1}' {2}.</value>
+    <value>Bot: Reemplazando '{0}' con '{1}' {2}.</value>
   </data>
   <data name="TokenObtained" xml:space="preserve">
-    <value>Token obtained</value>
+    <value>Token obtenido</value>
   </data>
   <data name="TryingToSave" xml:space="preserve">
-    <value>Trying to save '{0}'.</value>
+    <value>Intentando guardar '{0}'.</value>
   </data>
   <data name="UnsuccessfulOperation" xml:space="preserve">
-    <value>Unsuccessful operation.</value>
+    <value>La operación ha fallado.</value>
   </data>
   <data name="UserInactive" xml:space="preserve">
-    <value>User {0} is inactive.</value>
-  </data>
-  <data name="UserJustEdited" xml:space="preserve">
-    <value>{0} has just edited.</value>
-  </data>
-  <data name="UserName" xml:space="preserve">
-    <value>User name: </value>
-  </data>
-  <data name="AbuseFilter" xml:space="preserve">
-    <value>Abuse filter triggered on '{0}'.</value>
-  </data>
-  <data name="DefaultSumm" xml:space="preserve">
-    <value>Bot edit.</value>
-  </data>
-  <data name="EditConflict" xml:space="preserve">
-    <value>Edit conflit on '{0}'.</value>
-  </data>
-  <data name="FileCreateErr" xml:space="preserve">
-    <value>Error creating file '{0}'.</value>
-  </data>
-  <data name="FileSaveErr" xml:space="preserve">
-    <value>Error saving '{0}'.</value>
-  </data>
-  <data name="LoadingOres" xml:space="preserve">
-    <value>Loading ORES score from revid {0}.</value>
-  </data>
-  <data name="MaxRetryCount" xml:space="preserve">
-    <value>Max retry count reached on {0}.</value>
-  </data>
-  <data name="NoBots" xml:space="preserve">
-    <value>This bot cannot edit on '{0}'.</value>
-  </data>
-  <data name="OresFailed" xml:space="preserve">
-    <value>Cannot get ORES score of revid {0}. EX: {1}</value>
-  </data>
-  <data name="OresLoaded" xml:space="preserve">
-    <value>ORES score from revid {0}. DMG:{1} /GF:{2} </value>
-  </data>
-  <data name="PageDoesNotExist" xml:space="preserve">
-    <value>Warning: The page '{0}' does not exist yet!</value>
-  </data>
-  <data name="PageNoThumb" xml:space="preserve">
-    <value>Notice: The page '{0}' does not have a thumbnail.</value>
-  </data>
-  <data name="POSTEX" xml:space="preserve">
-    <value>POST exception on '{0}'. EX: {1}</value>
-  </data>
-  <data name="PRevLoaded" xml:space="preserve">
-    <value>Page with revid {0} loaded.</value>
-  </data>
-  <data name="RemovingRefs" xml:space="preserve">
-    <value>Removing all references to '{0}'.</value>
-  </data>
-  <data name="SpamBlackList" xml:space="preserve">
-    <value>Anti spam abuse filter triggered on '{0}'.</value>
-  </data>
-  <data name="SuccessfulEdit" xml:space="preserve">
-    <value>Edit on '{0}' successful.</value>
-  </data>
-  <data name="UnexpectedEX" xml:space="preserve">
-    <value>Unexpected exception: {0}</value>
-  </data>
-  <data name="NoDateMatch" xml:space="preserve">
-    <value>No text with date format found</value>
-  </data>
-  <data name="NewArchiveBoxTemplate" xml:space="preserve">
-    <value>Archive box page name (with namespace):</value>
-  </data>
-  <data name="NewArchiveMessageTemplate" xml:space="preserve">
-    <value>Archive page message (with namespace):</value>
-  </data>
-  <data name="NewAutoArchiveDoNotArchivePageName" xml:space="preserve">
-    <value>Auto archive 'do not archive' page name (with namespace):</value>
-  </data>
-  <data name="NewAutoArchiveProgrammedArchivePageName" xml:space="preserve">
-    <value>Auto archive 'programmed archive' page name (with namespace):</value>
-  </data>
-  <data name="NewAutoArchiveTemplatePagename" xml:space="preserve">
-    <value>Auto archive template page name (with namespace): </value>
-  </data>
-  <data name="NewAutoSignatureTemplatePageName" xml:space="preserve">
-    <value>Auto signature template page name (with namespace):</value>
-  </data>
-  <data name="CheckingUser" xml:space="preserve">
-    <value>Checking user {0}</value>
-  </data>
-  <data name="UserBlocked" xml:space="preserve">
-    <value>User {0} is blocked.</value>
+    <value>El usuario {0} está inactivo.</value>
   </data>
   <data name="UserInexistent" xml:space="preserve">
-    <value>User {0} does not exist.</value>
+    <value>El usuario {0} no existe.</value>
+  </data>
+  <data name="UserJustEdited" xml:space="preserve">
+    <value>{0} acaba de editar.</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>Nombre de usuario: </value>
+  </data>
+  <data name="UnexpectedEX" xml:space="preserve">
+    <value>Excepción inesperada: {0}</value>
+  </data>
+  <data name="AbuseFilter" xml:space="preserve">
+    <value>Filtro de abusos desencadenado en '{0}'.</value>
+  </data>
+  <data name="DefaultSumm" xml:space="preserve">
+    <value>Edición de bot.</value>
+  </data>
+  <data name="EditConflict" xml:space="preserve">
+    <value>Conflicto de edición en '{0}'.</value>
+  </data>
+  <data name="FileCreateErr" xml:space="preserve">
+    <value>Error al crear el archivo '{0}'.</value>
+  </data>
+  <data name="FileSaveErr" xml:space="preserve">
+    <value>Error al guardar el archivo '{0}'.</value>
+  </data>
+  <data name="LoadingOres" xml:space="preserve">
+    <value>Cargando puntaje ORES del revid {0}.</value>
+  </data>
+  <data name="MaxRetryCount" xml:space="preserve">
+    <value>Máximo número de reintentos alcanzado en '{0}'.</value>
+  </data>
+  <data name="NoBots" xml:space="preserve">
+    <value>Este bot no puede editar en '{0}'.</value>
+  </data>
+  <data name="OresFailed" xml:space="preserve">
+    <value>No se pudo obtener el puntaje ORES del revid {0}. EX: {1}</value>
+  </data>
+  <data name="OresLoaded" xml:space="preserve">
+    <value>Puntaje ORES del revid {0}:  DMG:{1} /GF:{2}</value>
+  </data>
+  <data name="PageDoesNotExist" xml:space="preserve">
+    <value>Cuidado: La página '{0}' no existe aún.</value>
+  </data>
+  <data name="PageNoThumb" xml:space="preserve">
+    <value>Aviso: La página '{0}' no posee una imagen de previsualización.</value>
+  </data>
+  <data name="POSTEX" xml:space="preserve">
+    <value>Error en la solicitud POST en '{0}'. EX: {1}</value>
+  </data>
+  <data name="PRevLoaded" xml:space="preserve">
+    <value>Página con el revid {0} cargada.</value>
+  </data>
+  <data name="RemovingRefs" xml:space="preserve">
+    <value>Eliminando todas las referencias que contengan '{0}'.</value>
+  </data>
+  <data name="SpamBlackList" xml:space="preserve">
+    <value>Filtro de abusos anti spam desencadenado en '{0}'.</value>
+  </data>
+  <data name="SuccessfulEdit" xml:space="preserve">
+    <value>Edición en '{0}' exitosa.</value>
+  </data>
+  <data name="NoDateMatch" xml:space="preserve">
+    <value>No se ha encontrado texto con formato de fecha.</value>
+  </data>
+  <data name="NewArchiveBoxTemplate" xml:space="preserve">
+    <value>Nombre de la página de la plantilla de 'caja de archivos' (con el espacio de nombres):</value>
+  </data>
+  <data name="NewArchiveMessageTemplate" xml:space="preserve">
+    <value>Nombre de la página de aviso de archivo (con el espacio de nombres):</value>
+  </data>
+  <data name="NewAutoArchiveDoNotArchivePageName" xml:space="preserve">
+    <value>Nombre de la página de la plantilla 'no archivar' (con el espacio de nombres):</value>
+  </data>
+  <data name="NewAutoArchiveProgrammedArchivePageName" xml:space="preserve">
+    <value>Nombre de la página de la plantilla de autoarchivado programado (con el espacio de nombres):</value>
+  </data>
+  <data name="NewAutoArchiveTemplatePagename" xml:space="preserve">
+    <value>Nombre de la página de la plantilla de autoarchivado (con el espacio de nombres):</value>
+  </data>
+  <data name="NewAutoSignatureTemplatePageName" xml:space="preserve">
+    <value>Nombre de la página de la plantilla de autofirmado (con el espacio de nombres):</value>
+  </data>
+  <data name="UserBlocked" xml:space="preserve">
+    <value>El usuario {0} está bloqueado.</value>
+  </data>
+  <data name="CheckingUser" xml:space="preserve">
+    <value>Verificando al usuario '{0}'.</value>
   </data>
 </root>

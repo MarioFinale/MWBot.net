@@ -1070,7 +1070,7 @@ Public NotInheritable Class Utils
                         dates.Add(Integer.Parse(RemoveAllAlphas(s)))
                     End If
                 Next
-
+                If Not (dates.Count = 5) Then Throw New Exception(Messages.NoDateMatch)
                 Dim dat As New DateTime(dates(4), dates(3), dates(2), dates(0), dates(1), 0)
                 TheDate = dat
             Catch ex As System.FormatException

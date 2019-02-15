@@ -73,16 +73,9 @@
     <Compile Include="LogEngine.vb" />
     <Compile Include="MaxRetriesExeption.vb" />
     <Compile Include="Messages.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
       <DependentUpon>Messages.resx</DependentUpon>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="Messages.es.Designer.vb">
-      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Messages.es.resx</DependentUpon>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <AutoGen>True</AutoGen>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
@@ -119,19 +112,13 @@
     <Compile Include="WikiUser.vb" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="SStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>SStrings.Designer.vb</LastGenOutput>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Messages.es.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Messages.es.Designer.vb</LastGenOutput>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="Messages.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Messages.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>SStrings.Designer.vb</LastGenOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">

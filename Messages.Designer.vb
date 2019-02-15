@@ -64,7 +64,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Abuse filter triggered on &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Filtro de abusos desencadenado en &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property AbuseFilter() As String
         Get
@@ -82,7 +82,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Checking user {0}.
+    '''  Busca una cadena traducida similar a Verificando al usuario &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property CheckingUser() As String
         Get
@@ -91,7 +91,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Checking users..
+    '''  Busca una cadena traducida similar a Comprobando usuarios..
     '''</summary>
     Public Shared ReadOnly Property CheckingUsers() As String
         Get
@@ -100,7 +100,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Malformed config file..
+    '''  Busca una cadena traducida similar a Archivo de configuraciones corrupto..
     '''</summary>
     Public Shared ReadOnly Property ConfigError() As String
         Get
@@ -109,7 +109,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Bot edit..
+    '''  Busca una cadena traducida similar a Edición de bot..
     '''</summary>
     Public Shared ReadOnly Property DefaultSumm() As String
         Get
@@ -118,7 +118,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Done, {0} pages returned..
+    '''  Busca una cadena traducida similar a Hecho, retornando {0} páginas..
     '''</summary>
     Public Shared ReadOnly Property DoneXPagesReturned() As String
         Get
@@ -127,7 +127,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Edit conflit on &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Conflicto de edición en &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property EditConflict() As String
         Get
@@ -136,7 +136,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Error creating file &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Error al crear el archivo &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property FileCreateErr() As String
         Get
@@ -145,7 +145,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Error saving &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Error al guardar el archivo &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property FileSaveErr() As String
         Get
@@ -154,7 +154,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Getting the last revid of {0} pages..
+    '''  Busca una cadena traducida similar a Obteniendo el ultimo revid de {0} páginas..
     '''</summary>
     Public Shared ReadOnly Property GetLastrevIDs() As String
         Get
@@ -163,7 +163,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Loading page extract of &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Cargando el extracto de la página &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property GetPageExtract() As String
         Get
@@ -172,7 +172,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Loading {0} pages extract..
+    '''  Busca una cadena traducida similar a Cargando {0} extractos de páginas..
     '''</summary>
     Public Shared ReadOnly Property GetPagesExtract() As String
         Get
@@ -190,7 +190,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a The url is invalid..
+    '''  Busca una cadena traducida similar a La url ingresada es inválida.
     '''</summary>
     Public Shared ReadOnly Property InvalidUrl() As String
         Get
@@ -199,7 +199,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a The user &apos;{0}&apos; is invalid..
+    '''  Busca una cadena traducida similar a El usuario &apos;{0}&apos; es inválido..
     '''</summary>
     Public Shared ReadOnly Property InvalidUser() As String
         Get
@@ -208,7 +208,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Loading config.
+    '''  Busca una cadena traducida similar a Cargando configuraciones.
     '''</summary>
     Public Shared ReadOnly Property LoadingConfig() As String
         Get
@@ -217,7 +217,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Loading ORES score from revid {0}..
+    '''  Busca una cadena traducida similar a Cargando puntaje ORES del revid {0}..
     '''</summary>
     Public Shared ReadOnly Property LoadingOres() As String
         Get
@@ -226,7 +226,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Login failed.
+    '''  Busca una cadena traducida similar a Falló el inicio de sesión.
     '''</summary>
     Public Shared ReadOnly Property LoginError() As String
         Get
@@ -235,7 +235,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Login ID: .
+    '''  Busca una cadena traducida similar a ID de usuario: .
     '''</summary>
     Public Shared ReadOnly Property LoginID() As String
         Get
@@ -244,7 +244,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Login result: .
+    '''  Busca una cadena traducida similar a Resultado: .
     '''</summary>
     Public Shared ReadOnly Property LoginResult() As String
         Get
@@ -253,7 +253,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Max retry count reached on {0}..
+    '''  Busca una cadena traducida similar a Máximo número de reintentos alcanzado en &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property MaxRetryCount() As String
         Get
@@ -262,7 +262,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Network error: .
+    '''  Busca una cadena traducida similar a Error de conexión: .
     '''</summary>
     Public Shared ReadOnly Property NetworkError() As String
         Get
@@ -271,7 +271,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Archive box page name (with namespace):.
+    '''  Busca una cadena traducida similar a Nombre de la página de la plantilla de &apos;caja de archivos&apos; (con el espacio de nombres):.
     '''</summary>
     Public Shared ReadOnly Property NewArchiveBoxTemplate() As String
         Get
@@ -280,7 +280,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Archive page message (with namespace):.
+    '''  Busca una cadena traducida similar a Nombre de la página de aviso de archivo (con el espacio de nombres):.
     '''</summary>
     Public Shared ReadOnly Property NewArchiveMessageTemplate() As String
         Get
@@ -289,7 +289,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Auto archive &apos;do not archive&apos; page name (with namespace):.
+    '''  Busca una cadena traducida similar a Nombre de la página de la plantilla &apos;no archivar&apos; (con el espacio de nombres):.
     '''</summary>
     Public Shared ReadOnly Property NewAutoArchiveDoNotArchivePageName() As String
         Get
@@ -298,7 +298,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Auto archive &apos;programmed archive&apos; page name (with namespace):.
+    '''  Busca una cadena traducida similar a Nombre de la página de la plantilla de autoarchivado programado (con el espacio de nombres):.
     '''</summary>
     Public Shared ReadOnly Property NewAutoArchiveProgrammedArchivePageName() As String
         Get
@@ -307,7 +307,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Auto archive template page name (with namespace): .
+    '''  Busca una cadena traducida similar a Nombre de la página de la plantilla de autoarchivado (con el espacio de nombres):.
     '''</summary>
     Public Shared ReadOnly Property NewAutoArchiveTemplatePagename() As String
         Get
@@ -316,7 +316,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Auto signature template page name (with namespace):.
+    '''  Busca una cadena traducida similar a Nombre de la página de la plantilla de autofirmado (con el espacio de nombres):.
     '''</summary>
     Public Shared ReadOnly Property NewAutoSignatureTemplatePageName() As String
         Get
@@ -325,7 +325,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Bot name: .
+    '''  Busca una cadena traducida similar a Nombre del bot: .
     '''</summary>
     Public Shared ReadOnly Property NewBotName() As String
         Get
@@ -334,7 +334,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Wiki BOT password: .
+    '''  Busca una cadena traducida similar a Contraseña de BOT en la Wiki: .
     '''</summary>
     Public Shared ReadOnly Property NewBotPassword() As String
         Get
@@ -343,7 +343,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Error creating a new config file.
+    '''  Busca una cadena traducida similar a Error al crear un nuevo archivo de configuraciones.
     '''</summary>
     Public Shared ReadOnly Property NewConfigFileError() As String
         Get
@@ -352,7 +352,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a There is no config file, please fill the following data or close the program and manually create a new config file..
+    '''  Busca una cadena traducida similar a El archivo de configuraciones no existe, por favor completa los siguientes campos o cierra el programa y crea el archivo manualmente..
     '''</summary>
     Public Shared ReadOnly Property NewConfigMessage() As String
         Get
@@ -361,7 +361,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Wiki user name: .
+    '''  Busca una cadena traducida similar a Nombre de usuario en la Wiki: .
     '''</summary>
     Public Shared ReadOnly Property NewUserName() As String
         Get
@@ -370,7 +370,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Wiki API Url: .
+    '''  Busca una cadena traducida similar a URL de la API de la Wiki: .
     '''</summary>
     Public Shared ReadOnly Property NewWikiMainApiUrl() As String
         Get
@@ -379,7 +379,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Wiki Url: .
+    '''  Busca una cadena traducida similar a URL principal de la Wiki: .
     '''</summary>
     Public Shared ReadOnly Property NewWikiMainUrl() As String
         Get
@@ -388,7 +388,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a This bot cannot edit on &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Este bot no puede editar en &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property NoBots() As String
         Get
@@ -397,7 +397,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a No config file.
+    '''  Busca una cadena traducida similar a El archivo de configuraciones no existe.
     '''</summary>
     Public Shared ReadOnly Property NoConfigFile() As String
         Get
@@ -406,7 +406,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a No text with date format found.
+    '''  Busca una cadena traducida similar a No se ha encontrado texto con formato de fecha..
     '''</summary>
     Public Shared ReadOnly Property NoDateMatch() As String
         Get
@@ -415,7 +415,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Cannot get ORES score of revid {0}. EX: {1}.
+    '''  Busca una cadena traducida similar a No se pudo obtener el puntaje ORES del revid {0}. EX: {1}.
     '''</summary>
     Public Shared ReadOnly Property OresFailed() As String
         Get
@@ -424,7 +424,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a ORES score from revid {0}. DMG:{1} /GF:{2} .
+    '''  Busca una cadena traducida similar a Puntaje ORES del revid {0}:  DMG:{1} /GF:{2}.
     '''</summary>
     Public Shared ReadOnly Property OresLoaded() As String
         Get
@@ -433,7 +433,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Server error on ORES query score from revid {0} (invalid diff?).
+    '''  Busca una cadena traducida similar a Error de servidor en la query del puntaje ORES desde el revid {0} (diff inválido?).
     '''</summary>
     Public Shared ReadOnly Property OresQueryError() As String
         Get
@@ -442,7 +442,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a ORES query from revid {0} EX: {1}.
+    '''  Busca una cadena traducida similar a Excepción al obtener el puntaje ORES del revid {0}. EX: {1}.
     '''</summary>
     Public Shared ReadOnly Property OresQueryEx() As String
         Get
@@ -451,7 +451,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a ORES query for revid {0} done. GF: {1} DMG: {2}.
+    '''  Busca una cadena traducida similar a Query del puntaje ORES del revid {0} completada. GF: {1} DMG: {2}.
     '''</summary>
     Public Shared ReadOnly Property OresQueryResult() As String
         Get
@@ -460,7 +460,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Warning: The page &apos;{0}&apos; does not exist yet!.
+    '''  Busca una cadena traducida similar a Cuidado: La página &apos;{0}&apos; no existe aún..
     '''</summary>
     Public Shared ReadOnly Property PageDoesNotExist() As String
         Get
@@ -469,7 +469,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Page &apos;{0}&apos; loaded..
+    '''  Busca una cadena traducida similar a Página &apos;{0}&apos; cargada..
     '''</summary>
     Public Shared ReadOnly Property PageLoaded() As String
         Get
@@ -478,7 +478,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Notice: The page &apos;{0}&apos; does not have a thumbnail..
+    '''  Busca una cadena traducida similar a Aviso: La página &apos;{0}&apos; no posee una imagen de previsualización..
     '''</summary>
     Public Shared ReadOnly Property PageNoThumb() As String
         Get
@@ -487,7 +487,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a POST exception on &apos;{0}&apos;. EX: {1}.
+    '''  Busca una cadena traducida similar a Error en la solicitud POST en &apos;{0}&apos;. EX: {1}.
     '''</summary>
     Public Shared ReadOnly Property POSTEX() As String
         Get
@@ -496,7 +496,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Press any key to exit.
+    '''  Busca una cadena traducida similar a Presione cualquier tecla para salir.
     '''</summary>
     Public Shared ReadOnly Property PressKey() As String
         Get
@@ -505,7 +505,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Page with revid {0} loaded..
+    '''  Busca una cadena traducida similar a Página con el revid {0} cargada..
     '''</summary>
     Public Shared ReadOnly Property PRevLoaded() As String
         Get
@@ -514,7 +514,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Reason: .
+    '''  Busca una cadena traducida similar a Motivo: .
     '''</summary>
     Public Shared ReadOnly Property Reason() As String
         Get
@@ -523,7 +523,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Removing all references to &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Eliminando todas las referencias que contengan &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property RemovingRefs() As String
         Get
@@ -532,7 +532,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Requesting token.
+    '''  Busca una cadena traducida similar a Obteniendo token.
     '''</summary>
     Public Shared ReadOnly Property RequestingToken() As String
         Get
@@ -541,7 +541,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Error saving the config..
+    '''  Busca una cadena traducida similar a Error al guardar las configuraciones..
     '''</summary>
     Public Shared ReadOnly Property SaveConfigError() As String
         Get
@@ -550,7 +550,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Signing in.
+    '''  Busca una cadena traducida similar a Iniciando sesión.
     '''</summary>
     Public Shared ReadOnly Property SigninIn() As String
         Get
@@ -559,7 +559,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Anti spam abuse filter triggered on &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Filtro de abusos anti spam desencadenado en &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property SpamBlackList() As String
         Get
@@ -568,7 +568,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Edit on &apos;{0}&apos; successful..
+    '''  Busca una cadena traducida similar a Edición en &apos;{0}&apos; exitosa..
     '''</summary>
     Public Shared ReadOnly Property SuccessfulEdit() As String
         Get
@@ -577,7 +577,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Successful operation..
+    '''  Busca una cadena traducida similar a Operación exitosa..
     '''</summary>
     Public Shared ReadOnly Property SuccessfulOperation() As String
         Get
@@ -586,7 +586,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a (Bot) Replacing &apos;{0}&apos; with &apos;{1}&apos; {2}..
+    '''  Busca una cadena traducida similar a Bot: Reemplazando &apos;{0}&apos; con &apos;{1}&apos; {2}..
     '''</summary>
     Public Shared ReadOnly Property TextReplaced() As String
         Get
@@ -595,7 +595,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Token obtained.
+    '''  Busca una cadena traducida similar a Token obtenido.
     '''</summary>
     Public Shared ReadOnly Property TokenObtained() As String
         Get
@@ -604,7 +604,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Trying to save &apos;{0}&apos;..
+    '''  Busca una cadena traducida similar a Intentando guardar &apos;{0}&apos;..
     '''</summary>
     Public Shared ReadOnly Property TryingToSave() As String
         Get
@@ -613,7 +613,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Unexpected exception: {0}.
+    '''  Busca una cadena traducida similar a Excepción inesperada: {0}.
     '''</summary>
     Public Shared ReadOnly Property UnexpectedEX() As String
         Get
@@ -622,7 +622,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a Unsuccessful operation..
+    '''  Busca una cadena traducida similar a La operación ha fallado..
     '''</summary>
     Public Shared ReadOnly Property UnsuccessfulOperation() As String
         Get
@@ -631,7 +631,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a User {0} is blocked..
+    '''  Busca una cadena traducida similar a El usuario {0} está bloqueado..
     '''</summary>
     Public Shared ReadOnly Property UserBlocked() As String
         Get
@@ -640,7 +640,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a User {0} is inactive..
+    '''  Busca una cadena traducida similar a El usuario {0} está inactivo..
     '''</summary>
     Public Shared ReadOnly Property UserInactive() As String
         Get
@@ -649,7 +649,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a User {0} does not exist..
+    '''  Busca una cadena traducida similar a El usuario {0} no existe..
     '''</summary>
     Public Shared ReadOnly Property UserInexistent() As String
         Get
@@ -658,7 +658,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a {0} has just edited..
+    '''  Busca una cadena traducida similar a {0} acaba de editar..
     '''</summary>
     Public Shared ReadOnly Property UserJustEdited() As String
         Get
@@ -667,7 +667,7 @@ Public Class Messages
     End Property
     
     '''<summary>
-    '''  Busca una cadena traducida similar a User name: .
+    '''  Busca una cadena traducida similar a Nombre de usuario: .
     '''</summary>
     Public Shared ReadOnly Property UserName() As String
         Get
