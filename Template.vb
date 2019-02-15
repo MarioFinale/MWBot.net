@@ -368,9 +368,11 @@ Namespace WikiBot
                         beginindex = i + 1
                         OpenTemplateCount2 = 0
                         CloseTemplateCount2 = 0
-                        templist.Add(TemplateText)
+                        If Not TemplateText.Length <= 4 Then
+                            templist.Add(TemplateText)
+                        End If
                     End If
-                End If
+                    End If
             Next
             Dim innertemplates As New List(Of String)
             For Each t As String In templist
