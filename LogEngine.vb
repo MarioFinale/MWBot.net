@@ -148,6 +148,7 @@ Public Class LogEngine
         If _Debug Then
             AddEvent(message, source, user, "DEBUG")
         End If
+        Utils.WriteLine("DEBUG", source, user & ": " & message)
         Return True
     End Function
 

@@ -662,7 +662,7 @@ Namespace WikiBot
                 PExtract = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """extract"":""", """}")(0))
                 PaRevID = Utils.TextInBetween(QueryText, """parentid"":", ",""")(0)
             Catch ex As IndexOutOfRangeException
-                Utils.EventLogger.Log(String.Format(Messages.PageDoesNotExist, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                Utils.EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End Try
 
             If Utils.TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
