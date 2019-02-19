@@ -787,18 +787,49 @@ Public NotInheritable Class Utils
     End Function
 
     ''' <summary>
+    ''' Evalua texto (wikicódigo) y regresa un array de string con cada uno de los hilos del mismo (los que comienzan con = ejemplo = y terminan en otro comienzo o el final de la página).
+    ''' </summary>
+    ''' <param name="pagetext">Texto a evaluar</param>
+    ''' <returns></returns>
+    Public Shared Function GetPageMainThreads(ByVal pagetext As String) As String()
+        Dim tutil As Utils = New Utils
+        Return tutil.GetXLvlThread(pagetext, "([\n\r]|^)((=(?!=)).+?(=(?!=)))(( +)*)([\n\r]|$)")
+    End Function
+
+    ''' <summary>
     ''' Evalua texto (wikicódigo) y regresa un array de string con cada uno de los hilos del mismo (los que comienzan con == ejemplo == y terminan en otro comienzo o el final de la página).
     ''' </summary>
     ''' <param name="pagetext">Texto a evaluar</param>
     ''' <returns></returns>
     Public Shared Function GetPageThreads(ByVal pagetext As String) As String()
+        Dim tutil As Utils = New Utils
+        Return tutil.GetXLvlThread(pagetext, "([\n\r]|^)((==(?!=)).+?(==(?!=)))(( +)*)([\n\r]|$)")
+    End Function
+
+    ''' <summary>
+    ''' Evalua texto (wikicódigo) y regresa un array de string con cada uno de los subhilos del mismo (los que comienzan con === ejemplo === y terminan en otro subhilo o el final de la página).
+    ''' </summary>
+    ''' <param name="pagetext">Texto a evaluar</param>
+    ''' <returns></returns>
+    Public Shared Function GetPageSubThreads(ByVal pagetext As String) As String()
+        Dim tutil As Utils = New Utils
+        Return tutil.GetXLvlThread(pagetext, "([\n\r]|^)((===(?!=)).+?(===(?!=)))(( +)*)([\n\r]|$)")
+    End Function
+
+    ''' <summary>
+    ''' Función base que obtiene los secciones de una página según la expresdión regular que defina los hilos.
+    ''' </summary>
+    ''' <param name="pagetext"></param>
+    ''' <param name="Threadregex"></param>
+    ''' <returns></returns>
+    Private Function GetXLvlThread(ByVal pagetext As String, ByVal Threadregex As String) As String()
         Dim temptext As String = pagetext
         Dim commentMatch As MatchCollection = Regex.Matches(temptext, "(<!--)[\s\S]*?(-->)")
         Dim NowikiMatch As MatchCollection = Regex.Matches(temptext, "(<[nN]owiki>)([\s\S]+?)(<\/[nN]owiki>)")
         Dim CodeMatch As MatchCollection = Regex.Matches(temptext, "(<[cC]ode>)([\s\S]+?)(<\/[cC]ode>)")
-        Dim PreMatch As MatchCollection = Regex.Matches(temptext, "(<[pP]re>)([\s\S]+?)(<\/[pP]re>)")
-        Dim SrcMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]ource( [^<\n\r]+?>| >|>))([\s\S]+?)(<\/[sS]ource>)")
-        Dim SyntaxHlMatch As MatchCollection = Regex.Matches(temptext, "(<[sS]yntaxhighlight( [^<\n\r]+?>| >|>))([\s\S]+?)(<\/[sS]yntaxhighlight>)")
+        Dim PreMatch As MatchCollection = Regex.Matches(temptext, "(<pre>)([\s\S]+?)(<\/pre>)", RegexOptions.IgnoreCase)
+        Dim SrcMatch As MatchCollection = Regex.Matches(temptext, "(<source( [^>]*)?>)([\s\S]+?)(<\/source>)", RegexOptions.IgnoreCase)
+        Dim SyntaxHlMatch As MatchCollection = Regex.Matches(temptext, "(<syntaxhighlight( [^>]*)?>)([\s\S]+?)(<\/syntaxhighlight>)", RegexOptions.IgnoreCase)
 
         'Comentarios
         Dim CommentsList As New List(Of String)
@@ -844,8 +875,7 @@ Public NotInheritable Class Utils
             temptext = temptext.Replace(SyntaxHlMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
         Next
 
-
-        Dim mc As MatchCollection = Regex.Matches(temptext, "([\n\r]|^)((==(?!=)).+?(==(?!=)))(( +)*)([\n\r]|$)")
+        Dim mc As MatchCollection = Regex.Matches(temptext, Threadregex)
 
         Dim threadlist As New List(Of String)
 
@@ -913,86 +943,6 @@ Public NotInheritable Class Utils
 
         Return EndThreadList.ToArray
     End Function
-
-    ''' <summary>
-    ''' Evalua texto (wikicódigo) y regresa un array de string con cada uno de los subhilos del mismo (los que comienzan con === ejemplo === y terminan en otro subhilo o el final de la página).
-    ''' </summary>
-    ''' <param name="pagetext">Texto a evaluar</param>
-    ''' <returns></returns>
-    Public Shared Function GetPageSubThreads(ByVal pagetext As String) As String()
-        Dim temptext As String = pagetext
-        Dim commentMatch As MatchCollection = Regex.Matches(temptext, "(<!--)[\s\S]*?(-->)")
-        Dim NowikiMatch As MatchCollection = Regex.Matches(temptext, "(<[nN]owiki>)([\s\S]+?)(<\/[Nn]owiki>)")
-        Dim CodeMatch As MatchCollection = Regex.Matches(temptext, "(<[cC]ode>)([\s\S]+?)(<\/[Cc]ode>)")
-
-        Dim CommentsList As New List(Of String)
-        Dim NowikiList As New List(Of String)
-        Dim CodeList As New List(Of String)
-
-        For i As Integer = 0 To commentMatch.Count - 1
-            CommentsList.Add(commentMatch(i).Value)
-            temptext = temptext.Replace(commentMatch(i).Value, ColoredText("PERIODIBOT::::COMMENTREPLACE::::" & i, 4))
-        Next
-        For i As Integer = 0 To NowikiMatch.Count - 1
-            NowikiList.Add(NowikiMatch(i).Value)
-            temptext = temptext.Replace(NowikiMatch(i).Value, ColoredText("PERIODIBOT::::NOWIKIREPLACE::::" & i, 4))
-        Next
-        For i As Integer = 0 To CodeMatch.Count - 1
-            CodeList.Add(CodeMatch(i).Value)
-            temptext = temptext.Replace(CodeMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
-        Next
-
-        Dim mc As MatchCollection = Regex.Matches(temptext, "([\n\r]|^)((===(?!=)).+?(===(?!=)))(( +)*)([\n\r]|$)")
-
-        Dim threadlist As New List(Of String)
-
-
-        For i As Integer = 0 To mc.Count - 1
-
-            Dim nextmatch As Integer = (i + 1)
-
-            If Not nextmatch = mc.Count Then
-
-                Dim threadtitle As String = mc(i).Value
-                Dim nextthreadtitle As String = mc(nextmatch).Value
-                Dim threadtext As String = String.Empty
-
-                threadtext = TextInBetween(temptext, threadtitle, nextthreadtitle)(0)
-                Dim Completethread As String = threadtitle & threadtext
-                threadlist.Add(Completethread)
-                temptext = ReplaceFirst(temptext, Completethread, "")
-
-            Else
-                Dim threadtitle As String = mc(i).Value
-
-                Dim ThreadPos As Integer = temptext.IndexOf(threadtitle)
-                Dim threadlenght As Integer = temptext.Length - temptext.Substring(0, ThreadPos).Length
-                Dim threadtext As String = temptext.Substring(ThreadPos, threadlenght)
-                threadlist.Add(threadtext)
-
-            End If
-        Next
-        Dim EndThreadList As New List(Of String)
-        For Each t As String In threadlist
-            Dim nthreadtext As String = t
-            For i As Integer = 0 To commentMatch.Count - 1
-                Dim commenttext As String = ColoredText("PERIODIBOT::::COMMENTREPLACE::::" & i, 4)
-                nthreadtext = nthreadtext.Replace(commenttext, CommentsList(i))
-            Next
-            For i As Integer = 0 To NowikiMatch.Count - 1
-                Dim codetext As String = ColoredText("PERIODIBOT::::NOWIKIREPLACE::::" & i, 4)
-                nthreadtext = nthreadtext.Replace(codetext, NowikiList(i))
-            Next
-            For i As Integer = 0 To CodeMatch.Count - 1
-                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
-                nthreadtext = nthreadtext.Replace(codetext, CodeList(i))
-            Next
-            EndThreadList.Add(nthreadtext)
-        Next
-
-        Return EndThreadList.ToArray
-    End Function
-
 
     ''' <summary>
     ''' Entrega como DateTime la última fecha (formato firma Wikipedia) en el último parrafo. Si no encuentra firma retorna 31/12/9999.
