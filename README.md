@@ -20,7 +20,7 @@ namespace MyProgram
          ConfigFile cfg = new ConfigFile(GlobalVars.ConfigFilePath); 
          Bot Workerbot = new Bot(cfg);
          Page examplepage = Workerbot.GetPage("Example page");
-         string newtext = examplepage.Content.replace("Text", "NewText");
+         string newtext = examplepage.Content.Replace("Text", "NewText");
          //Do something
          examplepage.Save(newtext, "Test edit"); 
         }
@@ -40,7 +40,7 @@ Namespace MyProgram
          Dim cfg As ConfigFile = New ConfigFile(GlobalVars.ConfigFilePath)
          Dim Workerbot as Bot = New Bot(cfg)
          Dim examplepage as Page = Workerbot.Getpage("Example page")
-         Dim newtext as String = examplepage.Content.replace("Text", "Newtext")
+         Dim newtext as String = examplepage.Content.Replace("Text", "Newtext")
          'Do something
          examplepage.Save(newtext, "Test edit")
       End Sub
