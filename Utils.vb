@@ -1066,6 +1066,8 @@ Public NotInheritable Class Utils
                 dates.Add(dat)
             Catch ex As System.FormatException
                 EventLogger.Debug_Log("EX: " & ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
+            Catch ex2 As System.ArgumentOutOfRangeException
+                EventLogger.Debug_Log("EX: " & ex2.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             End Try
         Next
         dates.Sort()
@@ -1105,6 +1107,8 @@ Public NotInheritable Class Utils
                 tdat = New DateTime(datesInt(4), datesInt(3), datesInt(2), datesInt(0), datesInt(1), 0)
             Catch ex As System.FormatException
                 EventLogger.Debug_Log("EX: " & ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
+            Catch ex2 As System.ArgumentOutOfRangeException
+                EventLogger.Debug_Log("EX: " & ex2.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             End Try
             Return tdat
         Next

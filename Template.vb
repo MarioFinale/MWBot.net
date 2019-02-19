@@ -308,7 +308,10 @@ Namespace WikiBot
             Dim temps As List(Of String) = Template.GetTemplateTextArray(text)
 
             For Each t As String In temps
-                TemplateList.Add(New Template(t, False))
+                Dim rectemplate As Template = New Template(t, False)
+                If Not (rectemplate.Text Is Nothing AndAlso String.IsNullOrWhiteSpace(rectemplate.Text)) Then
+                    TemplateList.Add(New Template(t, False))
+                End If
             Next
             Return TemplateList
         End Function
