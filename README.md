@@ -11,6 +11,7 @@ Cargar una página, editarla y guardarla.
 using System;
 using MWBot.net;
 using MWBot.net.WikiBot;
+
 namespace MyProgram
 {
     class Program
@@ -34,16 +35,17 @@ namespace MyProgram
 Imports System
 Imports MWBot.net
 Imports MWBot.net.WikiBot
+
 Namespace MyProgram
-   Class Program
-      Public Shared Sub TestMethod()
+   Class Program   
+      Public Shared Sub TestMethod()      
          Dim cfg As ConfigFile = New ConfigFile(GlobalVars.ConfigFilePath)
          Dim Workerbot as Bot = New Bot(cfg)
          Dim examplepage as Page = Workerbot.Getpage("Example page")
          Dim newtext as String = examplepage.Content.Replace("Text", "Newtext")
          'Do something
          examplepage.Save(newtext, "Test edit")
-      End Sub
-   End Class
+      End Sub      
+   End Class   
 End Namespace
 ```
