@@ -321,4 +321,7 @@
   <data name="CheckingUser" xml:space="preserve">
     <value>Verificando al usuario '{0}'.</value>
   </data>
+  <data name="NoChanges" xml:space="preserve">
+    <value>No hay cambios por guardar en '{0}'.</value>
+  </data>
 </root>

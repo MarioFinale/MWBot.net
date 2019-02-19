@@ -324,6 +324,11 @@ Namespace WikiBot
                 Throw New ArgumentNullException("pageContent", "Empty parameter")
             End If
 
+            If pageContent = Content Then
+                Utils.EventLogger.Debug_Log(String.Format(Messages.NoChanges, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                Return EditResults.Edit_successful
+            End If
+
             Dim EditToken As String = String.Empty
             Try
                 EditToken = GetEditToken()

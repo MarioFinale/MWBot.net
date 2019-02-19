@@ -397,6 +397,15 @@ Public Class Messages
     End Property
     
     '''<summary>
+    '''  Busca una cadena traducida similar a No hay cambios por guardar en &apos;{0}&apos;..
+    '''</summary>
+    Public Shared ReadOnly Property NoChanges() As String
+        Get
+            Return ResourceManager.GetString("NoChanges", resourceCulture)
+        End Get
+    End Property
+    
+    '''<summary>
     '''  Busca una cadena traducida similar a El archivo de configuraciones no existe.
     '''</summary>
     Public Shared ReadOnly Property NoConfigFile() As String
