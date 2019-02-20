@@ -877,34 +877,38 @@ Public NotInheritable Class Utils
 
         Dim mc As MatchCollection = Regex.Matches(temptext, Threadregex)
 
+        If temptext.Contains("Por otra parte, creo que la sospecha de «promocional» o") Then
+            Dim a As Integer = 1
+        End If
+
         Dim threadlist As New List(Of String)
 
+        If mc.Count > 0 Then
+            For i As Integer = 0 To mc.Count - 1
 
-        For i As Integer = 0 To mc.Count - 1
+                Dim nextmatch As Integer = (i + 1)
 
-            Dim nextmatch As Integer = (i + 1)
+                If Not nextmatch = mc.Count Then
 
-            If Not nextmatch = mc.Count Then
+                    Dim threadtitle As String = mc(i).Value
+                    Dim nextthreadtitle As String = mc(nextmatch).Value
+                    Dim threadtext As String = String.Empty
+                    threadtext = TextInBetweenInclusive(temptext, threadtitle, nextthreadtitle)(0)
+                    Dim Completethread As String = ReplaceLast(threadtext, nextthreadtitle, "")
+                    threadlist.Add(Completethread)
+                    temptext = ReplaceFirst(temptext, Completethread, "")
+                Else
 
-                Dim threadtitle As String = mc(i).Value
-                Dim nextthreadtitle As String = mc(nextmatch).Value
-                Dim threadtext As String = String.Empty
+                    Dim threadtitle As String = mc(i).Value
+                    Dim ThreadPos As Integer = temptext.IndexOf(threadtitle)
+                    If ThreadPos = -1 Then Continue For
+                    Dim threadlenght As Integer = temptext.Length - temptext.Substring(0, ThreadPos).Length
+                    Dim threadtext As String = temptext.Substring(ThreadPos, threadlenght)
+                    threadlist.Add(threadtext)
 
-                threadtext = TextInBetween(temptext, threadtitle, nextthreadtitle)(0)
-                Dim Completethread As String = threadtitle & threadtext
-                threadlist.Add(Completethread)
-                temptext = ReplaceFirst(temptext, Completethread, "")
-
-            Else
-                Dim threadtitle As String = mc(i).Value
-                Dim ThreadPos As Integer = temptext.IndexOf(threadtitle)
-                If ThreadPos = -1 Then Continue For
-                Dim threadlenght As Integer = temptext.Length - temptext.Substring(0, ThreadPos).Length
-                Dim threadtext As String = temptext.Substring(ThreadPos, threadlenght)
-                threadlist.Add(threadtext)
-
-            End If
-        Next
+                End If
+            Next
+        End If
         Dim EndThreadList As New List(Of String)
         For Each t As String In threadlist
             Dim nthreadtext As String = t

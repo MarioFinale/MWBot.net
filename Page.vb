@@ -635,8 +635,7 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Hace una solicitud a la API respecto a una página y retorna un array con valores sobre ésta.
-        ''' {Título de la página, ID de la página, Ultimo usuario que la editó,Fecha de última edición,Wikitexto de la página,tamaño de la página (en bytes)}
+        ''' Hace una solicitud a la API respecto a una página y actualiza los datos
         ''' </summary>
         ''' <param name="Pagename">Título exacto de la página</param>
         Private Overloads Sub PageInfoData(ByVal pageName As String)
@@ -702,8 +701,7 @@ Namespace WikiBot
         End Sub
 
         ''' <summary>
-        ''' Hace una solicitud a la API respecto a una página y retorna un array con valores sobre ésta.
-        ''' {Título de la página, ID de la página, Ultimo usuario que la editó,Fecha de última edición,Wikitexto de la página,tamaño de la página (en bytes)}
+        ''' Hace una solicitud a la API respecto a una página y actualiza los datos
         ''' </summary>
         ''' <param name="Revid">Revision ID de la página</param>
         Private Overloads Sub PageInfoData(ByVal Revid As Integer)
