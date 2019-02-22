@@ -817,7 +817,7 @@ Public NotInheritable Class Utils
     End Function
 
     ''' <summary>
-    ''' Función base que obtiene los secciones de una página según la expresdión regular que defina los hilos.
+    ''' Función base que obtiene los secciones de una página según la expresión regular que defina las secciones.
     ''' </summary>
     ''' <param name="pagetext"></param>
     ''' <param name="Threadregex"></param>
