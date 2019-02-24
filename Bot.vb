@@ -66,13 +66,6 @@ Namespace WikiBot
                 Return _wikiUri
             End Get
         End Property
-
-        Public Property AutoArchiveTemplatePageName As String
-        Public Property AutoSignatureTemplatePageName As String
-        Public Property AutoArchiveProgrammedArchivePageName As String
-        Public Property AutoArchiveDoNotArchivePageName As String
-        Public Property ArchiveBoxTemplate As String
-        Public Property ArchiveMessageTemplate As String
 #End Region
 
 #Region "Init"
@@ -100,13 +93,6 @@ Namespace WikiBot
             Dim WPAPI As String = String.Empty
             Dim WPBotUserName As String = String.Empty
             Dim WPBotPassword As String = String.Empty
-            Dim _autoArchiveTemplatePagename As String = String.Empty
-            Dim _autoSignatureTemplatePageName As String = String.Empty
-            Dim _autoArchiveProgrammedArchivePageName As String = String.Empty
-            Dim _autoArchiveDoNotArchivePageName As String = String.Empty
-            Dim _archiveBoxTemplate As String = String.Empty
-            Dim _doNotArchiveTemplate As String = String.Empty
-            Dim _archiveMessageTemplate As String = String.Empty
             Dim ConfigOK As Boolean = False
             Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
             Utils.EventLogger.Debug_Log(Messages.BotEngine & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
@@ -119,12 +105,6 @@ Namespace WikiBot
                     WPSite = Utils.TextInBetween(Configstr, "PageURL=""", """")(0)
                     WPBotPassword = Utils.TextInBetween(Configstr, "WPBotPassword=""", """")(0)
                     WPAPI = Utils.TextInBetween(Configstr, "ApiURL=""", """")(0)
-                    _autoArchiveTemplatePagename = Utils.TextInBetween(Configstr, "AutoArchiveTemplatePagename=""", """")(0)
-                    _autoSignatureTemplatePageName = Utils.TextInBetween(Configstr, "AutoSignatureTemplatePageName=""", """")(0)
-                    _autoArchiveProgrammedArchivePageName = Utils.TextInBetween(Configstr, "AutoArchiveProgrammedArchivePageName=""", """")(0)
-                    _autoArchiveDoNotArchivePageName = Utils.TextInBetween(Configstr, "AutoArchiveDoNotArchivePageName=""", """")(0)
-                    _archiveBoxTemplate = Utils.TextInBetween(Configstr, "ArchiveBoxTemplate=""", """")(0)
-                    _archiveMessageTemplate = Utils.TextInBetween(Configstr, "ArchiveMessageTemplate=""", """")(0)
                     ConfigOK = True
                 Catch ex As IndexOutOfRangeException
                     Utils.EventLogger.Log(Messages.ConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
@@ -151,35 +131,14 @@ Namespace WikiBot
                 WPSite = Console.ReadLine
                 Console.WriteLine(Messages.NewWikiMainApiUrl)
                 WPAPI = Console.ReadLine
-                Console.WriteLine(Messages.NewAutoArchiveTemplatePagename)
-                _autoArchiveTemplatePagename = Console.ReadLine
-                Console.WriteLine(Messages.NewAutoSignatureTemplatePageName)
-                _autoSignatureTemplatePageName = Console.ReadLine
-                Console.WriteLine(Messages.NewAutoArchiveProgrammedArchivePageName)
-                _autoArchiveProgrammedArchivePageName = Console.ReadLine
-                Console.WriteLine(Messages.NewAutoArchiveDoNotArchivePageName)
-                _autoArchiveDoNotArchivePageName = Console.ReadLine
-                Console.WriteLine(Messages.NewArchiveBoxTemplate)
-                _archiveBoxTemplate = Console.ReadLine
-                Console.WriteLine(Messages.NewArchiveMessageTemplate)
-                _archiveMessageTemplate = Console.ReadLine
 
-                Dim configstr As String = String.Format(SStrings.ConfigTemplate, MainBotName, WPBotUserName, WPBotPassword, WPSite, WPAPI,
-                                                        _autoArchiveTemplatePagename, _autoSignatureTemplatePageName, _autoArchiveProgrammedArchivePageName,
-                                                        _autoArchiveDoNotArchivePageName, _archiveBoxTemplate, _archiveMessageTemplate)
+                Dim configstr As String = String.Format(SStrings.ConfigTemplate, MainBotName, WPBotUserName, WPBotPassword, WPSite, WPAPI)
                 Try
                     System.IO.File.WriteAllText(Tfile.Path, configstr)
                 Catch ex As System.IO.IOException
                     Utils.EventLogger.Log(Messages.SaveConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
                 End Try
             End If
-
-            AutoArchiveTemplatePageName = _autoArchiveTemplatePagename
-            AutoSignatureTemplatePageName = _autoSignatureTemplatePageName
-            AutoArchiveProgrammedArchivePageName = _autoArchiveProgrammedArchivePageName
-            AutoArchiveDoNotArchivePageName = _autoArchiveDoNotArchivePageName
-            ArchiveBoxTemplate = _archiveBoxTemplate
-            ArchiveMessageTemplate = _archiveMessageTemplate
 
             _localName = MainBotName
             _botUserName = WPBotUserName
