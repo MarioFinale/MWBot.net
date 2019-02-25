@@ -286,4 +286,7 @@ ArchiveMessageTemplate="{10}"</value>
   <data name="TopicTemplate" xml:space="preserve">
     <value>Plantilla:Tema</value>
   </data>
+  <data name="UserFirstEditQuery" xml:space="preserve">
+    <value>format=json&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=</value>
+  </data>
 </root>

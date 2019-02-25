@@ -518,6 +518,15 @@ Friend Class SStrings
     End Property
     
     '''<summary>
+    '''  Busca una cadena traducida similar a format=json&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=.
+    '''</summary>
+    Friend Shared ReadOnly Property UserFirstEditQuery() As String
+        Get
+            Return ResourceManager.GetString("UserFirstEditQuery", resourceCulture)
+        End Get
+    End Property
+    
+    '''<summary>
     '''  Busca una cadena traducida similar a Avisar al archivar.
     '''</summary>
     Friend Shared ReadOnly Property WarnArchiving() As String
