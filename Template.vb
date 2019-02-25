@@ -190,6 +190,20 @@ Namespace WikiBot
                 ReplacedLinks.Add(LinkArray(temp2))
             Next
 
+
+            'Reemplazar comentarios y nowiki dentro de la plantilla para reconocer parametros de principal
+            Dim ReplacedComments As New List(Of String)
+            Dim CommentsArray As New List(Of String)
+            For Each m As Match In Regex.Matches(NewText, "((<!--)[\s\S]*?(-->)|(<[nN]owiki>)([\s\S]+?)(<\/[nN]owiki>))")
+                CommentsArray.Add(m.Value)
+            Next
+
+            For temp3 As Integer = 0 To CommentsArray.Count - 1
+                Dim CommentReplace As String = Utils.ColoredText("PERIODIBOT:COMMENTSREPLACE::::" & temp3.ToString, 1)
+                NewText = NewText.Replace(CommentsArray(temp3), CommentReplace)
+                ReplacedComments.Add(CommentsArray(temp3))
+            Next
+
             'Obtener nombre de la plantilla
             Dim tempname As String = String.Empty
             Dim innertext As String = NewText.Substring(2, NewText.Length - 4)
@@ -242,17 +256,23 @@ Namespace WikiBot
 
                 For reptempindex As Integer = 0 To ReplacedTemplates.Count - 1
                     Dim tempreplace As String = Utils.ColoredText("PERIODIBOT:TEMPLATEREPLACE::::" & reptempindex.ToString, 1)
-
                     ParamName = ParamName.Replace(tempreplace, ReplacedTemplates(reptempindex))
                     ParamValue = ParamValue.Replace(tempreplace, ReplacedTemplates(reptempindex))
                 Next
 
                 For RepLinkIndex As Integer = 0 To ReplacedLinks.Count - 1
                     Dim LinkReplace As String = Utils.ColoredText("PERIODIBOT:LINKREPLACE::::" & RepLinkIndex.ToString, 1)
-
                     ParamName = ParamName.Replace(LinkReplace, ReplacedLinks(RepLinkIndex))
                     ParamValue = ParamValue.Replace(LinkReplace, ReplacedLinks(RepLinkIndex))
                 Next
+
+
+                For RepCommentsIndex As Integer = 0 To ReplacedComments.Count - 1
+                    Dim CommentsReplace As String = Utils.ColoredText("PERIODIBOT:COMMENTSREPLACE::::" & RepCommentsIndex.ToString, 1)
+                    ParamName = ParamName.Replace(CommentsReplace, ReplacedComments(RepCommentsIndex))
+                    ParamValue = ParamValue.Replace(CommentsReplace, ReplacedComments(RepCommentsIndex))
+                Next
+
                 TotalParams.Add(New Tuple(Of String, String)(ParamName, ParamValue))
 
             Next

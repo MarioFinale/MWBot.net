@@ -30,7 +30,7 @@ Namespace WikiBot
 
         Public ReadOnly Property IsBot As Boolean
             Get
-                If _groups.Contains("bot") Then
+                If (Not _Groups Is Nothing) AndAlso _Groups.Contains("bot") Then
                     Return True
                 Else
                     Return False
@@ -52,11 +52,11 @@ Namespace WikiBot
             Try
                 _UserName = Utils.NormalizeUnicodetext(Utils.TextInBetween(queryresponse, """name"":""", """")(0))
 
-                If queryresponse.Contains("""missing"":""""") Then
+                If queryresponse.Contains("""missing"":""""") Or queryresponse.Contains(",""invalid"":""""}") Then
                     _Exists = False
                     Exit Sub
                 Else
-                    _exists = True
+                    _Exists = True
                 End If
 
                 _TalkPage = _workerBot.Getpage("Usuario discusión:" & _UserName)
