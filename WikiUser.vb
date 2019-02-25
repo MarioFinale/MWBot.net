@@ -73,7 +73,7 @@ Namespace WikiBot
                     _Registration = New Date(2004, 1, 1, 0, 0, 0)
                     _FirstEdit = New Date(2004, 1, 1, 0, 0, 0)
                 End Try
-                _Groups.AddRange(Utils.TextInBetween(queryresponse, """groups"":[", "],")(0).Split(","c).Select(Of String)(New Func(Of String, String)(Function(x) x.Replace("""", ""))).ToArray)
+                _Groups = Utils.TextInBetween(queryresponse, """groups"":[", "],")(0).Split(","c).Select(Of String)(New Func(Of String, String)(Function(x) x.Replace("""", ""))).ToList
                 _Gender = Utils.TextInBetween(queryresponse, """gender"":""", """")(0)
 
                 If queryresponse.Contains("blockid") Then
