@@ -169,8 +169,8 @@ Namespace WikiBot
                     'En caso de usuarios tan antiguos que la API no regresa la fecha de ingreso.
                     _registration = New Date(2004, 1, 1, 0, 0, 0)
                 End Try
+                _groups.AddRange(Utils.TextInBetween(queryresponse, """groups"":[", "],")(0).Split(","c).Select(Of String)(New Func(Of String, String)(Function(x) x.Replace("""", ""))).ToArray)
 
-                _groups.AddRange(Utils.TextInBetween(queryresponse, """userid"":", ",")(0).Split(","c))
                 _gender = Utils.TextInBetween(queryresponse, """gender"":""", """")(0)
 
                 If queryresponse.Contains("blockid") Then
