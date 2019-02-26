@@ -249,7 +249,7 @@ Namespace WikiBot
                 NamedParams.Add(New Tuple(Of String, String)((param + 1).ToString, UnnamedParams(param)))
             Next
 
-            'Restaurar plantillas internas y enlaces en parametros, luego agregarlas a lista de parametros
+            'Restaurar plantillas internas, comentarios y enlaces en parametros, luego agregarlas a lista de parametros
             For Each tup As Tuple(Of String, String) In NamedParams
                 Dim ParamName As String = tup.Item1
                 Dim ParamValue As String = tup.Item2

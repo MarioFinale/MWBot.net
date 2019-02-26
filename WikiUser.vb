@@ -25,9 +25,15 @@ Namespace WikiBot
         Public ReadOnly Property UserId As Integer
         Public ReadOnly Property Gender As String
         Public ReadOnly Property TalkPage As Page
+            Get
+                Return _workerBot.Getpage("User talk:" & _UserName)
+            End Get
+        End Property
         Public ReadOnly Property UserPage As Page
-
-
+            Get
+                Return _workerBot.Getpage("User:" & _UserName)
+            End Get
+        End Property
         Public ReadOnly Property IsBot As Boolean
             Get
                 If (Not _Groups Is Nothing) AndAlso _Groups.Contains("bot") Then
@@ -59,20 +65,24 @@ Namespace WikiBot
                     _Exists = True
                 End If
 
-                _TalkPage = _workerBot.Getpage("Usuario discusión:" & _UserName)
-                _UserPage = _workerBot.Getpage("Usuario:" & _userName)
                 _UserId = Integer.Parse(Utils.TextInBetween(queryresponse, """userid"":", ",")(0))
                 _EditCount = Integer.Parse(Utils.TextInBetween(queryresponse, """editcount"":", ",")(0))
 
                 Try
                     Dim registrationString As String = Utils.TextInBetween(queryresponse, """registration"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, "")
-                    _FirstEdit = Date.ParseExact(Utils.TextInBetween(fequeryresponse, """timestamp"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, ""), "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
                     _Registration = Date.ParseExact(registrationString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
                 Catch ex As IndexOutOfRangeException
                     'En caso de usuarios tan antiguos que la API no regresa la fecha de ingreso.
                     _Registration = New Date(2004, 1, 1, 0, 0, 0)
-                    _FirstEdit = New Date(2004, 1, 1, 0, 0, 0)
                 End Try
+
+                Try
+                    _FirstEdit = Date.ParseExact(Utils.TextInBetween(fequeryresponse, """timestamp"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, ""), "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+                Catch ex As IndexOutOfRangeException
+                    _FirstEdit = Nothing
+                End Try
+
+
                 _Groups = Utils.TextInBetween(queryresponse, """groups"":[", "],")(0).Split(","c).Select(Of String)(New Func(Of String, String)(Function(x) x.Replace("""", ""))).ToList
                 _Gender = Utils.TextInBetween(queryresponse, """gender"":""", """")(0)
 
@@ -93,25 +103,23 @@ Namespace WikiBot
         End Sub
 
         ''' <summary>
-        ''' Entrega como DateTime la fecha de la última edición del usuario entregado como parámetro.
+        ''' Entrega como Date la fecha de la última edición del usuario entregado como parámetro.
         ''' </summary>
         ''' <param name="user">Nombre exacto del usuario</param>
         ''' <returns></returns>
-        Function GetLastEditTimestampUser(ByVal user As String) As DateTime
+        Private Function GetLastEditTimestampUser(ByVal user As String) As Date
             user = Utils.UrlWebEncode(user)
             Dim qtest As String = _workerBot.POSTQUERY(SStrings.LastUserEditQuery & user)
 
             If qtest.Contains("""usercontribs"":[]") Then
-                Dim fec As DateTime = DateTime.ParseExact("1111-11-11|11:11:11", "yyyy-MM-dd|HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)
-                Return fec
+                Return Nothing
             Else
                 Try
                     Dim timestring As String = Utils.TextInBetween(qtest, """timestamp"":""", """,")(0).Replace("T", "|").Replace("Z", String.Empty)
-                    Dim fec As DateTime = DateTime.ParseExact(timestring, "yyyy-MM-dd|HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)
+                    Dim fec As Date = Date.ParseExact(timestring, "yyyy-MM-dd|HH:mm:ss", CultureInfo.InvariantCulture)
                     Return fec
                 Catch ex As IndexOutOfRangeException
-                    Dim fec As DateTime = DateTime.ParseExact("1111-11-11|11:11:11", "yyyy-MM-dd|HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)
-                    Return fec
+                    Return Nothing
                 End Try
 
             End If
