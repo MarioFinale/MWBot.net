@@ -862,24 +862,20 @@ Public NotInheritable Class Utils
         'Pre
         For i As Integer = 0 To PreMatch.Count - 1
             Prelist.Add(PreMatch(i).Value)
-            temptext = temptext.Replace(PreMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
+            temptext = temptext.Replace(PreMatch(i).Value, ColoredText("PERIODIBOT::::PREREPLACE::::" & i, 4))
         Next
         'Src
         For i As Integer = 0 To SrcMatch.Count - 1
             SrcList.Add(SrcMatch(i).Value)
-            temptext = temptext.Replace(SrcMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
+            temptext = temptext.Replace(SrcMatch(i).Value, ColoredText("PERIODIBOT::::SRCREPLACE::::" & i, 4))
         Next
         'SynHL
         For i As Integer = 0 To SyntaxHlMatch.Count - 1
             SyntaxHlList.Add(SyntaxHlMatch(i).Value)
-            temptext = temptext.Replace(SyntaxHlMatch(i).Value, ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4))
+            temptext = temptext.Replace(SyntaxHlMatch(i).Value, ColoredText("PERIODIBOT::::SYNREPLACE::::" & i, 4))
         Next
 
         Dim mc As MatchCollection = Regex.Matches(temptext, Threadregex)
-
-        If temptext.Contains("Por otra parte, creo que la sospecha de «promocional» o") Then
-            Dim a As Integer = 1
-        End If
 
         Dim threadlist As New List(Of String)
 
@@ -929,17 +925,17 @@ Public NotInheritable Class Utils
             Next
             'Pre
             For i As Integer = 0 To PreMatch.Count - 1
-                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
+                Dim codetext As String = ColoredText("PERIODIBOT::::PREREPLACE::::" & i, 4)
                 nthreadtext = nthreadtext.Replace(codetext, Prelist(i))
             Next
             'Src
             For i As Integer = 0 To SrcMatch.Count - 1
-                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
+                Dim codetext As String = ColoredText("PERIODIBOT::::SRCREPLACE::::" & i, 4)
                 nthreadtext = nthreadtext.Replace(codetext, SrcList(i))
             Next
             'SynHL
             For i As Integer = 0 To SyntaxHlMatch.Count - 1
-                Dim codetext As String = ColoredText("PERIODIBOT::::CODEREPLACE::::" & i, 4)
+                Dim codetext As String = ColoredText("PERIODIBOT::::SYNREPLACE::::" & i, 4)
                 nthreadtext = nthreadtext.Replace(codetext, SyntaxHlList(i))
             Next
             EndThreadList.Add(nthreadtext)

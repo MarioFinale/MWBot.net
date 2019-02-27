@@ -126,9 +126,9 @@ Namespace WikiBot
 
             For Each parampair As Tuple(Of String, String) In tempparams
                 If IsNumeric(parampair.Item1) Then
-                    paramstext.Add(parampair.Item2.Trim(CType(" ", Char())))
+                    paramstext.Add(parampair.Item2.Trim)
                 Else
-                    paramstext.Add(parampair.Item1.Trim(CType(" ", Char())) & " = " & parampair.Item2.Trim(CType(" ", Char())))
+                    paramstext.Add(parampair.Item1.Trim & " = " & parampair.Item2.Trim)
                 End If
             Next
             templatetext = opening & tempname
@@ -153,7 +153,7 @@ Namespace WikiBot
             If Not templatetext.Substring(0, 2) = "{{" Then
                 Exit Sub
             End If
-            If Not Utils.CountCharacter(templatetext, CChar("{")) = Utils.CountCharacter(templatetext, CChar("}")) Then
+            If Not Utils.CountCharacter(templatetext, "{"c) = Utils.CountCharacter(templatetext, "}"c) Then
                 Exit Sub
             End If
             If Not templatetext.Substring(templatetext.Length - 2, 2) = "}}" Then
