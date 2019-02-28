@@ -242,7 +242,7 @@ Namespace WikiBot
         ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto.</summary>
         ''' <param name="pageUri">URL absoluta del recurso web.</param>
         ''' <param name="postData">Cadena de texto que se envia en el POST.</param>
-        Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer) As String
+        Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer, Optional retrycount As Integer = 0) As String
 
             If pageUri Is Nothing Then
                 Throw New ArgumentNullException("pageUri", "Empty uri.")
@@ -269,12 +269,21 @@ Namespace WikiBot
             postreqstream.Write(byteData, 0, byteData.Length)
             postreqstream.Close()
 
-            Dim postresponse As HttpWebResponse
-            postresponse = DirectCast(postreq.GetResponse, HttpWebResponse)
-            tempcookies.Add(postresponse.Cookies)
-            Dim postreqreader As New StreamReader(postresponse.GetResponseStream())
-            cookies = tempcookies
-            Return postreqreader.ReadToEnd
+            Dim postresponse As HttpWebResponse = Nothing
+            Try
+                postresponse = DirectCast(postreq.GetResponse, HttpWebResponse)
+                tempcookies.Add(postresponse.Cookies)
+            Catch ex As System.Net.WebException
+                If retrycount < 3 Then
+                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                End If
+            End Try
+            If Not postresponse Is Nothing Then
+                Dim postreqreader As New StreamReader(postresponse.GetResponseStream())
+                cookies = tempcookies
+                Return postreqreader.ReadToEnd
+            End If
+            Return Nothing
         End Function
     End Class
 
