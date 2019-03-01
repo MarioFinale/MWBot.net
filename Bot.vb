@@ -649,7 +649,7 @@ Namespace WikiBot
         Private Function Removefiles(ByVal str As String) As String
             Dim tstr As String = str
             Do While True
-                Dim match As Match = Regex.Match(tstr, "\[\[([Aa]rchivo:|[Ff]ile).+?\]\]")
+                Dim match As Match = Regex.Match(tstr, "\[\[([Ii]mage:|[Aa]rchivo:|[Ff]ile:).+?\]\]")
                 If Not match.Success Then
                     Exit Do
                 End If
