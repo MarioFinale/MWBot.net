@@ -654,7 +654,7 @@ Namespace WikiBot
                     Exit Do
                 End If
                 Do While True
-                    Dim tmatch As Match = Regex.Match(tstr, "\[\[([Aa]rchivo:|[Ff]ile).+?\]\]")
+                    Dim tmatch As Match = Regex.Match(tstr, "\[\[([Ii]mage:|[Aa]rchivo:|[Ff]ile:).+?\]\]")
                     If (Utils.CountOccurrences(tmatch.Value, "[[") = Utils.CountOccurrences(tmatch.Value, "]]")) Then
                         tstr = tstr.Replace(tmatch.Value, "")
                         Exit Do
