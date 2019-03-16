@@ -4,6 +4,7 @@ Imports System.Net
 Imports System.Resources
 Imports System.Threading
 Imports MWBot.net.GlobalVars
+Imports Utils.Utils
 
 Namespace WikiBot
 
@@ -72,11 +73,11 @@ Namespace WikiBot
         ''' Obtiene un Token y cookies de ingreso, establece las cookies de la clase y retorna el token como string.
         ''' </summary>
         Private Function GetWikiToken() As String
-            Utils.EventLogger.Log(Messages.RequestingToken, SStrings.LocalSource)
+            EventLogger.Log(Messages.RequestingToken, SStrings.LocalSource)
             Dim postdata As String = SStrings.GetWikiToken
             Dim postresponse As String = PostDataAndGetResult(_apiUri, postdata, ApiCookies)
-            Dim token As String = Utils.TextInBetween(postresponse, """logintoken"":""", """}}}")(0).Replace("\\", "\")
-            Utils.EventLogger.Log(Messages.TokenObtained, SStrings.LocalSource)
+            Dim token As String = TextInBetween(postresponse, """logintoken"":""", """}}}")(0).Replace("\\", "\")
+            EventLogger.Log(Messages.TokenObtained, SStrings.LocalSource)
             Return token
         End Function
 
@@ -84,7 +85,7 @@ Namespace WikiBot
         ''' Luego de obtener un Token y cookies de ingreso, envía estos al servidor para loguear y guarda las cookies de sesión.
         ''' </summary>
         Public Function LogOn() As String
-            Utils.EventLogger.Log(Messages.SigninIn, SStrings.LocalSource)
+            EventLogger.Log(Messages.SigninIn, SStrings.LocalSource)
             Dim token As String = String.Empty
             Dim turi As Uri = _apiUri
             Dim postdata As String = String.Empty
@@ -95,35 +96,35 @@ Namespace WikiBot
             Do Until exitloop
                 Try
                     token = GetWikiToken()
-                    postdata = String.Format(SStrings.Login, _botUsername, _botPassword, Utils.UrlWebEncode(token))
+                    postdata = String.Format(SStrings.Login, _botUsername, _botPassword, UrlWebEncode(token))
                     postresponse = PostDataAndGetResult(turi, postdata, ApiCookies)
-                    lresult = Utils.TextInBetween(postresponse, "{""result"":""", """,")(0)
-                    Utils.EventLogger.Log(Messages.LoginResult & lresult, SStrings.LocalSource)
-                    Dim lUserID As String = Utils.TextInBetween(postresponse, """lguserid"":", ",")(0)
-                    Utils.EventLogger.Log(Messages.LoginID & lUserID, SStrings.LocalSource)
-                    Dim lUsername As String = Utils.TextInBetween(postresponse, """lgusername"":""", """}")(0)
-                    Utils.EventLogger.Log(Messages.UserName & lUsername, SStrings.LocalSource)
+                    lresult = TextInBetween(postresponse, "{""result"":""", """,")(0)
+                    EventLogger.Log(Messages.LoginResult & lresult, SStrings.LocalSource)
+                    Dim lUserID As String = TextInBetween(postresponse, """lguserid"":", ",")(0)
+                    EventLogger.Log(Messages.LoginID & lUserID, SStrings.LocalSource)
+                    Dim lUsername As String = TextInBetween(postresponse, """lgusername"":""", """}")(0)
+                    EventLogger.Log(Messages.UserName & lUsername, SStrings.LocalSource)
                     Return lresult
                 Catch ex As IndexOutOfRangeException
-                    Utils.EventLogger.Log(Messages.LoginError, SStrings.LocalSource)
+                    EventLogger.Log(Messages.LoginError, SStrings.LocalSource)
                     If lresult.ToLower(Globalization.CultureInfo.InvariantCulture) = "failed" Then
-                        Dim reason As String = Utils.TextInBetween(postresponse, """reason"":""", """")(0)
+                        Dim reason As String = TextInBetween(postresponse, """reason"":""", """")(0)
                         Console.WriteLine(Environment.NewLine & Environment.NewLine)
                         Console.WriteLine(Messages.Reason & reason)
                         Console.WriteLine(Environment.NewLine & Environment.NewLine)
                         Console.Write(Messages.PressKey)
                         Console.ReadKey()
-                        Utils.ExitProgram()
+                        ExitProgram()
                         Return lresult
                     End If
                     Return lresult
                 Catch ex2 As WebException
-                    Utils.EventLogger.Log(Messages.NetworkError & ex2.Message, SStrings.LocalSource)
+                    EventLogger.Log(Messages.NetworkError & ex2.Message, SStrings.LocalSource)
                 End Try
                 Console.WriteLine(Environment.NewLine)
-                exitloop = Utils.PressKeyTimeout(5)
+                exitloop = PressKeyTimeout(5)
             Loop
-            Utils.ExitProgram()
+            ExitProgram()
             Return lresult
         End Function
 
@@ -217,12 +218,12 @@ Namespace WikiBot
                     cookies = tempcookies
                     Return postreqreader.ReadToEnd
                 Catch ex As ProtocolViolationException 'Catch para los headers erróneos que a veces entrega la API de MediaWiki
-                    Utils.EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    Utils.EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
+                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
                     tryCount += 1
                 Catch ex As WebException
-                    Utils.EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    Utils.EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
+                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
                     If ex.Message.Contains("404") Then
                         Return String.Empty
                     End If

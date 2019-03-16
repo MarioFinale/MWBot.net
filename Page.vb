@@ -3,6 +3,7 @@ Option Explicit On
 Imports System.Net
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
+Imports Utils.Utils
 
 Namespace WikiBot
     Public Class Page
@@ -24,9 +25,10 @@ Namespace WikiBot
         Private _rootPage As String
         Private _bot As Bot
 
+
 #Region "Properties"
         ''' <summary>
-        ''' Entrega el puntaje ORES {reverted,goodfaith} de la página.
+        ''' Entrega el puntaje ORES {damaging,goodfaith} de la página.
         ''' </summary>
         ''' <returns></returns>
         Public Function ORESScores() As Double()
@@ -250,8 +252,8 @@ Namespace WikiBot
             End If
             _siteuri = site
             PageInfoData(PageTitle)
-            _sections = Utils.GetPageThreads(_content)
-            Utils.EventLogger.Debug_Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            _sections = GetPageThreads(_content)
+            EventLogger.Debug_Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Return True
         End Function
 
@@ -270,31 +272,31 @@ Namespace WikiBot
             End If
             _siteuri = site
             PageInfoData(Revid)
-            _sections = Utils.GetPageThreads(_content)
-            Utils.EventLogger.Debug_Log(String.Format(Messages.PRevLoaded, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            _sections = GetPageThreads(_content)
+            EventLogger.Debug_Log(String.Format(Messages.PRevLoaded, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Return True
         End Function
 
         ''' <summary>
         ''' Retorna el valor ORES (en %) de un EDIT ID (eswiki) indicados como porcentaje en double. 
         ''' En caso de no existir el EDIT ID, retorna 0.
-        ''' </summary>
+        ''' </summary>  
         ''' <param name="revid">EDIT ID de la edicion a revisar</param>
         ''' <remarks>Los EDIT ID deben ser distintos</remarks>
         Private Function GetORESScores(ByVal revid As Integer) As Double()
-            Utils.EventLogger.Debug_Log(String.Format(Messages.LoadingOres, revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            EventLogger.Debug_Log(String.Format(Messages.LoadingOres, revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Try
                 Dim turi As Uri = New Uri(SStrings.GetOresScore & revid)
                 Dim s As String = _bot.GET(turi)
 
-                Dim DMGScore_str As String = Utils.TextInBetween(Utils.TextInBetweenInclusive(s, "{""damaging"": {""score"":", "}}}")(0), """true"": ", "}}}")(0).Replace(".", DecimalSeparator)
-                Dim GoodFaithScore_str As String = Utils.TextInBetween(Utils.TextInBetweenInclusive(s, """goodfaith"": {""score"":", "}}}")(0), """true"": ", "}}}")(0).Replace(".", DecimalSeparator)
+                Dim DMGScore_str As String = TextInBetween(TextInBetweenInclusive(s, "{""damaging"": {""score"":", "}}}")(0), """true"": ", "}}}")(0).Replace(".", DecimalSeparator)
+                Dim GoodFaithScore_str As String = TextInBetween(TextInBetweenInclusive(s, """goodfaith"": {""score"":", "}}}")(0), """true"": ", "}}}")(0).Replace(".", DecimalSeparator)
                 Dim DMGScore As Double = Math.Round((Double.Parse(DMGScore_str) * 100), 2)
                 Dim GoodFaithScore As Double = Math.Round((Double.Parse(GoodFaithScore_str) * 100), 2)
-                Utils.EventLogger.Debug_Log(String.Format(Messages.OresLoaded, revid.ToString, DMGScore_str, GoodFaithScore_str), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.OresLoaded, revid.ToString, DMGScore_str, GoodFaithScore_str), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return {DMGScore, GoodFaithScore}
             Catch ex As IndexOutOfRangeException
-                Utils.EventLogger.Debug_Log(String.Format(Messages.OresFailed, revid, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.OresFailed, revid, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return Nothing
             End Try
         End Function
@@ -325,7 +327,7 @@ Namespace WikiBot
             End If
 
             If pageContent = Content Then
-                Utils.EventLogger.Debug_Log(String.Format(Messages.NoChanges, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.NoChanges, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_successful
             End If
 
@@ -333,14 +335,14 @@ Namespace WikiBot
             Try
                 EditToken = GetEditToken()
             Catch ex As WebException
-                Utils.EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
 
 
             Dim ntimestamp As String = GetLastTimeStamp()
             If Not ntimestamp = _timestamp Then
-                Utils.EventLogger.Log(String.Format(Messages.EditConflict, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.EditConflict, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_conflict
             End If
 
@@ -355,7 +357,7 @@ Namespace WikiBot
                 additionalParams = additionalParams & "&bot="
             End If
 
-            Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, _title, Utils.UrlWebEncode(EditSummary), Utils.UrlWebEncode(pageContent), Utils.UrlWebEncode(EditToken))
+            Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, _title, UrlWebEncode(EditSummary), UrlWebEncode(pageContent), UrlWebEncode(EditToken))
             Dim postresult As String = String.Empty
 
             Try
@@ -363,39 +365,39 @@ Namespace WikiBot
                 Threading.Thread.Sleep(1000) 'Some time for the server to process the data
                 Load() 'Update page data
             Catch ex As IO.IOException
-                Utils.EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             Catch ex As WebException
-                Utils.EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
 
             If String.IsNullOrWhiteSpace(postresult) Then
-                Utils.EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, Utils.PsvSafeEncode(postresult)), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, PsvSafeEncode(postresult)), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End If
 
             If postresult.Contains("""result"":""Success""") Then
-                Utils.EventLogger.Log(String.Format(Messages.SuccessfulEdit, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SuccessfulEdit, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_successful
             End If
 
             If postresult.ToLower.Contains("abusefilter") Then
-                Utils.EventLogger.Log(String.Format(Messages.AbuseFilter, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-                Utils.EventLogger.Debug_Log("ABUSEFILTER: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.AbuseFilter, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log("ABUSEFILTER: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.AbuseFilter
             End If
 
             If postresult.ToLower.Contains("spamblacklist") Then
-                Utils.EventLogger.Log(String.Format(Messages.SpamBlackList, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-                Utils.EventLogger.Debug_Log("SPAMBLACKLIST: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SpamBlackList, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log("SPAMBLACKLIST: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 If Spamreplace Then
-                    Dim spamlinkRegex As String = Utils.TextInBetween(postresult, """spamblacklist"":""", """")(0)
-                    Dim newtext As String = Regex.Replace(pageContent, Utils.SpamListParser(spamlinkRegex), Function(x) "<nowiki>" & x.Value & "</nowiki>") 'Reeplazar links con el Nowiki
+                    Dim spamlinkRegex As String = TextInBetween(postresult, """spamblacklist"":""", """")(0)
+                    Dim newtext As String = Regex.Replace(pageContent, SpamListParser(spamlinkRegex), Function(x) "<nowiki>" & x.Value & "</nowiki>") 'Reeplazar links con el Nowiki
                     If Not RetryCount > MaxRetry Then
                         Return SavePage(newtext, EditSummary, IsMinor, IsBot, True, RetryCount + 1)
                     Else
-                        Utils.EventLogger.Log(String.Format(Messages.MaxRetryCount, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                        EventLogger.Log(String.Format(Messages.MaxRetryCount, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                         Return EditResults.Max_retry_count
                     End If
                 Else
@@ -408,14 +410,14 @@ Namespace WikiBot
             End If
 
             'Unexpected result, log and retry
-            Utils.EventLogger.EX_Log(Utils.PsvSafeEncode(postresult), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            EventLogger.EX_Log(PsvSafeEncode(postresult), Reflection.MethodBase.GetCurrentMethod().Name, _username)
 
             If Not RetryCount > MaxRetry Then
                 'Refresh credentials, retry
                 _bot.Relogin()
                 Return SavePage(pageContent, EditSummary, IsMinor, IsBot, True, RetryCount + 1)
             Else
-                Utils.EventLogger.Log(String.Format(Messages.SpamBlackList, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SpamBlackList, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Max_retry_count
             End If
             Return EditResults.Unexpected_Result
@@ -430,7 +432,7 @@ Namespace WikiBot
         ''' <returns></returns>
         Overloads Function CheckAndSave(ByVal pageContent As String, ByVal summary As String, ByVal minor As Boolean, ByVal bot As Boolean, ByVal spam As Boolean) As EditResults
             If Not BotCanEdit(_content, _username) Then
-                Utils.EventLogger.Log(String.Format(Messages.NoBots, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.NoBots, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.No_bots
             End If
             Return SavePage(pageContent, summary, minor, bot, spam, 0)
@@ -535,12 +537,12 @@ Namespace WikiBot
             End If
 
             If Not GetLastTimeStamp() = _timestamp Then
-                Utils.EventLogger.Log(String.Format(Messages.EditConflict, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.EditConflict, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_conflict
             End If
 
             If Not BotCanEdit(_content, _username) Then
-                Utils.EventLogger.Log(String.Format(Messages.NoBots, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.NoBots, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.No_bots
             End If
 
@@ -548,24 +550,24 @@ Namespace WikiBot
                 additionalParameters = additionalParameters & "&minor=true"
             End If
 
-            Dim postdata As String = String.Format(SStrings.AddThread, additionalParameters, Utils.UrlWebEncode(_title), Utils.UrlWebEncode(editSummary), Utils.UrlWebEncode(sectionTitle), Utils.UrlWebEncode(sectionContent), Utils.UrlWebEncode(GetEditToken()))
+            Dim postdata As String = String.Format(SStrings.AddThread, additionalParameters, UrlWebEncode(_title), UrlWebEncode(editSummary), UrlWebEncode(sectionTitle), UrlWebEncode(sectionContent), UrlWebEncode(GetEditToken()))
             Dim postresult As String = String.Empty
             Try
                 postresult = _bot.POSTQUERY(postdata)
                 Threading.Thread.Sleep(1000) 'Some time to the server to process the data
                 Load() 'Update page data
             Catch ex As WebException
-                Utils.EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
 
             If postresult.Contains("""result"":""Success""") Then
-                Utils.EventLogger.Log(String.Format(Messages.SuccessfulEdit, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SuccessfulEdit, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_successful
             End If
 
             If postresult.Contains("abusefilter") Then
-                Utils.EventLogger.Log(String.Format(Messages.AbuseFilter, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.AbuseFilter, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.AbuseFilter
             End If
 
@@ -630,7 +632,7 @@ Namespace WikiBot
         Private Function GetEditToken() As String
             Dim querytext As String = SStrings.EditToken
             Dim queryresult As String = _bot.POSTQUERY(querytext)
-            Dim token As String = Utils.TextInBetween(queryresult, """csrftoken"":""", """}}")(0).Replace("\\", "\")
+            Dim token As String = TextInBetween(queryresult, """csrftoken"":""", """}}")(0).Replace("\\", "\")
             Return token
         End Function
 
@@ -640,43 +642,43 @@ Namespace WikiBot
         ''' <param name="Pagename">Título exacto de la página</param>
         Private Overloads Sub PageInfoData(ByVal pageName As String)
 
-            Dim querystring As String = String.Format(SStrings.PageInfo, Utils.UrlWebEncode(pageName))
+            Dim querystring As String = String.Format(SStrings.PageInfo, UrlWebEncode(pageName))
             Dim QueryText As String = _bot.GETQUERY(querystring)
 
             Dim PageID As String = "-1"
             Dim PRevID As String = "-1"
             Dim PaRevID As String = "-1"
             Dim User As String = ""
-            Dim PTitle As String = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """title"":""", """,")(0))
+            Dim PTitle As String = NormalizeUnicodetext(TextInBetween(QueryText, """title"":""", """,")(0))
             Dim Timestamp As String = ""
             Dim Wikitext As String = ""
             Dim Size As String = "0"
-            Dim WNamespace As String = Utils.TextInBetween(QueryText, """ns"":", ",")(0)
+            Dim WNamespace As String = TextInBetween(QueryText, """ns"":", ",")(0)
             Dim PCategories As New List(Of String)
             Dim PageImage As String = ""
             Dim PExtract As String = ""
             Dim Rootp As String = ""
             Try
-                PageID = Utils.TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
-                User = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """user"":""", """,")(0))
-                Timestamp = Utils.TextInBetween(QueryText, """timestamp"":""", """,")(0)
-                Wikitext = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """wikitext"",""*"":""", """}]")(0))
-                Size = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, ",""size"":", ",""")(0))
-                PRevID = Utils.TextInBetween(QueryText, """revid"":", ",""")(0)
-                PExtract = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """extract"":""", """}")(0))
-                PaRevID = Utils.TextInBetween(QueryText, """parentid"":", ",""")(0)
+                PageID = TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
+                User = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,")(0))
+                Timestamp = TextInBetween(QueryText, """timestamp"":""", """,")(0)
+                Wikitext = NormalizeUnicodetext(TextInBetween(QueryText, """wikitext"",""*"":""", """}]")(0))
+                Size = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""")(0))
+                PRevID = TextInBetween(QueryText, """revid"":", ",""")(0)
+                PExtract = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}")(0))
+                PaRevID = TextInBetween(QueryText, """parentid"":", ",""")(0)
             Catch ex As IndexOutOfRangeException
-                Utils.EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End Try
 
-            If Utils.TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
-                PageImage = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """pageimage"":""", """")(0))
+            If TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
+                PageImage = NormalizeUnicodetext(TextInBetween(QueryText, """pageimage"":""", """")(0))
             Else
-                Utils.EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End If
 
             For Each m As Match In Regex.Matches(QueryText, "title"":""[Cc][a][t][\S\s]+?(?=""})")
-                PCategories.Add(Utils.NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
+                PCategories.Add(NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
             Next
 
             If Regex.Match(PTitle, "\/.+").Success Then
@@ -711,35 +713,35 @@ Namespace WikiBot
             Dim PageID As String = "-1"
             Dim PRevID As String = "-1"
             Dim User As String = ""
-            Dim PTitle As String = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """title"":""", """,")(0))
+            Dim PTitle As String = NormalizeUnicodetext(TextInBetween(QueryText, """title"":""", """,")(0))
             Dim Timestamp As String = ""
             Dim Wikitext As String = ""
             Dim Size As String = "0"
-            Dim WNamespace As String = Utils.TextInBetween(QueryText, """ns"":", ",")(0)
+            Dim WNamespace As String = TextInBetween(QueryText, """ns"":", ",")(0)
             Dim PCategories As New List(Of String)
             Dim PageImage As String = ""
             Dim PExtract As String = ""
             Dim Rootp As String = ""
             Try
-                PageID = Utils.TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
-                User = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """user"":""", """,")(0))
-                Timestamp = Utils.TextInBetween(QueryText, """timestamp"":""", """,")(0)
-                Wikitext = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """wikitext"",""*"":""", """}]")(0))
-                Size = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, ",""size"":", ",""")(0))
-                PRevID = Utils.TextInBetween(QueryText, """revid"":", ",""")(0)
-                PExtract = Utils.NormalizeUnicodetext(Utils.TextInBetween(QueryText, """extract"":""", """}")(0))
+                PageID = TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
+                User = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,")(0))
+                Timestamp = TextInBetween(QueryText, """timestamp"":""", """,")(0)
+                Wikitext = NormalizeUnicodetext(TextInBetween(QueryText, """wikitext"",""*"":""", """}]")(0))
+                Size = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""")(0))
+                PRevID = TextInBetween(QueryText, """revid"":", ",""")(0)
+                PExtract = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}")(0))
             Catch ex As IndexOutOfRangeException
-                Utils.EventLogger.Log(String.Format(Messages.PageDoesNotExist, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End Try
 
-            If Utils.TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
-                PageImage = Utils.TextInBetween(QueryText, """pageimage"":""", """")(0)
+            If TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
+                PageImage = TextInBetween(QueryText, """pageimage"":""", """")(0)
             Else
-                Utils.EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End If
 
             For Each m As Match In Regex.Matches(QueryText, "title"":""[Cc][a][t][\S\s]+?(?=""})")
-                PCategories.Add(Utils.NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
+                PCategories.Add(NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
             Next
 
             If Regex.Match(PTitle, "\/.+").Success Then
@@ -770,7 +772,7 @@ Namespace WikiBot
             Dim querystring As String = String.Format(SStrings.GetLastTimestamp, _title)
             Try
                 Dim QueryText As String = _bot.POSTQUERY(querystring)
-                Return Utils.TextInBetween(QueryText, """timestamp"":""", """")(0)
+                Return TextInBetween(QueryText, """timestamp"":""", """")(0)
             Catch ex As IndexOutOfRangeException
                 Return ""
             Catch ex As WebException
@@ -785,7 +787,7 @@ Namespace WikiBot
         Private Function GetLastEdit() As Date
             Dim timestamp As String = GetLastTimeStamp()
             Dim timestringarray As String() = timestamp.Replace("T"c, " "c).Replace("Z"c, "").Replace("-"c, " "c).Replace(":"c, " "c).Split(" "c)
-            Dim timeintarray As Integer() = Utils.StringArrayToInt(timestringarray)
+            Dim timeintarray As Integer() = StringArrayToInt(timestringarray)
             Dim editdate As Date = New Date(timeintarray(0), timeintarray(1), timeintarray(2), timeintarray(3), timeintarray(4), timeintarray(5), DateTimeKind.Utc)
             Return editdate
         End Function
@@ -831,7 +833,7 @@ Namespace WikiBot
         ''' <returns></returns>
         Private Function GetPageViewsAvg(ByVal page As String) As Integer
             Try
-                Dim Project As String = Utils.TextInBetween(_siteuri.OriginalString, "https://", ".org")(0)
+                Dim Project As String = TextInBetween(_siteuri.OriginalString, "https://", ".org")(0)
                 Dim currentDate As DateTime = DateTime.Now
                 Dim Month As Integer = currentDate.Month - 1
                 Dim CurrentMonth As Integer = currentDate.Month
@@ -851,7 +853,7 @@ Namespace WikiBot
                 Dim Url As Uri = New Uri(String.Format(SStrings.GetPageViews, Project, page, Year, Currentyear, Month.ToString("00"), CurrentMonth.ToString("00"), FirstDay, LastDay))
                 Dim response As String = _bot.GET(Url)
 
-                For Each view As String In Utils.TextInBetween(response, """views"":", "}")
+                For Each view As String In TextInBetween(response, """views"":", "}")
                     Views.Add(Integer.Parse(view))
                 Next
                 For Each i As Integer In Views

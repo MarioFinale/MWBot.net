@@ -5,6 +5,7 @@ Imports System.IO
 Imports System.Net
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
+Imports Utils.Utils
 
 Namespace WikiBot
     Public Class Bot
@@ -95,26 +96,26 @@ Namespace WikiBot
             Dim WPBotPassword As String = String.Empty
             Dim ConfigOK As Boolean = False
             Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
-            Utils.EventLogger.Debug_Log(Messages.BotEngine & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Debug_Log(Messages.BotEngine & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
             If System.IO.File.Exists(Tfile.Path) Then
-                Utils.EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
                 Dim Configstr As String = System.IO.File.ReadAllText(Tfile.Path)
                 Try
-                    MainBotName = Utils.TextInBetween(Configstr, "BOTName=""", """")(0)
-                    WPBotUserName = Utils.TextInBetween(Configstr, "WPUserName=""", """")(0)
-                    WPSite = Utils.TextInBetween(Configstr, "PageURL=""", """")(0)
-                    WPBotPassword = Utils.TextInBetween(Configstr, "WPBotPassword=""", """")(0)
-                    WPAPI = Utils.TextInBetween(Configstr, "ApiURL=""", """")(0)
+                    MainBotName = TextInBetween(Configstr, "BOTName=""", """")(0)
+                    WPBotUserName = TextInBetween(Configstr, "WPUserName=""", """")(0)
+                    WPSite = TextInBetween(Configstr, "PageURL=""", """")(0)
+                    WPBotPassword = TextInBetween(Configstr, "WPBotPassword=""", """")(0)
+                    WPAPI = TextInBetween(Configstr, "ApiURL=""", """")(0)
                     ConfigOK = True
                 Catch ex As IndexOutOfRangeException
-                    Utils.EventLogger.Log(Messages.ConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
+                    EventLogger.Log(Messages.ConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
                 End Try
             Else
-                Utils.EventLogger.Log(Messages.NoConfigFile, Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(Messages.NoConfigFile, Reflection.MethodBase.GetCurrentMethod().Name)
                 Try
                     System.IO.File.Create(Tfile.ToString).Close()
                 Catch ex As System.IO.IOException
-                    Utils.EventLogger.Log(Messages.NewConfigFileError, Reflection.MethodBase.GetCurrentMethod().Name)
+                    EventLogger.Log(Messages.NewConfigFileError, Reflection.MethodBase.GetCurrentMethod().Name)
                 End Try
             End If
 
@@ -136,7 +137,7 @@ Namespace WikiBot
                 Try
                     System.IO.File.WriteAllText(Tfile.Path, configstr)
                 Catch ex As System.IO.IOException
-                    Utils.EventLogger.Log(Messages.SaveConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
+                    EventLogger.Log(Messages.SaveConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
                 End Try
             End If
 
@@ -147,14 +148,14 @@ Namespace WikiBot
                 _apiUri = New Uri(WPAPI)
                 _wikiUri = New Uri(WPSite)
             Catch ex As ArgumentException
-                Utils.EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
                 System.IO.File.Delete(Tfile.Path)
-                Utils.WaitSeconds(5)
+                WaitSeconds(5)
                 Return False
             Catch ex2 As UriFormatException
-                Utils.EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
                 System.IO.File.Delete(Tfile.Path)
-                Utils.PressKeyTimeout(5)
+                PressKeyTimeout(5)
                 Return False
             End Try
             Return True
@@ -174,12 +175,15 @@ Namespace WikiBot
         Function [GET](ByVal turi As Uri) As String
             Return Api.GET(turi)
         End Function
+        Function POST(ByVal turi As Uri, postData As String) As String
+            Return Api.POST(turi, postData)
+        End Function
 #End Region
 
 #Region "BotFunctions"
         Public Function GetSpamListregexes(ByVal spamlistPage As Page) As String()
             If spamlistPage Is Nothing Then Throw New ArgumentNullException(Reflection.MethodBase.GetCurrentMethod().Name)
-            Dim Lines As String() = Utils.GetLines(spamlistPage.Content, True) 'Extraer las líneas del texto de la página
+            Dim Lines As String() = GetLines(spamlistPage.Content, True) 'Extraer las líneas del texto de la página
             Dim Regexes As New List(Of String) 'Declarar lista con líneas con expresiones regulares
 
             For Each l As String In Lines 'Por cada línea...
@@ -202,34 +206,34 @@ Namespace WikiBot
         ''' <param name="pageNames">Array con nombres de paginas unicos.</param>
         ''' <remarks></remarks>
         Function GetLastRevIds(ByVal pageNames As String()) As SortedList(Of String, Integer)
-            Utils.EventLogger.Debug_Log(String.Format(Messages.GetLastrevIDs, pageNames.Count), Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Debug_Log(String.Format(Messages.GetLastrevIDs, pageNames.Count), Reflection.MethodBase.GetCurrentMethod().Name)
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
-            Dim PageList As List(Of List(Of String)) = Utils.SplitStringArrayIntoChunks(PageNamesList.ToArray, 50)
+            Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 50)
             Dim PagenameAndLastId As New SortedList(Of String, Integer)
             For Each ListInList As List(Of String) In PageList
                 Dim Qstring As String = String.Empty
                 For Each s As String In ListInList
-                    s = Utils.UrlWebEncode(s)
+                    s = UrlWebEncode(s)
                     Qstring = Qstring & s & "|"
                 Next
                 Qstring = Qstring.Trim(CType("|", Char))
 
                 Dim QueryResponse As String = GETQUERY((SStrings.GetLastRevIds & Qstring))
-                Dim ResponseArray As String() = Utils.TextInBetweenInclusive(QueryResponse, ",""title"":", "}]")
+                Dim ResponseArray As String() = TextInBetweenInclusive(QueryResponse, ",""title"":", "}]")
 
                 For Each s As String In ResponseArray
 
-                    Dim pagetitle As String = Utils.TextInBetween(s, ",""title"":""", """,""")(0)
+                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """,""")(0)
 
                     If s.Contains(",""missing"":") Then
                         If Not PagenameAndLastId.ContainsKey(pagetitle) Then
-                            PagenameAndLastId.Add(Utils.UrlWebDecode(Utils.NormalizeUnicodetext(pagetitle)).Replace(" ", "_"), -1)
+                            PagenameAndLastId.Add(UrlWebDecode(NormalizeUnicodetext(pagetitle)).Replace(" ", "_"), -1)
                         End If
                     Else
                         If Not PagenameAndLastId.ContainsKey(pagetitle) Then
                             Dim TemplateTitle As String = String.Empty
-                            Dim Revid As String = Utils.TextInBetween(s, pagetitle & """,""revisions"":[{""revid"":", ",""parentid"":")(0)
+                            Dim Revid As String = TextInBetween(s, pagetitle & """,""revisions"":[{""revid"":", ",""parentid"":")(0)
                             Dim Revid_ToInt As Integer = CType(Revid, Integer)
 
                             Dim modlist As New List(Of String)
@@ -239,7 +243,7 @@ Namespace WikiBot
                                 modlist.Add(tmp)
                             Next
 
-                            Dim normtext As String = Utils.NormalizeUnicodetext(pagetitle)
+                            Dim normtext As String = NormalizeUnicodetext(pagetitle)
                             normtext = normtext.ToLower.Replace("_", " ")
                             Dim ItemIndex As Integer = modlist.IndexOf(normtext)
                             TemplateTitle = PageNamesList(ItemIndex)
@@ -249,7 +253,7 @@ Namespace WikiBot
                     End If
                 Next
             Next
-            Utils.EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, PagenameAndLastId.Count), Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, PagenameAndLastId.Count), Reflection.MethodBase.GetCurrentMethod().Name)
             Return PagenameAndLastId
         End Function
 
@@ -261,7 +265,7 @@ Namespace WikiBot
         ''' <param name="PageName">Título aproximado o similar al de una página</param>
         ''' <returns></returns>
         Function SearchForPages(pageName As String) As String()
-            Return Utils.GetTitlesFromQueryText(GETQUERY(SStrings.Search & pageName))
+            Return GetTitlesFromQueryText(GETQUERY(SStrings.Search & pageName))
         End Function
 
         ''' <summary>
@@ -303,7 +307,7 @@ Namespace WikiBot
         ''' <param name="revids">Array con EDIT ID's unicos.</param>
         ''' <remarks>Los EDIT ID deben ser distintos</remarks>
         Function GetORESScores(ByVal revids As Integer()) As SortedList(Of Integer, Double())
-            Dim Revlist As List(Of List(Of Integer)) = Utils.SplitIntegerArrayIntoChunks(revids, 50)
+            Dim Revlist As List(Of List(Of Integer)) = SplitIntegerArrayIntoChunks(revids, 50)
             Dim EditAndScoreList As New SortedList(Of Integer, Double())
             For Each ListOfList As List(Of Integer) In Revlist
 
@@ -312,29 +316,29 @@ Namespace WikiBot
                     Qstring = Qstring & n.ToString & "|"
                 Next
                 Qstring = Qstring.Trim(CType("|", Char))
-                Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & Utils.UrlWebEncode(Qstring))
+                Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(Qstring))
                 Dim s As String = Api.GET(apiuri)
 
                 For Each m As Match In Regex.Matches(s, "({|, )(""[0-9]+"":).+?(}}}})")
                     Dim EditID_str As String = Regex.Match(m.Value, """[0-9]+""").Value
                     EditID_str = EditID_str.Trim(CType("""", Char()))
-                    EditID_str = Utils.RemoveAllAlphas(EditID_str)
+                    EditID_str = RemoveAllAlphas(EditID_str)
                     Dim EditID As Integer = Integer.Parse(EditID_str)
 
                     If m.Value.Contains("error") Then
 
-                        Utils.EventLogger.Debug_Log(String.Format(Messages.OresQueryError, EditID_str), Reflection.MethodBase.GetCurrentMethod().Name)
+                        EventLogger.Debug_Log(String.Format(Messages.OresQueryError, EditID_str), Reflection.MethodBase.GetCurrentMethod().Name)
                         EditAndScoreList.Add(EditID, {0, 0})
                     Else
                         Try
-                            Dim DMGScore_str As String = Utils.TextInBetween(m.Value, """true"": ", "}")(0).Replace(".", DecimalSeparator)
-                            Dim GoodFaithScore_str As String = Utils.TextInBetween(m.Value, """true"": ", "}")(1).Replace(".", DecimalSeparator)
+                            Dim DMGScore_str As String = TextInBetween(m.Value, """true"": ", "}")(0).Replace(".", DecimalSeparator)
+                            Dim GoodFaithScore_str As String = TextInBetween(m.Value, """true"": ", "}")(1).Replace(".", DecimalSeparator)
                             Dim DMGScore As Double = Double.Parse(DMGScore_str) * 100
                             Dim GoodFaithScore As Double = Double.Parse(GoodFaithScore_str) * 100
-                            Utils.EventLogger.Debug_Log(String.Format(Messages.OresQueryResult, EditID_str, GoodFaithScore.ToString, DMGScore.ToString), Reflection.MethodBase.GetCurrentMethod().Name)
+                            EventLogger.Debug_Log(String.Format(Messages.OresQueryResult, EditID_str, GoodFaithScore.ToString, DMGScore.ToString), Reflection.MethodBase.GetCurrentMethod().Name)
                             EditAndScoreList.Add(EditID, {DMGScore, GoodFaithScore})
                         Catch ex As IndexOutOfRangeException
-                            Utils.EventLogger.Debug_Log(String.Format(Messages.OresQueryEx, EditID_str, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name)
+                            EventLogger.Debug_Log(String.Format(Messages.OresQueryEx, EditID_str, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name)
                             EditAndScoreList.Add(EditID, {0, 0})
                         End Try
                     End If
@@ -352,14 +356,14 @@ Namespace WikiBot
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
 
-            Dim PageList As List(Of List(Of String)) = Utils.SplitStringArrayIntoChunks(PageNamesList.ToArray, 20)
+            Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 20)
             Dim PagenameAndImage As New SortedList(Of String, String)
 
             For Each ListInList As List(Of String) In PageList
                 Dim Qstring As String = String.Empty
 
                 For Each s As String In ListInList
-                    s = Utils.UrlWebEncode(s)
+                    s = UrlWebEncode(s)
                     Qstring = Qstring & s & "|"
                 Next
                 Qstring = Qstring.Trim(CType("|", Char))
@@ -373,7 +377,7 @@ Namespace WikiBot
 
                 For Each s As String In ResponseArray.ToArray
 
-                    Dim pagetitle As String = Utils.TextInBetween(s, ",""title"":""", """")(0)
+                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """")(0)
                     Dim PageImage As String = String.Empty
                     If Not s.Contains(",""missing"":") Then
 
@@ -383,15 +387,15 @@ Namespace WikiBot
                             For Each tx As String In PageNamesList.ToArray
                                 modlist.Add(tx.ToLower.Replace("_", " "))
                             Next
-                            Dim normtext As String = Utils.NormalizeUnicodetext(pagetitle)
+                            Dim normtext As String = NormalizeUnicodetext(pagetitle)
                             normtext = normtext.ToLower.Replace("_", " ")
 
                             Dim ItemIndex As Integer = modlist.IndexOf(normtext)
                             PageKey = PageNamesList(ItemIndex)
 
                             If s.Contains("pageimage") Then
-                                PageImage = Utils.TextInBetweenInclusive(s, """title"":""" & pagetitle & """", """}")(0)
-                                PageImage = Utils.TextInBetween(PageImage, """pageimage"":""", """}")(0)
+                                PageImage = TextInBetweenInclusive(s, """title"":""" & pagetitle & """", """}")(0)
+                                PageImage = TextInBetween(PageImage, """pageimage"":""", """}")(0)
                             Else
                                 PageImage = String.Empty
                             End If
@@ -476,22 +480,22 @@ Namespace WikiBot
                 If (TrimmedText.Chars(a) = ".") Or (TrimmedText.Chars(a) = ";") Then
 
                     If TrimmedText.Contains("(") Then
-                        If Not Utils.CountCharacter(TrimmedText, CType("(", Char)) = Utils.CountCharacter(TrimmedText, CType(")", Char)) Then
+                        If Not CountCharacter(TrimmedText, CType("(", Char)) = CountCharacter(TrimmedText, CType(")", Char)) Then
                             Continue For
                         End If
                     End If
                     If TrimmedText.Contains("<") Then
-                        If Not Utils.CountCharacter(TrimmedText, CType("<", Char)) = Utils.CountCharacter(TrimmedText, CType(">", Char)) Then
+                        If Not CountCharacter(TrimmedText, CType("<", Char)) = CountCharacter(TrimmedText, CType(">", Char)) Then
                             Continue For
                         End If
                     End If
                     If TrimmedText.Contains("«") Then
-                        If Not Utils.CountCharacter(TrimmedText, CType("«", Char)) = Utils.CountCharacter(TrimmedText, CType("»", Char)) Then
+                        If Not CountCharacter(TrimmedText, CType("«", Char)) = CountCharacter(TrimmedText, CType("»", Char)) Then
                             Continue For
                         End If
                     End If
                     If TrimmedText.Contains("{") Then
-                        If Not Utils.CountCharacter(TrimmedText, CType("{", Char)) = Utils.CountCharacter(TrimmedText, CType("}", Char)) Then
+                        If Not CountCharacter(TrimmedText, CType("{", Char)) = CountCharacter(TrimmedText, CType("}", Char)) Then
                             Continue For
                         End If
                     End If
@@ -519,26 +523,26 @@ Namespace WikiBot
                 For Each m As Match In Regex.Matches(TrimmedText, "{\\.+}")
                     TrimmedText = TrimmedText.Replace(m.Value, "")
                 Next
-                TrimmedText = Utils.RemoveExcessOfSpaces(TrimmedText)
+                TrimmedText = RemoveExcessOfSpaces(TrimmedText)
             End If
             Return TrimmedText
         End Function
 
         Function GetExtractsFromApiResponse(ByVal queryresponse As String, ByVal charLimit As Integer, ByVal wiki As Boolean) As HashSet(Of WikiExtract)
             Dim ExtractsList As New HashSet(Of WikiExtract)
-            Dim ResponseArray As String() = Utils.TextInBetweenInclusive(queryresponse, ",""title"":", """}")
+            Dim ResponseArray As String() = TextInBetweenInclusive(queryresponse, ",""title"":", """}")
             For Each s As String In ResponseArray
                 If Not s.Contains(",""missing"":") Then
-                    Dim pagetitle As String = Utils.TextInBetween(s, ",""title"":""", """,""")(0).Replace("_"c, " ")
-                    Dim TreatedExtract As String = Utils.TextInBetween(s, pagetitle & """,""extract"":""", """}")(0)
-                    TreatedExtract = Utils.NormalizeUnicodetext(TreatedExtract)
+                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """,""")(0).Replace("_"c, " ")
+                    Dim TreatedExtract As String = TextInBetween(s, pagetitle & """,""extract"":""", """}")(0)
+                    TreatedExtract = NormalizeUnicodetext(TreatedExtract)
                     TreatedExtract = TreatedExtract.Replace("\n", Environment.NewLine)
                     TreatedExtract = TreatedExtract.Replace("\""", """")
                     TreatedExtract = Regex.Replace(TreatedExtract, "\{\\\\.*\}", " ")
                     TreatedExtract = Regex.Replace(TreatedExtract, "\[[0-9]+\]", " ")
                     TreatedExtract = Regex.Replace(TreatedExtract, "\[nota\ [0-9]+\]", " ")
-                    TreatedExtract = Utils.RemoveExcessOfSpaces(TreatedExtract)
-                    TreatedExtract = Utils.FixResumeNumericExp(TreatedExtract)
+                    TreatedExtract = RemoveExcessOfSpaces(TreatedExtract)
+                    TreatedExtract = FixResumeNumericExp(TreatedExtract)
                     If TreatedExtract.Contains(""",""missing"":""""}}}}") Then
                         TreatedExtract = Nothing
                     End If
@@ -552,7 +556,7 @@ Namespace WikiBot
                     End If
                     Dim Extract As New WikiExtract With {
                         .ExtractContent = TreatedExtract,
-                        .PageName = Utils.NormalizeUnicodetext(pagetitle)}
+                        .PageName = NormalizeUnicodetext(pagetitle)}
                     ExtractsList.Add(Extract)
                 End If
             Next
@@ -629,7 +633,7 @@ Namespace WikiBot
                 TreatedExtract = Regex.Replace(TreatedExtract, "(<[Rr]ef.+?)(\/>)", "")
                 TreatedExtract = Regex.Replace(TreatedExtract, "(\[\[[Cc]ategoría:)(.+?)(\]\])", "")
                 TreatedExtract = Regex.Replace(TreatedExtract, "\[nota\ [0-9]+\]", "")
-                TreatedExtract = Utils.RemoveExcessOfSpaces(TreatedExtract)
+                TreatedExtract = RemoveExcessOfSpaces(TreatedExtract)
                 TreatedExtract = Removefiles(TreatedExtract)
                 TreatedExtract = TreatedExtract.Trim()
 
@@ -655,11 +659,11 @@ Namespace WikiBot
                 End If
                 Do While True
                     Dim tmatch As Match = Regex.Match(tstr, "\[\[([Ii]mage:|[Aa]rchivo:|[Ff]ile:).+?\]\]")
-                    If (Utils.CountOccurrences(tmatch.Value, "[[") = Utils.CountOccurrences(tmatch.Value, "]]")) Then
+                    If (CountOccurrences(tmatch.Value, "[[") = CountOccurrences(tmatch.Value, "]]")) Then
                         tstr = tstr.Replace(tmatch.Value, "")
                         Exit Do
                     End If
-                    Dim fixedmatch As String = Utils.ReplaceLast(Utils.ReplaceLast(tmatch.Value, "[[", ""), "]]", "")
+                    Dim fixedmatch As String = ReplaceLast(ReplaceLast(tmatch.Value, "[[", ""), "]]", "")
                     tstr = tstr.Replace(tmatch.Value, fixedmatch)
                 Loop
             Loop
@@ -673,17 +677,17 @@ Namespace WikiBot
         ''' <param name="pageNames">Array con nombres de página unicos.</param>
         ''' <remarks></remarks>
         Private Function BOTGetPagesExtract(ByVal pageNames As String(), charLimit As Integer, wiki As Boolean) As SortedList(Of String, String)
-            Utils.EventLogger.Log(String.Format(Messages.GetPagesExtract, pageNames.Count.ToString), Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Log(String.Format(Messages.GetPagesExtract, pageNames.Count.ToString), Reflection.MethodBase.GetCurrentMethod().Name)
             If pageNames Is Nothing Then Return Nothing
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
-            Dim PageList As List(Of List(Of String)) = Utils.SplitStringArrayIntoChunks(PageNamesList.ToArray, 20)
+            Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 20)
             Dim PagenameAndResume As New SortedList(Of String, String)
 
             For Each ListInList As List(Of String) In PageList
                 Dim Qstring As String = String.Empty
                 For Each s As String In ListInList
-                    s = Utils.UrlWebEncode(s)
+                    s = UrlWebEncode(s)
                     Qstring = Qstring & s & "|"
                 Next
                 Qstring = Qstring.Trim(CType("|", Char))
@@ -713,7 +717,7 @@ Namespace WikiBot
         ''' <param name="text">Título relativo a buscar</param>
         ''' <returns></returns>
         Function UserFirstGuess(text As String) As String
-            Dim titles As String() = Utils.GetTitlesFromQueryText(GETQUERY(SStrings.SearchForUser & text))
+            Dim titles As String() = GetTitlesFromQueryText(GETQUERY(SStrings.SearchForUser & text))
             If titles.Count >= 1 Then
                 Return titles(0)
             Else
@@ -751,9 +755,9 @@ Namespace WikiBot
             Dim newlist As New List(Of String)
             Dim s As String = String.Empty
             s = POSTQUERY(SStrings.GetPageInclusions & pageName)
-            Dim pages As String() = Utils.TextInBetween(s, """title"":""", """}")
+            Dim pages As String() = TextInBetween(s, """title"":""", """}")
             For Each _pag As String In pages
-                newlist.Add(Utils.NormalizeUnicodetext(_pag))
+                newlist.Add(NormalizeUnicodetext(_pag))
             Next
             Return newlist.ToArray
         End Function
@@ -794,11 +798,11 @@ Namespace WikiBot
             Dim querytext As String = POSTQUERY(querydata)
             Dim difftext As String = String.Empty
             Try
-                difftext = Utils.NormalizeUnicodetext(Utils.TextInBetween(querytext, ",""*"":""", "\n""}}")(0))
+                difftext = NormalizeUnicodetext(TextInBetween(querytext, ",""*"":""", "\n""}}")(0))
             Catch ex As IndexOutOfRangeException
                 Return New WikiDiff(fromid, toid, Changedlist)
             End Try
-            Dim Rows As String() = Utils.TextInBetween(difftext, "<tr>", "</tr>")
+            Dim Rows As String() = TextInBetween(difftext, "<tr>", "</tr>")
             Dim Diffs As New List(Of Tuple(Of String, String))
             For Each row As String In Rows
                 Dim matches As MatchCollection = Regex.Matches(row, "<td class=""diff-(addedline|deletedline|context)"">[\S\s]*?<\/td>")
@@ -875,22 +879,22 @@ Namespace WikiBot
         ''' <param name="user">Usuario de Wiki</param>
         ''' <returns></returns>
         Private Function ValidUser(ByVal user As WikiUser) As Boolean
-            Utils.EventLogger.Debug_Log(String.Format(Messages.CheckingUser, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Debug_Log(String.Format(Messages.CheckingUser, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
             'Verificar si el usuario existe
             If Not user.Exists Then
-                Utils.EventLogger.Log(String.Format(Messages.UserInexistent, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(String.Format(Messages.UserInexistent, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
                 Return False
             End If
 
             'Verificar si el usuario está bloqueado.
             If user.Blocked Then
-                Utils.EventLogger.Log(String.Format(Messages.UserBlocked, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(String.Format(Messages.UserBlocked, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
                 Return False
             End If
 
             'Verificar si el usuario editó hace al menos 4 días.
             If Date.Now.Subtract(user.LastEdit).Days >= 4 Then
-                Utils.EventLogger.Log(String.Format(Messages.UserInactive, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.Log(String.Format(Messages.UserInactive, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
                 Return False
             End If
             Return True
@@ -902,12 +906,12 @@ Namespace WikiBot
         ''' <param name="pagePrefix"></param>
         ''' <returns></returns>
         Function PrefixSearch(ByVal pagePrefix As String) As String()
-            Dim QueryString As String = SStrings.PrefixSearchQuery & Utils.UrlWebEncode(pagePrefix)
+            Dim QueryString As String = SStrings.PrefixSearchQuery & UrlWebEncode(pagePrefix)
             Dim QueryResult As String = POSTQUERY(QueryString)
-            Dim Pages As String() = Utils.TextInBetween(QueryResult, """title"":""", """,""")
+            Dim Pages As String() = TextInBetween(QueryResult, """title"":""", """,""")
             Dim DecodedPages As New List(Of String)
             For Each p As String In Pages
-                DecodedPages.Add(Utils.NormalizeUnicodetext(p))
+                DecodedPages.Add(NormalizeUnicodetext(p))
             Next
             Return DecodedPages.ToArray
         End Function
@@ -918,11 +922,11 @@ Namespace WikiBot
             For Each u As String In userList
                 Dim user As New WikiUser(Me, u)
                 If Not user.Exists Then
-                    Utils.EventLogger.Log(String.Format(Messages.UserInexistent, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
+                    EventLogger.Log(String.Format(Messages.UserInexistent, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
                     Continue For
                 End If
                 If user.Blocked Then
-                    Utils.EventLogger.Log(String.Format(Messages.UserBlocked, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
+                    EventLogger.Log(String.Format(Messages.UserBlocked, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
                     Continue For
                 End If
                 Dim userTalkPage As Page = user.TalkPage

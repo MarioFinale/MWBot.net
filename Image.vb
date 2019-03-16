@@ -1,6 +1,7 @@
 ﻿Imports System.Drawing
 Imports System.Net
 Imports System.Text.RegularExpressions
+Imports Utils.Utils
 
 Namespace WikiBot
     Public Class Image
@@ -32,11 +33,11 @@ Namespace WikiBot
         End Sub
 
         Private Function GetCommonsFile(ByVal CommonsFilename As String, ByVal Workerbot As Bot) As Tuple(Of Drawing.Image, String())
-            Dim responsestring As String = Utils.NormalizeUnicodetext(Workerbot.GETQUERY("action=query&format=json&titles=File:" & Utils.UrlWebEncode(CommonsFilename) & "&prop=imageinfo&iiprop=extmetadata|url&iiurlwidth=1000"))
-            Dim thumburlmatches As String() = Utils.TextInBetween(responsestring, """thumburl"":""", """,")
-            Dim licencematches As String() = Utils.TextInBetween(responsestring, """LicenseShortName"":{""value"":""", """,")
-            Dim licenceurlmatches As String() = Utils.TextInBetween(responsestring, """LicenseUrl"":{""value"":""", """,")
-            Dim authormatches As String() = Utils.TextInBetween(responsestring, """Artist"":{""value"":""", """,")
+            Dim responsestring As String = NormalizeUnicodetext(Workerbot.GETQUERY("action=query&format=json&titles=File:" & UrlWebEncode(CommonsFilename) & "&prop=imageinfo&iiprop=extmetadata|url&iiurlwidth=1000"))
+            Dim thumburlmatches As String() = TextInBetween(responsestring, """thumburl"":""", """,")
+            Dim licencematches As String() = TextInBetween(responsestring, """LicenseShortName"":{""value"":""", """,")
+            Dim licenceurlmatches As String() = TextInBetween(responsestring, """LicenseUrl"":{""value"":""", """,")
+            Dim authormatches As String() = TextInBetween(responsestring, """Artist"":{""value"":""", """,")
             Dim matchstring As String = "<[\S\s]+?>"
             Dim matchstring2 As String = "\([\S\s]+?\)"
             Dim licence As String = String.Empty
@@ -77,7 +78,7 @@ Namespace WikiBot
                 End Using
                 Return img
             Catch ex As Exception
-                Utils.EventLogger.EX_Log(ex.Message, "DailyRes")
+                EventLogger.EX_Log(ex.Message, "DailyRes")
                 img.Dispose()
                 Return Nothing
             End Try
@@ -90,7 +91,7 @@ Namespace WikiBot
         Public Sub Save(ByVal Path As String)
             Dim tex As String() = Path.Split("."c)
             Dim ext As String = "." & tex(tex.Count - 1)
-            Dim endname As String = Utils.ReplaceLast(Path, ext, ".png")
+            Dim endname As String = ReplaceLast(Path, ext, ".png")
             Image.Save(endname, Imaging.ImageFormat.Png)
         End Sub
 

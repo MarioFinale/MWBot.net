@@ -1,6 +1,7 @@
 ﻿Option Strict On
 Option Explicit On
 Imports System.Globalization
+Imports Utils.Utils
 
 Namespace WikiBot
 
@@ -56,7 +57,7 @@ Namespace WikiBot
             Dim queryresponse As String = _workerBot.POSTQUERY(SStrings.LoadUserQuery & _userName)
             Dim fequeryresponse As String = _workerBot.POSTQUERY(SStrings.UserFirstEditQuery & _userName)
             Try
-                _UserName = Utils.NormalizeUnicodetext(Utils.TextInBetween(queryresponse, """name"":""", """")(0))
+                _UserName = NormalizeUnicodetext(TextInBetween(queryresponse, """name"":""", """")(0))
 
                 If queryresponse.Contains("""missing"":""""") Or queryresponse.Contains(",""invalid"":""""}") Then
                     _Exists = False
@@ -65,11 +66,11 @@ Namespace WikiBot
                     _Exists = True
                 End If
 
-                _UserId = Integer.Parse(Utils.TextInBetween(queryresponse, """userid"":", ",")(0))
-                _EditCount = Integer.Parse(Utils.TextInBetween(queryresponse, """editcount"":", ",")(0))
+                _UserId = Integer.Parse(TextInBetween(queryresponse, """userid"":", ",")(0))
+                _EditCount = Integer.Parse(TextInBetween(queryresponse, """editcount"":", ",")(0))
 
                 Try
-                    Dim registrationString As String = Utils.TextInBetween(queryresponse, """registration"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, "")
+                    Dim registrationString As String = TextInBetween(queryresponse, """registration"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, "")
                     _Registration = Date.ParseExact(registrationString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
                 Catch ex As IndexOutOfRangeException
                     'En caso de usuarios tan antiguos que la API no regresa la fecha de ingreso.
@@ -77,27 +78,27 @@ Namespace WikiBot
                 End Try
 
                 Try
-                    _FirstEdit = Date.ParseExact(Utils.TextInBetween(fequeryresponse, """timestamp"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, ""), "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+                    _FirstEdit = Date.ParseExact(TextInBetween(fequeryresponse, """timestamp"":""", """")(0).Replace("-"c, "").Replace("T"c, "").Replace("Z"c, "").Replace(":"c, ""), "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
                 Catch ex As IndexOutOfRangeException
                     _FirstEdit = Nothing
                 End Try
 
 
-                _Groups = Utils.TextInBetween(queryresponse, """groups"":[", "],")(0).Split(","c).Select(Of String)(New Func(Of String, String)(Function(x) x.Replace("""", ""))).ToList
-                _Gender = Utils.TextInBetween(queryresponse, """gender"":""", """")(0)
+                _Groups = TextInBetween(queryresponse, """groups"":[", "],")(0).Split(","c).Select(Of String)(New Func(Of String, String)(Function(x) x.Replace("""", ""))).ToList
+                _Gender = TextInBetween(queryresponse, """gender"":""", """")(0)
 
                 If queryresponse.Contains("blockid") Then
                     _Blocked = True
-                    _BlockId = Integer.Parse(Utils.TextInBetween(queryresponse, """blockid"":", ",")(0))
-                    _BlockedTimestamp = Utils.TextInBetween(queryresponse, """blockedtimestamp"":""", """")(0)
-                    _BlockedBy = Utils.NormalizeUnicodetext(Utils.TextInBetween(queryresponse, """blockedby"":""", """")(0))
-                    _BlockedById = Integer.Parse(Utils.TextInBetween(queryresponse, """blockedbyid"":", ",")(0))
-                    _BlockReason = Utils.NormalizeUnicodetext(Utils.TextInBetween(queryresponse, """blockreason"":""", """")(0))
-                    _BlockExpiry = Utils.TextInBetween(queryresponse, """blockexpiry"":""", """")(0)
+                    _BlockId = Integer.Parse(TextInBetween(queryresponse, """blockid"":", ",")(0))
+                    _BlockedTimestamp = TextInBetween(queryresponse, """blockedtimestamp"":""", """")(0)
+                    _BlockedBy = NormalizeUnicodetext(TextInBetween(queryresponse, """blockedby"":""", """")(0))
+                    _BlockedById = Integer.Parse(TextInBetween(queryresponse, """blockedbyid"":", ",")(0))
+                    _BlockReason = NormalizeUnicodetext(TextInBetween(queryresponse, """blockreason"":""", """")(0))
+                    _BlockExpiry = TextInBetween(queryresponse, """blockexpiry"":""", """")(0)
                 End If
 
             Catch ex As IndexOutOfRangeException
-                Utils.EventLogger.EX_Log(ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
+                EventLogger.EX_Log(ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             End Try
 
         End Sub
@@ -108,14 +109,14 @@ Namespace WikiBot
         ''' <param name="user">Nombre exacto del usuario</param>
         ''' <returns></returns>
         Private Function GetLastEditTimestampUser(ByVal user As String) As Date
-            user = Utils.UrlWebEncode(user)
+            user = UrlWebEncode(user)
             Dim qtest As String = _workerBot.POSTQUERY(SStrings.LastUserEditQuery & user)
 
             If qtest.Contains("""usercontribs"":[]") Then
                 Return Nothing
             Else
                 Try
-                    Dim timestring As String = Utils.TextInBetween(qtest, """timestamp"":""", """,")(0).Replace("T", "|").Replace("Z", String.Empty)
+                    Dim timestring As String = TextInBetween(qtest, """timestamp"":""", """,")(0).Replace("T", "|").Replace("Z", String.Empty)
                     Dim fec As Date = Date.ParseExact(timestring, "yyyy-MM-dd|HH:mm:ss", CultureInfo.InvariantCulture)
                     Return fec
                 Catch ex As IndexOutOfRangeException
