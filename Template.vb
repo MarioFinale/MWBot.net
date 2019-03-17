@@ -168,7 +168,7 @@ Namespace WikiBot
 
             Dim NewText As String = _text
             Dim ReplacedTemplates As New List(Of String)
-            Dim TemplateInnerText = NewText.Substring(2, NewText.Length - 4)
+            Dim TemplateInnerText As String = NewText.Substring(2, NewText.Length - 4)
 
             'Reemplazar plantillas internas con texto para reconocer parametros de principal
             Dim temparray As List(Of String) = GetTemplateTextArray(TemplateInnerText)

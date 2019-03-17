@@ -1,8 +1,5 @@
 ﻿Option Strict On
 Option Explicit On
-Imports System.Collections.ObjectModel
-Imports System.IO
-Imports System.Net
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
@@ -19,6 +16,15 @@ Namespace WikiBot
         Private Api As ApiHandler
         Private _localName As String
         Private _userName As String
+
+        Property LogPath As String
+            Set(value As String)
+                Log_Filepath = value
+            End Set
+            Get
+                Return Log_Filepath
+            End Get
+        End Property
 
         Public ReadOnly Property Bot As Boolean
             Get
@@ -78,7 +84,16 @@ Namespace WikiBot
             Api = New ApiHandler(_botUserName, _botPassword, _apiUri)
             _userName = Api.UserName
         End Sub
-
+        Sub New(ByVal configPath As ConfigFile, logpath As String)
+            Me.LogPath = logpath
+            Log_Filepath = logpath
+            Dim valid As Boolean = LoadConfig(configPath)
+            Do Until valid
+                valid = LoadConfig(configPath)
+            Loop
+            Api = New ApiHandler(_botUserName, _botPassword, _apiUri)
+            _userName = Api.UserName
+        End Sub
         Sub Relogin()
             Api = New ApiHandler(_botUserName, _botPassword, _apiUri)
         End Sub
@@ -96,7 +111,7 @@ Namespace WikiBot
             Dim WPBotPassword As String = String.Empty
             Dim ConfigOK As Boolean = False
             Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
-            EventLogger.Debug_Log(Messages.BotEngine & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Debug_Log(Messages.BotEngine & " " & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
             If System.IO.File.Exists(Tfile.Path) Then
                 EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
                 Dim Configstr As String = System.IO.File.ReadAllText(Tfile.Path)
