@@ -2,7 +2,7 @@
 Option Explicit On
 Imports System.Globalization
 Imports System.Threading
-Imports Utils.Utils
+Imports MWBot.net.GlobalVars
 
 Public Class TaskAdmin
     Public TaskList As ICollection(Of TaskInfo)

@@ -38,6 +38,10 @@ Namespace WikiBot
             End Get
         End Property
 
+        ''' <summary>
+        ''' Contiene los parámetros de la plantilla (con espacios y saltos de línea). Al establecer un valor se crea nuevamente el texto de la plantilla.
+        ''' </summary>
+        ''' <returns></returns>
         Public Property Parameters As List(Of Tuple(Of String, String))
             Get
                 Return _parameters

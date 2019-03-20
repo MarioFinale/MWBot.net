@@ -77,7 +77,7 @@ Public Class TaskInfo
     ''' <returns></returns>
     Public Property ExCount As Integer
     ''' <summary>
-    ''' Indica si la tarea es críctica. Una tarea crítica no se puede pausar.
+    ''' Indica si la tarea es crítica. Una tarea crítica no se puede pausar.
     ''' </summary>
     ''' <returns></returns>
     Public Property Critical As Boolean

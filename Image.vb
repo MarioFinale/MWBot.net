@@ -2,6 +2,7 @@
 Imports System.Net
 Imports System.Text.RegularExpressions
 Imports Utils.Utils
+Imports MWBot.net.GlobalVars
 
 Namespace WikiBot
     Public Class Image

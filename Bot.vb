@@ -3,8 +3,12 @@ Option Explicit On
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
+Imports LogEngine
 
 Namespace WikiBot
+    ''' <summary>
+    ''' Clase que media entre el programa y la API MediaWiki.
+    ''' </summary>
     Public Class Bot
 
 #Region "Properties"
@@ -17,15 +21,24 @@ Namespace WikiBot
         Private _localName As String
         Private _userName As String
 
+        ''' <summary>
+        ''' Ruta del archivo PSV que contiene el registro de eventos.
+        ''' </summary>
+        ''' <returns></returns>
         Property LogPath As String
             Set(value As String)
                 Log_Filepath = value
+                EventLogger.LogPath = value
             End Set
             Get
                 Return Log_Filepath
             End Get
         End Property
 
+        ''' <summary>
+        ''' Indica si la cuenta utilizada posee el permiso "bot".
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property Bot As Boolean
             Get
                 Dim postdata As String = SStrings.AssertBotData
@@ -38,6 +51,10 @@ Namespace WikiBot
             End Get
         End Property
 
+        ''' <summary>
+        ''' Indica si la cuenta utilizada está logueada en el sistema.
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property LoggedIn As Boolean
             Get
                 Dim postdata As String = SStrings.AssertUserData
@@ -50,12 +67,20 @@ Namespace WikiBot
             End Get
         End Property
 
+        ''' <summary>
+        ''' Indica la URI de la API utilizada por el bot.
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property ApiUri As Uri
             Get
                 Return _apiUri
             End Get
         End Property
 
+        ''' <summary>
+        ''' Entrega la 
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property UserName As String
             Get
                 Return _userName
