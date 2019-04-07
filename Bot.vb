@@ -14,12 +14,7 @@ Namespace WikiBot
 #Region "Properties"
         Private _botPassword As String
         Private _botUserName As String
-        Private _apiUri As Uri
-        Private _wikiUri As Uri
-
         Private Api As ApiHandler
-        Private _localName As String
-        Private _userName As String
 
         ''' <summary>
         ''' Ruta del archivo PSV que contiene el registro de eventos.
@@ -52,7 +47,7 @@ Namespace WikiBot
         End Property
 
         ''' <summary>
-        ''' Indica si la cuenta utilizada está logueada en el sistema.
+        ''' Indica si la cuenta utilizada está logueada en la API.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property LoggedIn As Boolean
@@ -72,43 +67,46 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property ApiUri As Uri
-            Get
-                Return _apiUri
-            End Get
-        End Property
 
         ''' <summary>
-        ''' Entrega la 
+        ''' Entrega el usuario del bot según la api.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property UserName As String
-            Get
-                Return _userName
-            End Get
-        End Property
 
+        ''' <summary>
+        ''' Nombre interno del bot.
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property LocalName As String
-            Get
-                Return _localName
-            End Get
-        End Property
 
+        ''' <summary>
+        ''' Uri de la wiki.
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property WikiUri As Uri
-            Get
-                Return _wikiUri
-            End Get
-        End Property
+
 #End Region
 
 #Region "Init"
-        Sub New(ByVal configPath As ConfigFile)
-            Dim valid As Boolean = LoadConfig(configPath)
+        ''' <summary>
+        ''' Crea una nueva instancia del bot e intenta loguear en la API.
+        ''' </summary>
+        ''' <param name="configfile">Archivo de configuración.</param>
+        Sub New(ByVal configfile As ConfigFile)
+            Dim valid As Boolean = LoadConfig(configfile)
             Do Until valid
-                valid = LoadConfig(configPath)
+                valid = LoadConfig(configfile)
             Loop
-            Api = New ApiHandler(_botUserName, _botPassword, _apiUri)
-            _userName = Api.UserName
+            Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
+            _UserName = Api.UserName
         End Sub
+
+        ''' <summary>
+        ''' Crea una nueva instancia del bot e intenta loguear en la API.
+        ''' </summary>
+        ''' <param name="configPath">Archivo de configuración.</param>
+        ''' <param name="logpath">Archivo de LOG.</param>
         Sub New(ByVal configPath As ConfigFile, logpath As String)
             Me.LogPath = logpath
             Log_Filepath = logpath
@@ -116,12 +114,17 @@ Namespace WikiBot
             Do Until valid
                 valid = LoadConfig(configPath)
             Loop
-            Api = New ApiHandler(_botUserName, _botPassword, _apiUri)
-            _userName = Api.UserName
+            Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
+            _UserName = Api.UserName
         End Sub
+
+        ''' <summary>
+        ''' Intenta loguear de nuevo en la API.
+        ''' </summary>
         Sub Relogin()
-            Api = New ApiHandler(_botUserName, _botPassword, _apiUri)
+            Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
         End Sub
+
         ''' <summary>
         ''' Inicializa las configuraciones genereales del programa desde el archivo de configuración.
         ''' Si no existe el archivo, solicita datos al usuario y lo genera.
@@ -181,12 +184,13 @@ Namespace WikiBot
                 End Try
             End If
 
-            _localName = MainBotName
+            _LocalName = MainBotName
             _botUserName = WPBotUserName
             _botPassword = WPBotPassword
+
             Try
-                _apiUri = New Uri(WPAPI)
-                _wikiUri = New Uri(WPSite)
+                _ApiUri = New Uri(WPAPI)
+                _WikiUri = New Uri(WPSite)
             Catch ex As ArgumentException
                 EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
                 System.IO.File.Delete(Tfile.Path)
@@ -199,28 +203,57 @@ Namespace WikiBot
                 Return False
             End Try
             Return True
+
         End Function
 
 #End Region
 
 #Region "ApiFunctions"
+        ''' <summary>
+        ''' Envía una solicitud POST a la API.
+        ''' </summary>
+        ''' <param name="postdata">Datos dentro del cuerpo de la solicitud POST.</param>
+        ''' <returns></returns>
         Function POSTQUERY(ByVal postdata As String) As String
             Return Api.Postquery(postdata)
         End Function
 
+        ''' <summary>
+        ''' Envía una solicitud GET a la API.
+        ''' </summary>
+        ''' <param name="getdata">Datos dentro del cuerpo de la solicitud GET. (en bruto, luego del '?')</param>
+        ''' <returns></returns>
         Function GETQUERY(ByVal getdata As String) As String
             Return Api.Getquery(getdata)
         End Function
 
+        ''' <summary>
+        ''' Envía una solicitud GET a la uri indicada.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <returns></returns>
         Function [GET](ByVal turi As Uri) As String
             Return Api.GET(turi)
         End Function
+
+        ''' <summary>
+        ''' Envía una solicitud POST a la uri indicada.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <param name="postData">Cuerpo de la solicitud POST.</param>
+        ''' <returns></returns>
         Function POST(ByVal turi As Uri, postData As String) As String
             Return Api.POST(turi, postData)
         End Function
 #End Region
 
 #Region "BotFunctions"
+
+        ''' <summary>
+        ''' Entrega una lista con las URL en la lista negra en formato de expresión regular.
+        ''' </summary>
+        ''' <param name="spamlistPage">Pagina que contiene la lista negra.</param>
+        ''' <returns></returns>
         Public Function GetSpamListregexes(ByVal spamlistPage As Page) As String()
             If spamlistPage Is Nothing Then Throw New ArgumentNullException(Reflection.MethodBase.GetCurrentMethod().Name)
             Dim Lines As String() = GetLines(spamlistPage.Content, True) 'Extraer las líneas del texto de la página
@@ -568,6 +601,13 @@ Namespace WikiBot
             Return TrimmedText
         End Function
 
+        ''' <summary>
+        ''' Obtiene los extractos en texto plano que entrega la API (textextracts).
+        ''' </summary>
+        ''' <param name="queryresponse"></param>
+        ''' <param name="charLimit"></param>
+        ''' <param name="wiki"></param>
+        ''' <returns></returns>
         Function GetExtractsFromApiResponse(ByVal queryresponse As String, ByVal charLimit As Integer, ByVal wiki As Boolean) As HashSet(Of WikiExtract)
             Dim ExtractsList As New HashSet(Of WikiExtract)
             Dim ResponseArray As String() = TextInBetweenInclusive(queryresponse, ",""title"":", """}")
@@ -603,7 +643,10 @@ Namespace WikiBot
             Return ExtractsList
         End Function
 
-
+        ''' <summary>
+        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces.
+        ''' </summary>
+        ''' <returns></returns>
         Function GetWikiExtractFromPageNames(ByVal pages As String(), ByVal charLimit As Integer) As SortedList(Of String, String)
             Dim tpageres As New SortedList(Of String, String)
             For Each page As String In pages
@@ -617,7 +660,7 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias.
+        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces.
         ''' </summary>
         ''' <returns></returns>
         Function GetWikiExtractFromPages(ByVal pages As String(), ByVal charLimit As Integer) As HashSet(Of WikiExtract)
@@ -632,10 +675,10 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias.
+        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces.
         ''' </summary>
         ''' <returns></returns>
-        Function GetWikiExtractFromPages(ByVal pages As Page(), ByVal charLimit As Integer) As HashSet(Of WikiExtract)
+        Public Function GetWikiExtractFromPages(ByVal pages As Page(), ByVal charLimit As Integer) As HashSet(Of WikiExtract)
             Dim tset As New HashSet(Of WikiExtract)
             For Each page As Page In pages
                 Dim textract As WikiExtract = GetWikiExtractFromPage(page, charLimit)
@@ -647,12 +690,12 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Obtiene la entradilla de una página manteniendo el wikitexto pero eliminando plantillas y referencias.
+        ''' Obtiene la entradilla de una página manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces.
         ''' </summary>
         ''' <param name="page"></param>
         ''' <param name="charLimit"></param>
         ''' <returns></returns>
-        Function GetWikiExtractFromPage(ByVal page As Page, ByVal charLimit As Integer) As WikiExtract
+        Public Function GetWikiExtractFromPage(ByVal page As Page, ByVal charLimit As Integer) As WikiExtract
             If page.Exists Then
                 Dim pagethreads As String() = page.Threads
                 Dim TreatedExtract As String = page.Content
@@ -676,7 +719,6 @@ Namespace WikiBot
                 TreatedExtract = RemoveExcessOfSpaces(TreatedExtract)
                 TreatedExtract = Removefiles(TreatedExtract)
                 TreatedExtract = TreatedExtract.Trim()
-
                 If TreatedExtract.Length > charLimit Then
                     TreatedExtract = SafeTrimExtract(TreatedExtract.Substring(0, charLimit + 1), charLimit)
                 End If
@@ -689,7 +731,11 @@ Namespace WikiBot
             Return Nothing
         End Function
 
-
+        ''' <summary>
+        ''' Elimina todos los enlaces de tipo [[Archivo:]] o [[File:]]
+        ''' </summary>
+        ''' <param name="str">Cadena a limpiar.</param>
+        ''' <returns></returns>
         Private Function Removefiles(ByVal str As String) As String
             Dim tstr As String = str
             Do While True

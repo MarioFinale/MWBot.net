@@ -389,17 +389,21 @@ Namespace WikiBot
                 If OpenTemplateCount2 > 0 Then
                     If OpenTemplateCount2 = CloseTemplateCount2 Then
                         temptext = text.Substring(beginindex, (i - beginindex) + 1)
-                        Dim BeginPos As Integer = temptext.IndexOf("{{")
-                        Dim Textbefore As String = temptext.Substring(0, BeginPos)
-                        Dim Lenght As Integer = temptext.Length - (Textbefore.Length)
-                        Dim TemplateText As String = temptext.Substring(BeginPos, Lenght)
-                        temptext = ""
+                        If Not temptext.Length = 0 Then
+                            Dim BeginPos As Integer = temptext.IndexOf("{{")
+                            If Not BeginPos = -1 Then
+                                Dim Textbefore As String = temptext.Substring(0, BeginPos)
+                                Dim Lenght As Integer = temptext.Length - (Textbefore.Length)
+                                Dim TemplateText As String = temptext.Substring(BeginPos, Lenght)
+                                If Not TemplateText.Length <= 4 Then
+                                    templist.Add(TemplateText)
+                                End If
+                            End If
+                        End If
+                        temptext = String.Empty
                         beginindex = i + 1
                         OpenTemplateCount2 = 0
                         CloseTemplateCount2 = 0
-                        If Not TemplateText.Length <= 4 Then
-                            templist.Add(TemplateText)
-                        End If
                     End If
                     End If
             Next
