@@ -73,7 +73,6 @@
   <ItemGroup>
     <Compile Include="APIHandler.vb" />
     <Compile Include="Bot.vb" />
-    <Compile Include="ConfigFile.vb" />
     <Compile Include="EditResults.vb" />
     <Compile Include="GlobalVars.vb" />
     <Compile Include="Image.vb" />

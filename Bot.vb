@@ -93,7 +93,7 @@ Namespace WikiBot
         ''' Crea una nueva instancia del bot e intenta loguear en la API.
         ''' </summary>
         ''' <param name="configfile">Archivo de configuración.</param>
-        Sub New(ByVal configfile As ConfigFile)
+        Sub New(ByVal configfile As String)
             Dim valid As Boolean = LoadConfig(configfile)
             Do Until valid
                 valid = LoadConfig(configfile)
@@ -107,7 +107,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="configPath">Archivo de configuración.</param>
         ''' <param name="logpath">Archivo de LOG.</param>
-        Sub New(ByVal configPath As ConfigFile, logpath As String)
+        Sub New(ByVal configPath As String, logpath As String)
             Me.LogPath = logpath
             Log_Filepath = logpath
             Dim valid As Boolean = LoadConfig(configPath)
@@ -130,7 +130,7 @@ Namespace WikiBot
         ''' Si no existe el archivo, solicita datos al usuario y lo genera.
         ''' </summary>
         ''' <returns></returns>
-        Function LoadConfig(ByVal Tfile As ConfigFile) As Boolean
+        Function LoadConfig(ByVal Tfile As String) As Boolean
             If Tfile Is Nothing Then Throw New ArgumentNullException(Reflection.MethodBase.GetCurrentMethod().Name)
             Dim MainBotName As String = String.Empty
             Dim WPSite As String = String.Empty
@@ -140,9 +140,9 @@ Namespace WikiBot
             Dim ConfigOK As Boolean = False
             Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
             EventLogger.Debug_Log(Messages.BotEngine & " " & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
-            If System.IO.File.Exists(Tfile.Path) Then
+            If System.IO.File.Exists(Tfile) Then
                 EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
-                Dim Configstr As String = System.IO.File.ReadAllText(Tfile.Path)
+                Dim Configstr As String = System.IO.File.ReadAllText(Tfile)
                 Try
                     MainBotName = TextInBetween(Configstr, "BOTName=""", """")(0)
                     WPBotUserName = TextInBetween(Configstr, "WPUserName=""", """")(0)
@@ -178,7 +178,7 @@ Namespace WikiBot
 
                 Dim configstr As String = String.Format(SStrings.ConfigTemplate, MainBotName, WPBotUserName, WPBotPassword, WPSite, WPAPI)
                 Try
-                    System.IO.File.WriteAllText(Tfile.Path, configstr)
+                    System.IO.File.WriteAllText(Tfile, configstr)
                 Catch ex As System.IO.IOException
                     EventLogger.Log(Messages.SaveConfigError, Reflection.MethodBase.GetCurrentMethod().Name)
                 End Try
@@ -193,12 +193,12 @@ Namespace WikiBot
                 _WikiUri = New Uri(WPSite)
             Catch ex As ArgumentException
                 EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
-                System.IO.File.Delete(Tfile.Path)
+                System.IO.File.Delete(Tfile)
                 WaitSeconds(5)
                 Return False
             Catch ex2 As UriFormatException
                 EventLogger.Log(Messages.InvalidUrl, Reflection.MethodBase.GetCurrentMethod().Name)
-                System.IO.File.Delete(Tfile.Path)
+                System.IO.File.Delete(Tfile)
                 PressKeyTimeout(5)
                 Return False
             End Try
