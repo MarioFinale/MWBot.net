@@ -7,26 +7,16 @@ Imports Utils.Utils
 
 Namespace WikiBot
     Public Class Page
-        Private _content As String
-        Private _title As String
-        Private _lastuser As String
-        Private _username As String
-        Private _ID As Integer
-        Private _siteuri As Uri
-        Private _currentRevID As Integer
-        Private _parentRevId As Integer
-        Private _timestamp As String
-        Private _sections As String()
-        Private _categories As String()
-        Private _size As Integer
-        Private _Namespace As Integer
-        Private _extract As String
-        Private _thumbnail As String
-        Private _rootPage As String
+
         Private _bot As Bot
 
 
 #Region "Properties"
+
+        Private _ID As Integer
+        Private _username As String
+        Private _siteuri As Uri
+
         ''' <summary>
         ''' Entrega el puntaje ORES {damaging,goodfaith} de la página.
         ''' </summary>
@@ -39,62 +29,49 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Content As String
-            Get
-                Return _content
-            End Get
-        End Property
+
         ''' <summary>
         ''' Entrega el revid actual de la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property CurrentRevId As Integer
-            Get
-                Return _currentRevID
-            End Get
-        End Property
+
         ''' <summary>
         ''' entrega el último usuario en editar la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Lastuser As String
-            Get
-                Return _lastuser
-            End Get
-        End Property
+
         ''' <summary>
         ''' Entrega el título de la página (con el namespace).
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Title As String
-            Get
-                Return _title
-            End Get
-        End Property
+
         ''' <summary>
         ''' Entrega la marca de tiempo de la edición actual de la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Timestamp As String
-            Get
-                Return _timestamp
-            End Get
-        End Property
+
+        ''' <summary>
+        ''' Entrega el comentario de la última edición en la página.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property Comment As String
+
         ''' <summary>
         ''' Entrega las secciones de la página
         ''' </summary>
         ''' <returns></returns>
-        Function Threads() As String()
+        Public ReadOnly Property Threads As String()
 
-            Return _sections
-
-        End Function
         ''' <summary>
         ''' Entrega las primeras 10 categorías de la página.
         ''' </summary>
         ''' <returns></returns>
-        Public Function Categories() As String()
-            Return _categories
-        End Function
+        Public ReadOnly Property Categories As String()
+
         ''' <summary>
         ''' Entrega el promedio de visitas diarias de la página en los últimos 2 meses.
         ''' </summary>
@@ -109,56 +86,33 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Size As Integer
-            Get
-                Return _size
-            End Get
-        End Property
+
 
         ''' <summary>
         ''' Número del espacio de nombres al cual pertenece la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property PageNamespace As Integer
-            Get
-                Return _Namespace
-            End Get
-        End Property
 
         ''' <summary>
         ''' Extracto de la intro de la pagina (segun wikipedia, largo completo).
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Extract As String
-            Get
-                Return _extract
-            End Get
-        End Property
 
         ''' <summary>
         ''' Imagen de miniatura de la pagina.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Thumbnail As String
-            Get
-                Return _thumbnail
-            End Get
-        End Property
 
         Public ReadOnly Property RootPage As String
-            Get
-                Return _rootPage
-            End Get
-        End Property
 
         ''' <summary>
         ''' Obtiene el revid de la edición anterior de la página (si existe)
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property ParentRevId As Integer
-            Get
-                Return _parentRevId
-            End Get
-        End Property
 
         ''' <summary>
         ''' ¿La página existe?
@@ -252,7 +206,7 @@ Namespace WikiBot
             End If
             _siteuri = site
             PageInfoData(PageTitle)
-            _sections = GetPageThreads(_content)
+            _Threads = GetPageThreads(_Content)
             EventLogger.Debug_Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Return True
         End Function
@@ -272,7 +226,7 @@ Namespace WikiBot
             End If
             _siteuri = site
             PageInfoData(Revid)
-            _sections = GetPageThreads(_content)
+            _Threads = GetPageThreads(_Content)
             EventLogger.Debug_Log(String.Format(Messages.PRevLoaded, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Return True
         End Function
@@ -338,7 +292,6 @@ Namespace WikiBot
                 EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
-
 
             Dim ntimestamp As String = GetLastTimeStamp()
             If Not ntimestamp = _timestamp Then
@@ -658,11 +611,14 @@ Namespace WikiBot
             Dim PageImage As String = ""
             Dim PExtract As String = ""
             Dim Rootp As String = ""
+            Dim pComment As String = ""
             Try
                 PageID = TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
                 User = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,")(0))
                 Timestamp = TextInBetween(QueryText, """timestamp"":""", """,")(0)
-                Wikitext = NormalizeUnicodetext(TextInBetween(QueryText, """wikitext"",""*"":""", """}]")(0))
+                pComment = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,")(0))
+                Wikitext = TextInBetweenInclusive(QueryText, """wikitext"",", """}]")(0)
+                Wikitext = NormalizeUnicodetext(TextInBetween(Wikitext, ",""*"":""", """}]")(0))
                 Size = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""")(0))
                 PRevID = TextInBetween(QueryText, """revid"":", ",""")(0)
                 PExtract = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}")(0))
@@ -694,12 +650,13 @@ Namespace WikiBot
             _timestamp = Timestamp
             _content = Wikitext
             _size = Integer.Parse(Size)
-            _Namespace = Integer.Parse(WNamespace)
-            _categories = PCategories.ToArray
+            _PageNamespace = Integer.Parse(WNamespace)
+            _Categories = PCategories.ToArray
             _currentRevID = Integer.Parse(PRevID)
             _parentRevId = Integer.Parse(PaRevID)
             _extract = PExtract
-            _thumbnail = PageImage
+            _Thumbnail = PageImage
+            _Comment = pComment
         End Sub
 
         ''' <summary>
@@ -722,11 +679,14 @@ Namespace WikiBot
             Dim PageImage As String = ""
             Dim PExtract As String = ""
             Dim Rootp As String = ""
+            Dim pComment As String = ""
             Try
                 PageID = TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
                 User = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,")(0))
                 Timestamp = TextInBetween(QueryText, """timestamp"":""", """,")(0)
-                Wikitext = NormalizeUnicodetext(TextInBetween(QueryText, """wikitext"",""*"":""", """}]")(0))
+                pComment = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,")(0))
+                Wikitext = TextInBetweenInclusive(QueryText, """wikitext"",", """}]")(0)
+                Wikitext = NormalizeUnicodetext(TextInBetween(Wikitext, ",""*"":""", """}]")(0))
                 Size = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""")(0))
                 PRevID = TextInBetween(QueryText, """revid"":", ",""")(0)
                 PExtract = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}")(0))
@@ -757,8 +717,8 @@ Namespace WikiBot
             _timestamp = Timestamp
             _content = Wikitext
             _size = Integer.Parse(Size)
-            _Namespace = Integer.Parse(WNamespace)
-            _categories = PCategories.ToArray
+            _PageNamespace = Integer.Parse(WNamespace)
+            _Categories = PCategories.ToArray
             _currentRevID = Integer.Parse(PRevID)
             _extract = PExtract
             _thumbnail = PageImage

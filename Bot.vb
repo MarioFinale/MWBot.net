@@ -837,11 +837,30 @@ Namespace WikiBot
         ''' Retorna un array de tipo string con todas las páginas donde el nombre de la página indicada es llamada (no confundir con "lo que enlaza aquí").
         ''' </summary>
         ''' <param name="pageName">Nombre exacto de la pagina.</param>
-        Function GetallInclusions(ByVal pageName As String) As String()
+        ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
+        Function GetallInclusions(ByVal pageName As String, Optional limit As Integer = 100) As String()
             Dim newlist As New List(Of String)
             Dim s As String = String.Empty
             s = POSTQUERY(SStrings.GetPageInclusions & pageName)
-            Dim pages As String() = TextInBetween(s, """title"":""", """}")
+            Dim pages As New List(Of String)
+            pages.AddRange(TextInBetween(s, """title"":""", """}"))
+            If s.Contains("""continue"":{""eicontinue"":""") Then
+                'Ok, esto es un poco confuso pero funciona
+                'Cuando una respuesta de la api tiene el parametro "continue", para continuar hay que responder con una query con nuevos parámetros, 
+                'estos deben ser los entregados por el "continue", usualmente no tienen un orden aparente (ej. de 100 salta a 1700 y luego a 10000)
+                'pero así es como funciona.
+                For i As Integer = 1 To limit
+                    If s.Contains("""continue"":{""eicontinue"":""") Then
+                        Dim tparam As String = TextInBetween(s, """continue"":{""", """},")(0).Replace("""", "")
+                        Dim tparam1 As String = "&" & tparam.Split(","c)(0).Replace(":"c, "="c).Trim()
+                        Dim tparam2 As String = "&" & tparam.Split(","c)(1).Replace(":"c, "="c).Trim()
+                        s = POSTQUERY(SStrings.GetPageInclusions & pageName & tparam1 & tparam2)
+                        pages.AddRange(TextInBetween(s, """title"":""", """}"))
+                    Else
+                        Exit For
+                    End If
+                Next
+            End If
             For Each _pag As String In pages
                 newlist.Add(NormalizeUnicodetext(_pag))
             Next
