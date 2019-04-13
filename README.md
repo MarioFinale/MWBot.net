@@ -18,8 +18,7 @@ namespace MyProgram
     {
         static void TestMethod()
         {
-         ConfigFile cfg = new ConfigFile(GlobalVars.ConfigFilePath); 
-         Bot Workerbot = new Bot(cfg);
+         Bot Workerbot = new Bot(@"c:\Config.cfg");
          Page examplepage = Workerbot.GetPage("Example page");
          string newtext = examplepage.Content.Replace("Text", "NewText");
          //Do something
@@ -39,8 +38,7 @@ Imports MWBot.net.WikiBot
 Namespace MyProgram
    Class Program   
       Public Shared Sub TestMethod()      
-         Dim cfg As ConfigFile = New ConfigFile(GlobalVars.ConfigFilePath)
-         Dim Workerbot as Bot = New Bot(cfg)
+         Dim Workerbot as Bot = New Bot("c:\Config.cfg")
          Dim examplepage as Page = Workerbot.Getpage("Example page")
          Dim newtext as String = examplepage.Content.Replace("Text", "Newtext")
          'Do something
