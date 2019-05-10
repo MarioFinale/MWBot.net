@@ -971,7 +971,7 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Retorna un elemento Page coincidente al nombre entregado como parámetro.
+        ''' Retorna un elemento Page coincidente al RevID entregado como parámetro.
         ''' </summary>
         ''' <param name="revId">ID de la revisión.</param>
         Function Getpage(ByVal revId As Integer) As Page

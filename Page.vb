@@ -61,7 +61,7 @@ Namespace WikiBot
         Public ReadOnly Property Comment As String
 
         ''' <summary>
-        ''' Entrega las secciones de la página
+        ''' Entrega las secciones de la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Threads As String()
@@ -71,6 +71,12 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Categories As String()
+
+        ''' <summary>
+        ''' Indica si la edición ha sido ocultada u ocultada parcialmente.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property HasHiddenInfo As Boolean
 
         ''' <summary>
         ''' Entrega el promedio de visitas diarias de la página en los últimos 2 meses.
@@ -86,7 +92,6 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Size As Integer
-
 
         ''' <summary>
         ''' Número del espacio de nombres al cual pertenece la página.
@@ -109,20 +114,20 @@ Namespace WikiBot
         Public ReadOnly Property RootPage As String
 
         ''' <summary>
-        ''' Obtiene el revid de la edición anterior de la página (si existe)
+        ''' Obtiene el revid de la edición anterior de la página (si existe).
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property ParentRevId As Integer
 
 
         ''' <summary>
-        ''' Entrega la fecha de la edición en la página
+        ''' Entrega la fecha de la edición en la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property EditDate As Date
 
         ''' <summary>
-        ''' ¿La página existe?
+        ''' Indica si la pagina existe.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Exists As Boolean
@@ -136,7 +141,7 @@ Namespace WikiBot
         End Property
 
         ''' <summary>
-        ''' Indica si puede ser editada por el bot.
+        ''' Indica si la pagina puede ser editada por el bot.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property BotEditable As Boolean
@@ -146,7 +151,7 @@ Namespace WikiBot
         End Property
 
         ''' <summary>
-        ''' Entrega la fecha de la última edición en la página
+        ''' Entrega la fecha de la última edición en la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property LastEdit As Date
@@ -649,6 +654,7 @@ Namespace WikiBot
 
             If deletedinfo() Then
                 EventLogger.Debug_Log(String.Format(Messages.DeletedInfoMessage, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                _HasHiddenInfo = True
             End If
 
             If String.IsNullOrWhiteSpace(PageImage) Then
