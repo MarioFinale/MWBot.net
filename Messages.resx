@@ -324,4 +324,7 @@
   <data name="NoChanges" xml:space="preserve">
     <value>No hay cambios por guardar en '{0}'.</value>
   </data>
+  <data name="DeletedInfoMessage" xml:space="preserve">
+    <value>Parte de la información en la página '{0}' fue eliminada u ocultada.</value>
+  </data>
 </root>
