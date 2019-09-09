@@ -446,6 +446,15 @@ Friend Class SStrings
     End Property
     
     '''<summary>
+    '''  Looks up a localized string similar to format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1.
+    '''</summary>
+    Friend Shared ReadOnly Property RandomPageQuery() As String
+        Get
+            Return ResourceManager.GetString("RandomPageQuery", resourceCulture)
+        End Get
+    End Property
+    
+    '''<summary>
     '''  Looks up a localized string similar to Usuario:PeriodiBOT/Resumen página.
     '''</summary>
     Friend Shared ReadOnly Property ResumePageName() As String

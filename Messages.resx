@@ -283,7 +283,7 @@
     <value>Error en la solicitud POST en '{0}'. EX: {1}</value>
   </data>
   <data name="PRevLoaded" xml:space="preserve">
-    <value>Página con el revid {0} cargada.</value>
+    <value>Revid {0} cargado.</value>
   </data>
   <data name="RemovingRefs" xml:space="preserve">
     <value>Eliminando todas las referencias que contengan '{0}'.</value>

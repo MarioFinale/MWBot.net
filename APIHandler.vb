@@ -228,6 +228,10 @@ Namespace WikiBot
                         Return String.Empty
                     End If
                     tryCount += 1
+                Catch ex As Sockets.SocketException
+                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
+                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                    tryCount += 1
                 End Try
             Loop
             Throw New MaxRetriesExeption

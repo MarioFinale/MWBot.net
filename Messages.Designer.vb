@@ -521,9 +521,9 @@ Public Class Messages
             Return ResourceManager.GetString("PressKey", resourceCulture)
         End Get
     End Property
-    
+
     '''<summary>
-    '''  Looks up a localized string similar to Página con el revid {0} cargada..
+    '''  Looks up a localized string similar to Revid {0} cargado..
     '''</summary>
     Public Shared ReadOnly Property PRevLoaded() As String
         Get

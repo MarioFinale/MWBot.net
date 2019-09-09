@@ -318,7 +318,7 @@ Namespace WikiBot
 
                             Dim normtext As String = NormalizeUnicodetext(pagetitle)
                             normtext = normtext.ToLower.Replace("_", " ")
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
+                            Dim ItemIndex As Integer = modlist.IndexOf(normtext, StringComparison.Ordinal)
                             TemplateTitle = PageNamesList(ItemIndex)
                             PagenameAndLastId.Add(TemplateTitle, Revid_ToInt)
 
@@ -463,7 +463,7 @@ Namespace WikiBot
                             Dim normtext As String = NormalizeUnicodetext(pagetitle)
                             normtext = normtext.ToLower.Replace("_", " ")
 
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
+                            Dim ItemIndex As Integer = modlist.IndexOf(normtext, StringComparison.Ordinal)
                             PageKey = PageNamesList(ItemIndex)
 
                             If s.Contains("pageimage") Then
@@ -786,7 +786,7 @@ Namespace WikiBot
                 Next
 
                 For Each Extract As WikiExtract In ExtractsList
-                    Dim OriginalNameIndex As Integer = NormalizedNames.IndexOf(Extract.PageName.ToLower)
+                    Dim OriginalNameIndex As Integer = NormalizedNames.IndexOf(Extract.PageName.ToLower, StringComparison.Ordinal)
                     Dim OriginalName As String = PageNamesList(OriginalNameIndex)
                     PagenameAndResume.Add(OriginalName, Extract.ExtractContent)
                 Next
@@ -976,6 +976,25 @@ Namespace WikiBot
         ''' <param name="revId">ID de la revisión.</param>
         Function Getpage(ByVal revId As Integer) As Page
             Return New Page(revId, Me)
+        End Function
+
+        ''' <summary>
+        ''' Retorna una pagina aleatoria.
+        ''' </summary>
+        ''' <returns></returns>
+        Function GetRandomPage() As Page
+            Return GetRandomPage(0)
+        End Function
+
+        ''' <summary>
+        ''' Retorna una pagina aleatoria.
+        ''' </summary>
+        ''' <param name="pnamespace">Espacio de nombres de la pagina.</param>
+        ''' <returns></returns>
+        Function GetRandomPage(ByVal pnamespace As Integer) As Page
+            Dim tquery As String = POSTQUERY(String.Format(SStrings.RandomPageQuery, pnamespace))
+            Dim tpage As String = NormalizeUnicodetext(TextInBetween(tquery, "title"":""", """}").FirstOrDefault())
+            Return Getpage(tpage)
         End Function
 
         ''' <summary>

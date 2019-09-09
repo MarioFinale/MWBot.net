@@ -289,4 +289,7 @@ ArchiveMessageTemplate="{10}"</value>
   <data name="UserFirstEditQuery" xml:space="preserve">
     <value>format=json&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=</value>
   </data>
+  <data name="RandomPageQuery" xml:space="preserve">
+    <value>format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1</value>
+  </data>
 </root>

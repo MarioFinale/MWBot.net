@@ -634,8 +634,8 @@ Namespace WikiBot
             Dim Timestamp As String = TextInBetween(QueryText, """timestamp"":""", """,").DefaultIfEmpty("").FirstOrDefault()
             Dim Size As String = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""").DefaultIfEmpty("0").FirstOrDefault())
             Dim pComment As String = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,").DefaultIfEmpty("").FirstOrDefault())
-            Dim Wikitext As String = TextInBetweenInclusive(QueryText, """wikitext"",", """}]").DefaultIfEmpty("").FirstOrDefault()
-            Wikitext = NormalizeUnicodetext(TextInBetween(Wikitext, ",""*"":""", """}]").DefaultIfEmpty("").FirstOrDefault())
+            Dim Wikitext As String = TextInBetweenInclusive(QueryText, """wikitext"",", """}").DefaultIfEmpty("").FirstOrDefault()
+            Wikitext = NormalizeUnicodetext(TextInBetween(Wikitext, ",""*"":""", """}").DefaultIfEmpty("").FirstOrDefault())
             Dim PExtract As String = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}").DefaultIfEmpty("").FirstOrDefault())
             Dim PageImage As String = NormalizeUnicodetext(TextInBetween(QueryText, """pageimage"":""", """").DefaultIfEmpty("").FirstOrDefault())
             Dim PCategories As New List(Of String)
@@ -645,7 +645,7 @@ Namespace WikiBot
             End If
 
             Dim deletedinfo As Func(Of Boolean) = Function()
-                                                      Dim vars As String() = {User, pComment, Wikitext}
+                                                      Dim vars As String() = {User, Wikitext}
                                                       For Each v As String In vars
                                                           If String.IsNullOrWhiteSpace(v) Then Return True
                                                       Next
@@ -657,9 +657,10 @@ Namespace WikiBot
                 _HasHiddenInfo = True
             End If
 
-            If String.IsNullOrWhiteSpace(PageImage) Then
-                EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-            End If
+            'Inutil
+            'If String.IsNullOrWhiteSpace(PageImage) Then
+            '    EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            'End If
 
             For Each m As Match In Regex.Matches(QueryText, "title"":""[Cc][a][t][\S\s]+?(?=""})")
                 PCategories.Add(NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
