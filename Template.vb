@@ -381,10 +381,7 @@ Namespace WikiBot
 
                 If CountString(analyzedText, "{{") = CountString(analyzedText, "}}") Then
                     If CountString(analyzedText, "{{") = 0 Then Continue For
-
                     templatelist.Add(AnalyzeTemplateParams(analyzedText.Substring(analyzedText.IndexOf("{{", StringComparison.Ordinal))))
-
-
                     analyzedText = ReplaceFirst(analyzedText, analyzedText, Space(analyzedText.Length))
 
                 End If
@@ -472,6 +469,9 @@ Namespace WikiBot
                             currentParam &= text(currentCharacter)
                         End If
                     Case "{"c
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
                         If settingParameter Then
                             currentParam += text(currentCharacter)
                         End If
@@ -481,6 +481,9 @@ Namespace WikiBot
                             If text(currentCharacter) = "{"c Then
                                 Depth += 1
                             End If
+                            If settingName Then
+                                templateName &= text(currentCharacter)
+                            End If
                             If settingParameter Then
                                 currentParam += text(currentCharacter)
                             End If
@@ -489,22 +492,40 @@ Namespace WikiBot
                         If Depth = 0 Then
                             If text.Length >= currentCharacter + 1 Then
                                 currentCharacter += 1
-                                templateText &= text(currentCharacter)
                                 If text(currentCharacter) = "}"c Then
+                                    templateText &= text(currentCharacter)
                                     If settingParameter Then
                                         paramlist.Add(New Tuple(Of String, String)(currentParamName, currentParam))
                                     End If
                                     Exit For
+                                Else
+                                    If settingName Then
+                                        templateName &= text(currentCharacter)
+                                    End If
+                                    currentCharacter -= 1
+                                End If
+                                templateText &= text(currentCharacter)
+                                If settingName Then
+                                    templateName &= text(currentCharacter)
+                                End If
+                                If settingParameter Then
+                                    currentParam += text(currentCharacter)
                                 End If
                             End If
                         End If
                         If Depth > 0 Then
+                            If settingName Then
+                                templateName &= text(currentCharacter)
+                            End If
                             If settingParameter Then
                                 currentParam += text(currentCharacter)
                             End If
                             If text.Length >= currentCharacter + 1 Then
                                 currentCharacter += 1
                                 templateText &= text(currentCharacter)
+                                If settingName Then
+                                    templateName &= text(currentCharacter)
+                                End If
                                 If settingParameter Then
                                     currentParam += text(currentCharacter)
                                 End If
