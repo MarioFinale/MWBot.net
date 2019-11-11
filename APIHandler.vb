@@ -2,6 +2,7 @@
 Imports System.IO
 Imports System.Net
 Imports System.Resources
+Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
@@ -214,9 +215,8 @@ Namespace WikiBot
                     postreq.ContentType = "application/x-www-form-urlencoded"
                     Dim postresponse As HttpWebResponse = DirectCast(postreq.GetResponse, HttpWebResponse)
                     tempcookies.Add(postresponse.Cookies)
-                    Dim postreqreader As New StreamReader(postresponse.GetResponseStream())
                     cookies = tempcookies
-                    Return postreqreader.ReadToEnd
+                    Return adaptEncoding(postresponse.GetResponseStream())
                 Catch ex As ProtocolViolationException 'Catch para los headers erróneos que a veces entrega la API de MediaWiki
                     EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
                     EventLogger.Debug_Log(ex.StackTrace, ex.Source)
@@ -235,6 +235,25 @@ Namespace WikiBot
                 End Try
             Loop
             Throw New MaxRetriesExeption
+        End Function
+
+        Function adaptEncoding(ByVal responseStream As Stream) As String
+            Dim memstream As MemoryStream = New MemoryStream()
+            responseStream.CopyTo(memstream)
+            Dim textbytes As Byte() = memstream.ToArray
+            Dim reader As New StreamReader(New MemoryStream(textbytes), True)
+            Dim text As String = reader.ReadToEnd
+            If text.Contains("�") Then
+                If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding("ISO-8859-1")
+                    text = iso.GetString(textbytes)
+                End If
+                If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding("ISO-8859-9")
+                    text = iso.GetString(textbytes)
+                End If
+            End If
+            Return text
         End Function
 
         ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto.</summary>
@@ -284,9 +303,8 @@ Namespace WikiBot
                 End If
             End Try
             If Not postresponse Is Nothing Then
-                Dim postreqreader As New StreamReader(postresponse.GetResponseStream())
                 cookies = tempcookies
-                Return postreqreader.ReadToEnd
+                Return adaptEncoding(postresponse.GetResponseStream())
             End If
             Return Nothing
         End Function

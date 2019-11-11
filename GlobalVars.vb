@@ -10,7 +10,7 @@ Public Class GlobalVars
     Public Shared Log_Filepath As String = Exepath & "Log.psv"
     Public Shared UserPath As String = Exepath & "Users.psv"
     Public Shared SettingsPath As String = Exepath & "Settings.psv"
-    Public Shared EventLogger As New LogEngine.LogEngine(Log_Filepath, UserPath, Codename)
+    Public Shared EventLogger As New LogEngine.LogEngine(Log_Filepath, UserPath, Codename, True)
     Public Shared SettingsProvider As New Settings(SettingsPath)
 
 

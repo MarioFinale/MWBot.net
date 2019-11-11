@@ -125,6 +125,17 @@ Namespace WikiBot
             Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
         End Sub
 
+        Function SetLogConfig(ByVal Logpath As String, Userpath As String, BotName As String, Verbose As Boolean) As Boolean
+            Try
+                Dim newLogger As New LogEngine.LogEngine(Logpath, Userpath, BotName, Verbose)
+                EventLogger = newLogger
+            Catch ex As Exception
+                EventLogger.EX_Log(ex.Message, "MWBOT.Net:SetLogConfig", "N/A")
+                Return False
+            End Try
+            Return True
+        End Function
+
         ''' <summary>
         ''' Inicializa las configuraciones genereales del programa desde el archivo de configuración.
         ''' Si no existe el archivo, solicita datos al usuario y lo genera.
@@ -139,6 +150,7 @@ Namespace WikiBot
             Dim WPBotPassword As String = String.Empty
             Dim ConfigOK As Boolean = False
             Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
+
             EventLogger.Debug_Log(Messages.BotEngine & " " & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
             If System.IO.File.Exists(Tfile) Then
                 EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
@@ -318,7 +330,7 @@ Namespace WikiBot
 
                             Dim normtext As String = NormalizeUnicodetext(pagetitle)
                             normtext = normtext.ToLower.Replace("_", " ")
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext, StringComparison.Ordinal)
+                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
                             TemplateTitle = PageNamesList(ItemIndex)
                             PagenameAndLastId.Add(TemplateTitle, Revid_ToInt)
 
@@ -328,6 +340,7 @@ Namespace WikiBot
             Next
             EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, PagenameAndLastId.Count), Reflection.MethodBase.GetCurrentMethod().Name)
             Return PagenameAndLastId
+
         End Function
 
         ''' <summary>
@@ -463,7 +476,7 @@ Namespace WikiBot
                             Dim normtext As String = NormalizeUnicodetext(pagetitle)
                             normtext = normtext.ToLower.Replace("_", " ")
 
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext, StringComparison.Ordinal)
+                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
                             PageKey = PageNamesList(ItemIndex)
 
                             If s.Contains("pageimage") Then
@@ -786,7 +799,7 @@ Namespace WikiBot
                 Next
 
                 For Each Extract As WikiExtract In ExtractsList
-                    Dim OriginalNameIndex As Integer = NormalizedNames.IndexOf(Extract.PageName.ToLower, StringComparison.Ordinal)
+                    Dim OriginalNameIndex As Integer = NormalizedNames.IndexOf(Extract.PageName.ToLower)
                     Dim OriginalName As String = PageNamesList(OriginalNameIndex)
                     PagenameAndResume.Add(OriginalName, Extract.ExtractContent)
                 Next

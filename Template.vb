@@ -342,6 +342,11 @@ Namespace WikiBot
             Return TemplateList
         End Function
 
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
         Public Shared Function GetTemplates_TEST(ByVal text As String) As List(Of Template)
             Dim te As New Template
             Return te.GetTemplatesTest(text).ToList
@@ -355,19 +360,25 @@ Namespace WikiBot
             _newtemplate = False
         End Sub
 
-
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
         Function GetTemplatesTest(ByVal text As String) As Template()
 
             Dim templatelist As New List(Of Template)
             Dim tokens As String() = {"{{", "}}", "[", "]", "{{{", "}}}", Environment.NewLine & "{|", Environment.NewLine & "|}"}
             Dim tokensList As List(Of Tuple(Of String, Integer())) = GetTokensIndexes(text, tokens)
-
             Return GetTemplatesTest(text, tokensList)
-
         End Function
 
-
-
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <param name="tokensList"></param>
+        ''' <returns></returns>
         Function GetTemplatesTest(ByVal text As String, ByVal tokensList As List(Of Tuple(Of String, Integer()))) As Template()
             Dim templatelist As New List(Of Template)
 
@@ -381,7 +392,7 @@ Namespace WikiBot
 
                 If CountString(analyzedText, "{{") = CountString(analyzedText, "}}") Then
                     If CountString(analyzedText, "{{") = 0 Then Continue For
-                    templatelist.Add(AnalyzeTemplateParams(analyzedText.Substring(analyzedText.IndexOf("{{", StringComparison.Ordinal))))
+                    templatelist.Add(AnalyzeTemplateParams(analyzedText.Substring(analyzedText.IndexOf("{{"))))
                     analyzedText = ReplaceFirst(analyzedText, analyzedText, Space(analyzedText.Length))
 
                 End If
@@ -390,7 +401,11 @@ Namespace WikiBot
             Return templatelist.ToArray
         End Function
 
-
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
         Function AnalyzeTemplateParams(ByVal text As String) As Template
             Dim settingName As Boolean = True
             Dim settingParameter As Boolean = False
@@ -558,10 +573,6 @@ Namespace WikiBot
 
         End Function
 
-
-
-
-
         Function CountString(ByVal text As String, stringToCount As String) As Integer
             Dim newtext As String = text.Replace(stringToCount, "")
             Dim diff As Integer = text.Length - newtext.Length
@@ -569,14 +580,13 @@ Namespace WikiBot
             Return Count
         End Function
 
-
         Function GetTokensIndexes(ByVal text As String, tokens As String()) As List(Of Tuple(Of String, Integer()))
             Dim TokensList As New List(Of Tuple(Of String, Integer()))
             For Each token As String In tokens
                 Dim indexList As New List(Of Integer)
                 Dim tindex As Integer = 0
                 Do Until tindex = -1
-                    tindex = text.IndexOf(token, StringComparison.Ordinal)
+                    tindex = text.IndexOf(token)
                     If Not tindex = -1 Then
                         indexList.Add(tindex)
                         text = text.Substring(0, tindex) & Space(token.Length) + text.Substring(tindex + token.Length)
@@ -635,7 +645,7 @@ Namespace WikiBot
                     If OpenTemplateCount2 = CloseTemplateCount2 Then
                         temptext = text.Substring(beginindex, (i - beginindex) + 1)
                         If Not temptext.Length = 0 Then
-                            Dim BeginPos As Integer = temptext.IndexOf("{{", StringComparison.Ordinal)
+                            Dim BeginPos As Integer = temptext.IndexOf("{{")
                             If Not BeginPos = -1 Then
                                 Dim Textbefore As String = temptext.Substring(0, BeginPos)
                                 Dim Lenght As Integer = temptext.Length - (Textbefore.Length)
