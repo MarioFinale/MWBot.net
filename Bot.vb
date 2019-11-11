@@ -125,6 +125,17 @@ Namespace WikiBot
             Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
         End Sub
 
+        Function SetLogConfig(ByVal Logpath As String, Userpath As String, BotName As String, Verbose As Boolean) As Boolean
+            Try
+                Dim newLogger As New LogEngine.LogEngine(Logpath, Userpath, BotName, Verbose)
+                EventLogger = newLogger
+            Catch ex As Exception
+                EventLogger.EX_Log(ex.Message, "MWBOT.Net:SetLogConfig", "N/A")
+                Return False
+            End Try
+            Return True
+        End Function
+
         ''' <summary>
         ''' Inicializa las configuraciones genereales del programa desde el archivo de configuración.
         ''' Si no existe el archivo, solicita datos al usuario y lo genera.
@@ -139,6 +150,7 @@ Namespace WikiBot
             Dim WPBotPassword As String = String.Empty
             Dim ConfigOK As Boolean = False
             Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
+
             EventLogger.Debug_Log(Messages.BotEngine & " " & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
             If System.IO.File.Exists(Tfile) Then
                 EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
@@ -328,6 +340,7 @@ Namespace WikiBot
             Next
             EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, PagenameAndLastId.Count), Reflection.MethodBase.GetCurrentMethod().Name)
             Return PagenameAndLastId
+
         End Function
 
         ''' <summary>
@@ -971,11 +984,30 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Retorna un elemento Page coincidente al nombre entregado como parámetro.
+        ''' Retorna un elemento Page coincidente al RevID entregado como parámetro.
         ''' </summary>
         ''' <param name="revId">ID de la revisión.</param>
         Function Getpage(ByVal revId As Integer) As Page
             Return New Page(revId, Me)
+        End Function
+
+        ''' <summary>
+        ''' Retorna una pagina aleatoria.
+        ''' </summary>
+        ''' <returns></returns>
+        Function GetRandomPage() As Page
+            Return GetRandomPage(0)
+        End Function
+
+        ''' <summary>
+        ''' Retorna una pagina aleatoria.
+        ''' </summary>
+        ''' <param name="pnamespace">Espacio de nombres de la pagina.</param>
+        ''' <returns></returns>
+        Function GetRandomPage(ByVal pnamespace As Integer) As Page
+            Dim tquery As String = POSTQUERY(String.Format(SStrings.RandomPageQuery, pnamespace))
+            Dim tpage As String = NormalizeUnicodetext(TextInBetween(tquery, "title"":""", """}").FirstOrDefault())
+            Return Getpage(tpage)
         End Function
 
         ''' <summary>

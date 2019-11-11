@@ -21,7 +21,7 @@ Imports System
 '''<summary>
 '''  A strongly-typed resource class, for looking up localized strings, etc.
 '''</summary>
-<Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0"),  _
+<Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0"),  _
  Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
  Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute()>  _
 Friend Class SStrings
@@ -419,7 +419,7 @@ Friend Class SStrings
     End Property
     
     '''<summary>
-    '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}.
+    '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}.
     '''</summary>
     Friend Shared ReadOnly Property PageInfo() As String
         Get
@@ -428,7 +428,7 @@ Friend Class SStrings
     End Property
     
     '''<summary>
-    '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;exlimit=1&amp;explaintext&amp;exintro&amp;revids={0}.
+    '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;revids={0}.
     '''</summary>
     Friend Shared ReadOnly Property PageInfoRevid() As String
         Get
@@ -442,6 +442,15 @@ Friend Class SStrings
     Friend Shared ReadOnly Property PrefixSearchQuery() As String
         Get
             Return ResourceManager.GetString("PrefixSearchQuery", resourceCulture)
+        End Get
+    End Property
+    
+    '''<summary>
+    '''  Looks up a localized string similar to format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1.
+    '''</summary>
+    Friend Shared ReadOnly Property RandomPageQuery() As String
+        Get
+            Return ResourceManager.GetString("RandomPageQuery", resourceCulture)
         End Get
     End Property
     

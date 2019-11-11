@@ -61,7 +61,7 @@ Namespace WikiBot
         Public ReadOnly Property Comment As String
 
         ''' <summary>
-        ''' Entrega las secciones de la página
+        ''' Entrega las secciones de la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Threads As String()
@@ -71,6 +71,12 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Categories As String()
+
+        ''' <summary>
+        ''' Indica si la edición ha sido ocultada u ocultada parcialmente.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property HasHiddenInfo As Boolean
 
         ''' <summary>
         ''' Entrega el promedio de visitas diarias de la página en los últimos 2 meses.
@@ -86,7 +92,6 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Size As Integer
-
 
         ''' <summary>
         ''' Número del espacio de nombres al cual pertenece la página.
@@ -109,13 +114,20 @@ Namespace WikiBot
         Public ReadOnly Property RootPage As String
 
         ''' <summary>
-        ''' Obtiene el revid de la edición anterior de la página (si existe)
+        ''' Obtiene el revid de la edición anterior de la página (si existe).
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property ParentRevId As Integer
 
+
         ''' <summary>
-        ''' ¿La página existe?
+        ''' Entrega la fecha de la edición en la página.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property EditDate As Date
+
+        ''' <summary>
+        ''' Indica si la pagina existe.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Exists As Boolean
@@ -129,7 +141,7 @@ Namespace WikiBot
         End Property
 
         ''' <summary>
-        ''' Indica si puede ser editada por el bot.
+        ''' Indica si la pagina puede ser editada por el bot.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property BotEditable As Boolean
@@ -139,7 +151,7 @@ Namespace WikiBot
         End Property
 
         ''' <summary>
-        ''' Entrega la fecha de la última edición en la página
+        ''' Entrega la fecha de la última edición en la página.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property LastEdit As Date
@@ -147,6 +159,7 @@ Namespace WikiBot
                 Return GetLastEdit()
             End Get
         End Property
+
 
         Public ReadOnly Property LastTimeStamp As String
             Get
@@ -594,69 +607,9 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="Pagename">Título exacto de la página</param>
         Private Overloads Sub PageInfoData(ByVal pageName As String)
-
             Dim querystring As String = String.Format(SStrings.PageInfo, UrlWebEncode(pageName))
             Dim QueryText As String = _bot.GETQUERY(querystring)
-
-            Dim PageID As String = "-1"
-            Dim PRevID As String = "-1"
-            Dim PaRevID As String = "-1"
-            Dim User As String = ""
-            Dim PTitle As String = NormalizeUnicodetext(TextInBetween(QueryText, """title"":""", """,")(0))
-            Dim Timestamp As String = ""
-            Dim Wikitext As String = ""
-            Dim Size As String = "0"
-            Dim WNamespace As String = TextInBetween(QueryText, """ns"":", ",")(0)
-            Dim PCategories As New List(Of String)
-            Dim PageImage As String = ""
-            Dim PExtract As String = ""
-            Dim Rootp As String = ""
-            Dim pComment As String = ""
-            Try
-                PageID = TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
-                User = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,")(0))
-                Timestamp = TextInBetween(QueryText, """timestamp"":""", """,")(0)
-                pComment = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,")(0))
-                Wikitext = TextInBetweenInclusive(QueryText, """wikitext"",", """}]")(0)
-                Wikitext = NormalizeUnicodetext(TextInBetween(Wikitext, ",""*"":""", """}]")(0))
-                Size = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""")(0))
-                PRevID = TextInBetween(QueryText, """revid"":", ",""")(0)
-                PExtract = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}")(0))
-                PaRevID = TextInBetween(QueryText, """parentid"":", ",""")(0)
-            Catch ex As IndexOutOfRangeException
-                EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-            End Try
-
-            If TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
-                PageImage = NormalizeUnicodetext(TextInBetween(QueryText, """pageimage"":""", """")(0))
-            Else
-                EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, pageName), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-            End If
-
-            For Each m As Match In Regex.Matches(QueryText, "title"":""[Cc][a][t][\S\s]+?(?=""})")
-                PCategories.Add(NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
-            Next
-
-            If Regex.Match(PTitle, "\/.+").Success Then
-                Rootp = PTitle.Split("/"c)(0)
-            Else
-                Rootp = PTitle
-            End If
-
-            _rootPage = Rootp
-            _title = PTitle
-            _ID = Integer.Parse(PageID)
-            _lastuser = User
-            _timestamp = Timestamp
-            _content = Wikitext
-            _size = Integer.Parse(Size)
-            _PageNamespace = Integer.Parse(WNamespace)
-            _Categories = PCategories.ToArray
-            _currentRevID = Integer.Parse(PRevID)
-            _parentRevId = Integer.Parse(PaRevID)
-            _extract = PExtract
-            _Thumbnail = PageImage
-            _Comment = pComment
+            LoadPageInfo(querystring, pageName)
         End Sub
 
         ''' <summary>
@@ -665,64 +618,80 @@ Namespace WikiBot
         ''' <param name="Revid">Revision ID de la página</param>
         Private Overloads Sub PageInfoData(ByVal Revid As Integer)
             Dim querystring As String = String.Format(SStrings.PageInfoRevid, Revid.ToString)
+            LoadPageInfo(querystring, Revid.ToString)
+        End Sub
+
+        Private Sub LoadPageInfo(ByVal querystring As String, ByVal PagenameOrID As String)
             Dim QueryText As String = _bot.GETQUERY(querystring)
+            Dim Def As String = "-1"
 
-            Dim PageID As String = "-1"
-            Dim PRevID As String = "-1"
-            Dim User As String = ""
-            Dim PTitle As String = NormalizeUnicodetext(TextInBetween(QueryText, """title"":""", """,")(0))
-            Dim Timestamp As String = ""
-            Dim Wikitext As String = ""
-            Dim Size As String = "0"
-            Dim WNamespace As String = TextInBetween(QueryText, """ns"":", ",")(0)
+            Dim PTitle As String = NormalizeUnicodetext(TextInBetween(QueryText, """title"":""", """,").DefaultIfEmpty("").FirstOrDefault())
+            Dim WNamespace As String = TextInBetween(QueryText, """ns"":", ",").DefaultIfEmpty(Def).FirstOrDefault()
+            Dim PageID As String = TextInBetween(QueryText, "{""pageid"":", ",""ns").DefaultIfEmpty(Def).FirstOrDefault()
+            Dim PaRevID As String = TextInBetween(QueryText, """parentid"":", ",""").DefaultIfEmpty(Def).FirstOrDefault()
+            Dim PRevID As String = TextInBetween(QueryText, """revid"":", ",""").DefaultIfEmpty(Def).FirstOrDefault()
+            Dim User As String = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,").DefaultIfEmpty("").FirstOrDefault())
+            Dim Timestamp As String = TextInBetween(QueryText, """timestamp"":""", """,").DefaultIfEmpty("").FirstOrDefault()
+            Dim Size As String = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""").DefaultIfEmpty("0").FirstOrDefault())
+            Dim pComment As String = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,").DefaultIfEmpty("").FirstOrDefault())
+            Dim Wikitext As String = If(Regex.Match(QueryText, "(wikitext"","".+?\*"":"")([\s\S]+?[^\\])(""}})", RegexOptions.IgnoreCase).Groups(2).Value, "")
+            Wikitext = NormalizeUnicodetext(Wikitext)
+            Dim PExtract As String = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}").DefaultIfEmpty("").FirstOrDefault())
+            Dim PageImage As String = NormalizeUnicodetext(TextInBetween(QueryText, """pageimage"":""", """").DefaultIfEmpty("").FirstOrDefault())
             Dim PCategories As New List(Of String)
-            Dim PageImage As String = ""
-            Dim PExtract As String = ""
-            Dim Rootp As String = ""
-            Dim pComment As String = ""
-            Try
-                PageID = TextInBetween(QueryText, "{""pageid"":", ",""ns")(0)
-                User = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,")(0))
-                Timestamp = TextInBetween(QueryText, """timestamp"":""", """,")(0)
-                pComment = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,")(0))
-                Wikitext = TextInBetweenInclusive(QueryText, """wikitext"",", """}]")(0)
-                Wikitext = NormalizeUnicodetext(TextInBetween(Wikitext, ",""*"":""", """}]")(0))
-                Size = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""")(0))
-                PRevID = TextInBetween(QueryText, """revid"":", ",""")(0)
-                PExtract = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}")(0))
-            Catch ex As IndexOutOfRangeException
-                EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-            End Try
 
-            If TextInBetween(QueryText, """pageimage"":""", """").Count >= 1 Then
-                PageImage = TextInBetween(QueryText, """pageimage"":""", """")(0)
-            Else
-                EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            If PageID = "-1" Then
+                EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             End If
+
+            Dim deletedinfo As Func(Of Boolean) = Function()
+                                                      Dim vars As String() = {User, Wikitext}
+                                                      For Each v As String In vars
+                                                          If String.IsNullOrWhiteSpace(v) Then Return True
+                                                      Next
+                                                      Return False
+                                                  End Function
+
+            If deletedinfo() Then
+                EventLogger.Debug_Log(String.Format(Messages.DeletedInfoMessage, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                _HasHiddenInfo = True
+            End If
+
+            'Inutil
+            'If String.IsNullOrWhiteSpace(PageImage) Then
+            '    EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            'End If
 
             For Each m As Match In Regex.Matches(QueryText, "title"":""[Cc][a][t][\S\s]+?(?=""})")
                 PCategories.Add(NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
             Next
 
+            Dim Rootp As String
             If Regex.Match(PTitle, "\/.+").Success Then
                 Rootp = PTitle.Split("/"c)(0)
             Else
                 Rootp = PTitle
             End If
 
-            _rootPage = Rootp
-            _title = PTitle
+            _RootPage = Rootp
+            _Title = PTitle
             _ID = Integer.Parse(PageID)
-            _lastuser = User
-            _timestamp = Timestamp
-            _content = Wikitext
-            _size = Integer.Parse(Size)
+            _Lastuser = User
+            _Timestamp = Timestamp
+            _Content = Wikitext
+            _Size = Integer.Parse(Size)
             _PageNamespace = Integer.Parse(WNamespace)
             _Categories = PCategories.ToArray
-            _currentRevID = Integer.Parse(PRevID)
-            _extract = PExtract
-            _thumbnail = PageImage
+            _CurrentRevId = Integer.Parse(PRevID)
+            _ParentRevId = Integer.Parse(PaRevID)
+            _Extract = PExtract
+            _Thumbnail = PageImage
+            _Comment = pComment
+            _EditDate = ConvertTimestampToDate(Timestamp)
         End Sub
+
+
+
 
         ''' <summary>
         ''' Entrega la ultima marca de tiempo de la pagina.
@@ -746,6 +715,15 @@ Namespace WikiBot
         ''' <returns></returns>
         Private Function GetLastEdit() As Date
             Dim timestamp As String = GetLastTimeStamp()
+            Return ConvertTimestampToDate(timestamp)
+        End Function
+
+        ''' <summary>
+        ''' Convierte un timestamp de mediawiki a un objeto Date
+        ''' </summary>
+        ''' <param name="timestamp"></param>
+        ''' <returns></returns>
+        Private Function ConvertTimestampToDate(ByVal timestamp As String) As Date
             Dim timestringarray As String() = timestamp.Replace("T"c, " "c).Replace("Z"c, "").Replace("-"c, " "c).Replace(":"c, " "c).Split(" "c)
             Dim timeintarray As Integer() = StringArrayToInt(timestringarray)
             Dim editdate As Date = New Date(timeintarray(0), timeintarray(1), timeintarray(2), timeintarray(3), timeintarray(4), timeintarray(5), DateTimeKind.Utc)

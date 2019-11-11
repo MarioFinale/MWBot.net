@@ -209,10 +209,10 @@ ArchiveMessageTemplate="{10}"</value>
     <value>https://ores.wikimedia.org/v3/scores/eswiki/?models=damaging|goodfaith&amp;format=json&amp;revids=</value>
   </data>
   <data name="PageInfo" xml:space="preserve">
-    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}</value>
   </data>
   <data name="PageInfoRevid" xml:space="preserve">
-    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;exlimit=1&amp;explaintext&amp;exintro&amp;revids={0}</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;revids={0}</value>
   </data>
   <data name="PrefixSearchQuery" xml:space="preserve">
     <value>format=json&amp;action=query&amp;pslimit=max&amp;list=prefixsearch&amp;pssearch=</value>
@@ -288,5 +288,8 @@ ArchiveMessageTemplate="{10}"</value>
   </data>
   <data name="UserFirstEditQuery" xml:space="preserve">
     <value>format=json&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=</value>
+  </data>
+  <data name="RandomPageQuery" xml:space="preserve">
+    <value>format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1</value>
   </data>
 </root>

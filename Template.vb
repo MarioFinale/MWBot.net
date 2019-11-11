@@ -343,6 +343,261 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
+        Public Shared Function GetTemplates_TEST(ByVal text As String) As List(Of Template)
+            Dim te As New Template
+            Return te.GetTemplatesTest(text).ToList
+        End Function
+
+
+        Sub New(name As String, parameters As List(Of Tuple(Of String, String)), text As String)
+            _name = name
+            _parameters = parameters
+            _text = text
+            _newtemplate = False
+        End Sub
+
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
+        Function GetTemplatesTest(ByVal text As String) As Template()
+
+            Dim templatelist As New List(Of Template)
+            Dim tokens As String() = {"{{", "}}", "[", "]", "{{{", "}}}", Environment.NewLine & "{|", Environment.NewLine & "|}"}
+            Dim tokensList As List(Of Tuple(Of String, Integer())) = GetTokensIndexes(text, tokens)
+            Return GetTemplatesTest(text, tokensList)
+        End Function
+
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <param name="tokensList"></param>
+        ''' <returns></returns>
+        Function GetTemplatesTest(ByVal text As String, ByVal tokensList As List(Of Tuple(Of String, Integer()))) As Template()
+            Dim templatelist As New List(Of Template)
+
+            If Not tokensList(0).Item2.Length > 1 Then Return Nothing
+
+            Dim currentCharacter As Integer = tokensList(0).Item2.First
+            Dim analyzedText As String = String.Empty
+            For currentCharacter = currentCharacter To text.Length - 1
+
+                analyzedText &= text(currentCharacter)
+
+                If CountString(analyzedText, "{{") = CountString(analyzedText, "}}") Then
+                    If CountString(analyzedText, "{{") = 0 Then Continue For
+                    templatelist.Add(AnalyzeTemplateParams(analyzedText.Substring(analyzedText.IndexOf("{{"))))
+                    analyzedText = ReplaceFirst(analyzedText, analyzedText, Space(analyzedText.Length))
+
+                End If
+
+            Next
+            Return templatelist.ToArray
+        End Function
+
+        ''' <summary>
+        ''' Test. Inestable, no usar.
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
+        Function AnalyzeTemplateParams(ByVal text As String) As Template
+            Dim settingName As Boolean = True
+            Dim settingParameter As Boolean = False
+            Dim paramlist As New List(Of Tuple(Of String, String))
+            Dim templateName As String = String.Empty
+            Dim Depth As Integer = 0
+            Dim lDepth As Integer = 0
+            Dim htmDepth As Integer = 0
+            Dim templateText As String = "{{"
+            Dim currentParam As String = String.Empty
+            Dim currentParamName As String = String.Empty
+
+            For currentCharacter As Integer = 2 To text.Length - 1
+                templateText &= text(currentCharacter)
+                Select Case text(currentCharacter)
+                    Case "|"c
+                        If Not Depth > 0 AndAlso Not lDepth > 0 Then
+                            settingName = False
+                            If settingParameter Then
+                                paramlist.Add(New Tuple(Of String, String)(currentParamName, currentParam))
+                                currentParam = ""
+                                currentParamName = ""
+                            Else
+                                settingParameter = True
+                            End If
+                        Else
+                            If settingParameter Then
+                                currentParam &= text(currentCharacter)
+                            End If
+                        End If
+                    Case "="c
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+
+                        If settingParameter Then
+                            If Depth = 0 AndAlso lDepth = 0 Then
+                                currentParamName = currentParam
+                                currentParam = ""
+                            Else
+                                currentParam &= text(currentCharacter)
+                            End If
+                        End If
+
+                    Case "["c
+                        lDepth += 1
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+                        If settingParameter Then
+                            currentParam &= text(currentCharacter)
+                        End If
+                    Case "]"c
+                        lDepth -= 1
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+                        If settingParameter Then
+                            currentParam &= text(currentCharacter)
+                        End If
+
+                    Case "["c
+                        lDepth += 1
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+                        If settingParameter Then
+                            currentParam &= text(currentCharacter)
+                        End If
+                    Case "]"c
+                        lDepth -= 1
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+                        If settingParameter Then
+                            currentParam &= text(currentCharacter)
+                        End If
+                    Case "{"c
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+                        If settingParameter Then
+                            currentParam += text(currentCharacter)
+                        End If
+                        If text.Length > currentCharacter + 2 Then
+                            currentCharacter += 1
+                            templateText &= text(currentCharacter)
+                            If text(currentCharacter) = "{"c Then
+                                Depth += 1
+                            End If
+                            If settingName Then
+                                templateName &= text(currentCharacter)
+                            End If
+                            If settingParameter Then
+                                currentParam += text(currentCharacter)
+                            End If
+                        End If
+                    Case "}"c
+                        If Depth = 0 Then
+                            If text.Length >= currentCharacter + 1 Then
+                                currentCharacter += 1
+                                If text(currentCharacter) = "}"c Then
+                                    templateText &= text(currentCharacter)
+                                    If settingParameter Then
+                                        paramlist.Add(New Tuple(Of String, String)(currentParamName, currentParam))
+                                    End If
+                                    Exit For
+                                Else
+                                    If settingName Then
+                                        templateName &= text(currentCharacter)
+                                    End If
+                                    currentCharacter -= 1
+                                End If
+                                templateText &= text(currentCharacter)
+                                If settingName Then
+                                    templateName &= text(currentCharacter)
+                                End If
+                                If settingParameter Then
+                                    currentParam += text(currentCharacter)
+                                End If
+                            End If
+                        End If
+                        If Depth > 0 Then
+                            If settingName Then
+                                templateName &= text(currentCharacter)
+                            End If
+                            If settingParameter Then
+                                currentParam += text(currentCharacter)
+                            End If
+                            If text.Length >= currentCharacter + 1 Then
+                                currentCharacter += 1
+                                templateText &= text(currentCharacter)
+                                If settingName Then
+                                    templateName &= text(currentCharacter)
+                                End If
+                                If settingParameter Then
+                                    currentParam += text(currentCharacter)
+                                End If
+                                If text(currentCharacter) = "}"c Then
+                                    Depth -= 1
+                                End If
+
+                            End If
+                        End If
+                    Case Else
+                        If text(currentCharacter) = Environment.NewLine Then
+                            lDepth = 0
+                        End If
+                        If settingParameter Then
+                            currentParam += text(currentCharacter)
+                        End If
+                        If settingName Then
+                            templateName &= text(currentCharacter)
+                        End If
+                End Select
+            Next
+            Dim NumeredParams As New List(Of Tuple(Of String, String, String))
+            For i As Integer = 0 To paramlist.Count - 1
+                NumeredParams.Add(New Tuple(Of String, String, String)(If(String.IsNullOrWhiteSpace(paramlist(i).Item1), i.ToString, paramlist(i).Item1.Trim()), paramlist(i).Item1, paramlist(i).Item2))
+            Next
+            Dim temp As New Template(templateName, paramlist, templateText)
+
+            Return temp
+
+
+        End Function
+
+        Function CountString(ByVal text As String, stringToCount As String) As Integer
+            Dim newtext As String = text.Replace(stringToCount, "")
+            Dim diff As Integer = text.Length - newtext.Length
+            Dim Count As Integer = diff \ stringToCount.Length
+            Return Count
+        End Function
+
+        Function GetTokensIndexes(ByVal text As String, tokens As String()) As List(Of Tuple(Of String, Integer()))
+            Dim TokensList As New List(Of Tuple(Of String, Integer()))
+            For Each token As String In tokens
+                Dim indexList As New List(Of Integer)
+                Dim tindex As Integer = 0
+                Do Until tindex = -1
+                    tindex = text.IndexOf(token)
+                    If Not tindex = -1 Then
+                        indexList.Add(tindex)
+                        text = text.Substring(0, tindex) & Space(token.Length) + text.Substring(tindex + token.Length)
+                    End If
+                Loop
+                TokensList.Add(New Tuple(Of String, Integer())(token, indexList.ToArray))
+            Next
+            Return TokensList
+        End Function
+
+        ''' <summary>
         ''' Retorna un array de string con todas las plantillas contenidas en un texto.
         ''' Pueden repetirse si hay plantillas que contienen otras en su interior.
         ''' </summary>
@@ -405,7 +660,7 @@ Namespace WikiBot
                         OpenTemplateCount2 = 0
                         CloseTemplateCount2 = 0
                     End If
-                    End If
+                End If
             Next
             Dim innertemplates As New List(Of String)
             For Each t As String In templist
@@ -435,4 +690,17 @@ Namespace WikiBot
             Return True
         End Function
     End Class
+
+    Public Class WikiLink
+        Property Text As String
+        Property Type As WikiLinkType
+        Property Name As String
+        Property Content As String
+    End Class
+
+    Public Enum WikiLinkType
+        Internal
+        External
+    End Enum
+
 End Namespace
