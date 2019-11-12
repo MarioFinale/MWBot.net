@@ -86,6 +86,16 @@ Namespace WikiBot
         ''' <returns></returns>
         Public ReadOnly Property WikiUri As Uri
 
+        ''' <summary>
+        ''' Entrega el ApiHandler interno del bot.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property BotApiHandler As ApiHandler
+            Get
+                Return Api
+            End Get
+        End Property
+
 #End Region
 
 #Region "Init"
