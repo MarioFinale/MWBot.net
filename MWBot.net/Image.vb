@@ -3,11 +3,13 @@ Imports System.Net
 Imports System.Text.RegularExpressions
 Imports Utils.Utils
 Imports MWBot.net.GlobalVars
+Imports SixLabors.ImageSharp
+Imports System.IO
 
 Namespace WikiBot
     Public Class Image
         Property Name As String
-        Property Image As Drawing.Image
+        Property Image As SixLabors.ImageSharp.Image
         Property Author As String
         Property Uri As Uri
         Property License As String
@@ -22,7 +24,7 @@ Namespace WikiBot
             If Not (CommonsFileName.ToUpper.EndsWith(".PNG") Or CommonsFileName.ToUpper.EndsWith(".JPG") Or CommonsFileName.ToUpper.EndsWith(".SVG") Or CommonsFileName.ToUpper.EndsWith(".GIF") Or CommonsFileName.ToUpper.EndsWith(".JPEG")) Then
                 Throw New ArgumentException("The file must be a image.", "CommonsFileName")
             End If
-            Dim timg As Tuple(Of Drawing.Image, String()) = GetCommonsFile(CommonsFileName, Workerbot)
+            Dim timg As Tuple(Of SixLabors.ImageSharp.Image, String()) = GetCommonsFile(CommonsFileName, Workerbot)
             Image = timg.Item1
             Name = CommonsFileName
             Author = timg.Item2(2)
@@ -33,7 +35,7 @@ Namespace WikiBot
             Uri = New Uri("https://commons.wikimedia.org/wiki/File:" & CommonsFileName.Replace(" ", "_"))
         End Sub
 
-        Private Function GetCommonsFile(ByVal CommonsFilename As String, ByVal Workerbot As Bot) As Tuple(Of Drawing.Image, String())
+        Private Function GetCommonsFile(ByVal CommonsFilename As String, ByVal Workerbot As Bot) As Tuple(Of SixLabors.ImageSharp.Image, String())
             Dim responsestring As String = NormalizeUnicodetext(Workerbot.GETQUERY("action=query&format=json&titles=File:" & UrlWebEncode(CommonsFilename) & "&prop=imageinfo&iiprop=extmetadata|url&iiurlwidth=1000"))
             Dim thumburlmatches As String() = TextInBetween(responsestring, """thumburl"":""", """,")
             Dim licencematches As String() = TextInBetween(responsestring, """LicenseShortName"":{""value"":""", """,")
@@ -62,19 +64,19 @@ Namespace WikiBot
                 If author.Contains(":") Then author = author.Split(":"c)(1).Trim()
             End If
 
-            Dim img As Drawing.Image = New Bitmap(1, 1)
+            Dim img As SixLabors.ImageSharp.Image = Nothing
             If thumburlmatches.Count() > 0 Then img = PicFromUrl(thumburlmatches(0))
             If String.IsNullOrWhiteSpace(author) Or (author.ToLower().Contains("unknown")) Then author = "Desconocido"
-            Return New Tuple(Of Drawing.Image, String())(img, New String() {licence, licenceurl, author})
+            Return New Tuple(Of SixLabors.ImageSharp.Image, String())(img, New String() {licence, licenceurl, author})
         End Function
 
-        Private Function PicFromUrl(ByVal url As String) As Drawing.Image
-            Dim img As Drawing.Image = New Bitmap(1, 1)
+        Private Function PicFromUrl(ByVal url As String) As SixLabors.ImageSharp.Image
+            Dim img As SixLabors.ImageSharp.Image = Nothing
             Try
                 Dim request = WebRequest.Create(url)
                 Using response = request.GetResponse()
                     Using stream = response.GetResponseStream()
-                        img = CType(Drawing.Image.FromStream(stream).Clone(), Drawing.Image)
+                        img = SixLabors.ImageSharp.Image.Load(stream)
                     End Using
                 End Using
                 Return img
@@ -86,14 +88,17 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Guarda la imagen (en png ignorando la extensión).
+        ''' Guarda la imagen (en PNG).
         ''' </summary>
         ''' <param name="Path"></param>
         Public Sub Save(ByVal Path As String)
             Dim tex As String() = Path.Split("."c)
             Dim ext As String = "." & tex(tex.Count - 1)
             Dim endname As String = ReplaceLast(Path, ext, ".png")
-            Image.Save(endname, Imaging.ImageFormat.Png)
+            Dim tstream As New MemoryStream
+            Image.SaveAsPng(tstream)
+            Dim imageBytes As Byte() = tstream.ToArray
+            IO.File.WriteAllBytes(endname, imageBytes)
         End Sub
 
     End Class

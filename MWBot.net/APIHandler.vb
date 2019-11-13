@@ -6,6 +6,9 @@ Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
+Imports MWBot.net.My.Resources
+Imports System.Net.Http
+Imports System.Text
 
 Namespace WikiBot
 
@@ -16,7 +19,7 @@ Namespace WikiBot
         Private _botUsername As String = String.Empty
         Private _botPassword As String = String.Empty
         Private _apiUri As Uri
-        Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/Usuario_discusión:MarioFinale) .NET/MONO"
+        Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/User_talk:MarioFinale) .NET/MONO"
 
 #Region "Properties"
         Public ReadOnly Property UserName As String
@@ -201,56 +204,55 @@ Namespace WikiBot
             Dim tryCount As Integer = 0
 
             Do Until tryCount = MaxRetry
+
+                If pageUri Is Nothing Then
+                    Throw New ArgumentNullException("pageUri", "Empty uri.")
+                End If
+
+                If cookies Is Nothing Then
+                    cookies = New CookieContainer
+                End If
+
+                Dim tempcookies As CookieContainer = cookies
+
+                Dim encoding As New Text.UTF8Encoding
+                Dim handler As HttpClientHandler = New HttpClientHandler()
+                handler.CookieContainer = cookies
+                handler.UseCookies = True
+                Dim client As HttpClient = New HttpClient(handler)
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.DefaultRequestHeaders.Add("Method", "GET")
+                Dim response As Byte() = Nothing
+
                 Try
-                    If cookies Is Nothing Then
-                        cookies = New CookieContainer
-                    End If
-                    Dim tempcookies As CookieContainer = cookies
-                    Dim postreq As HttpWebRequest = DirectCast(HttpWebRequest.Create(pageUri), HttpWebRequest)
-                    postreq.Method = "GET"
-                    postreq.KeepAlive = True
-                    postreq.Timeout = 60000
-                    postreq.CookieContainer = tempcookies
-                    postreq.UserAgent = _userAgent
-                    postreq.ContentType = "application/x-www-form-urlencoded"
-                    Dim postresponse As HttpWebResponse = DirectCast(postreq.GetResponse, HttpWebResponse)
-                    tempcookies.Add(postresponse.Cookies)
-                    cookies = tempcookies
-                    Return adaptEncoding(postresponse.GetResponseStream())
-                Catch ex As ProtocolViolationException 'Catch para los headers erróneos que a veces entrega la API de MediaWiki
-                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                    response = client.GetByteArrayAsync(pageUri).Result
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+                Catch ex As System.Net.WebException
                     tryCount += 1
-                Catch ex As WebException
-                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
-                    If ex.Message.Contains("404") Then
-                        Return String.Empty
-                    End If
-                    tryCount += 1
-                Catch ex As Sockets.SocketException
-                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                Catch ex2 As Exception
                     tryCount += 1
                 End Try
+                If Not response Is Nothing Then
+                    cookies = tempcookies
+                    Return AdaptEncoding(response)
+                End If
+                Return Nothing
             Loop
             Throw New MaxRetriesExeption
         End Function
 
-        Function adaptEncoding(ByVal responseStream As Stream) As String
-            Dim memstream As MemoryStream = New MemoryStream()
-            responseStream.CopyTo(memstream)
-            Dim textbytes As Byte() = memstream.ToArray
-            Dim reader As New StreamReader(New MemoryStream(textbytes), True)
+        Function AdaptEncoding(ByVal responseBytes As Byte()) As String
+            Dim reader As New StreamReader(New MemoryStream(responseBytes), True)
             Dim text As String = reader.ReadToEnd
             If text.Contains("�") Then
                 If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
-                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding("ISO-8859-1")
-                    text = iso.GetString(textbytes)
+                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
+                    text = iso.GetString(responseBytes)
                 End If
-                If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
-                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding("ISO-8859-9")
-                    text = iso.GetString(textbytes)
+                If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-9"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28599)
+                    text = iso.GetString(responseBytes)
                 End If
             End If
             Return text
@@ -280,31 +282,36 @@ Namespace WikiBot
 
             Dim encoding As New Text.UTF8Encoding
             Dim byteData As Byte() = encoding.GetBytes(postData)
-            Dim postreq As HttpWebRequest = DirectCast(HttpWebRequest.Create(pageUri), HttpWebRequest)
+            Dim handler As HttpClientHandler = New HttpClientHandler()
+            handler.CookieContainer = cookies
+            handler.UseCookies = True
 
-            postreq.Method = "POST"
-            postreq.KeepAlive = True
-            postreq.CookieContainer = tempcookies
-            postreq.UserAgent = _userAgent
-            postreq.ContentType = "application/x-www-form-urlencoded"
-            postreq.ContentLength = byteData.Length
+            Dim client As HttpClient = New HttpClient(handler)
+            Dim content As StringContent = New StringContent(postData)
+            content.Headers.Add("Method", "POST")
+            content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
+            content.Headers.ContentLength = byteData.Length
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+            client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+            client.DefaultRequestHeaders.Add("Method", "POST")
+            Dim response As Byte() = Nothing
 
-            Dim postreqstream As Stream = postreq.GetRequestStream()
-            postreqstream.Write(byteData, 0, byteData.Length)
-            postreqstream.Close()
 
-            Dim postresponse As HttpWebResponse = Nothing
             Try
-                postresponse = DirectCast(postreq.GetResponse, HttpWebResponse)
-                tempcookies.Add(postresponse.Cookies)
+                response = client.PostAsync(pageUri, content).Result.Content.ReadAsByteArrayAsync.Result
+                tempcookies.Add(cookies.GetCookies(pageUri))
             Catch ex As System.Net.WebException
                 If retrycount < 3 Then
                     Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                 End If
+            Catch ex2 As Exception
+                If retrycount < 3 Then
+                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                End If
             End Try
-            If Not postresponse Is Nothing Then
+            If Not response Is Nothing Then
                 cookies = tempcookies
-                Return adaptEncoding(postresponse.GetResponseStream())
+                Return AdaptEncoding(response)
             End If
             Return Nothing
         End Function

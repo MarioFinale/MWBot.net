@@ -4,6 +4,7 @@ Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
 Imports LogEngine
+Imports MWBot.net.My.Resources
 
 Namespace WikiBot
     ''' <summary>

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MWBot.net": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\MarioFinale\\source\\repos\\Comp\\netcoreapp3.0\\PeriodiBOT-IRC.exe"
+    }
+  }
+}

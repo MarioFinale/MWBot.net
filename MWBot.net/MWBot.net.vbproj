@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>MWBot.net</RootNamespace>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <OptionCompare>Text</OptionCompare>
+    <AssemblyVersion>1.0.7256.6872</AssemblyVersion>
+    <FileVersion>1.0.7256.6872</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\Comp\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0007" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LogEngine">
+      <HintPath>..\..\Comp\netcoreapp3.0\LogEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="Utils">
+      <HintPath>..\..\Comp\netcoreapp3.0\Utils.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Messages.Designer.vb">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Messages.resx</DependentUpon>
+    </Compile>
+    <Compile Update="SStrings.Designer.vb">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SStrings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Messages.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <LastGenOutput>Messages.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <LastGenOutput>SStrings.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

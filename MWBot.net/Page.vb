@@ -3,6 +3,7 @@ Option Explicit On
 Imports System.Net
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
+Imports MWBot.net.My.Resources
 Imports Utils.Utils
 
 Namespace WikiBot
@@ -22,7 +23,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public Function ORESScores() As Double()
-            Return GetORESScores(_currentRevID)
+            Return GetORESScores(_CurrentRevId)
         End Function
         ''' <summary>
         ''' Entrega el contenido (wikitexto) de la página.
@@ -84,7 +85,7 @@ Namespace WikiBot
         ''' <returns></returns>
         Public ReadOnly Property PageViews As Integer
             Get
-                Return GetPageViewsAvg(_title)
+                Return GetPageViewsAvg(_Title)
             End Get
         End Property
         ''' <summary>
@@ -200,7 +201,7 @@ Namespace WikiBot
         ''' Inicializa de nuevo la página (al crear una página esta ya está inicializada).
         ''' </summary>
         Public Sub Load()
-            Loadpage(_title, _siteuri)
+            Loadpage(_Title, _siteuri)
         End Sub
 
         ''' <summary>
@@ -294,7 +295,7 @@ Namespace WikiBot
             End If
 
             If pageContent = Content Then
-                EventLogger.Debug_Log(String.Format(Messages.NoChanges, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Debug_Log(String.Format(Messages.NoChanges, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_successful
             End If
 
@@ -302,13 +303,13 @@ Namespace WikiBot
             Try
                 EditToken = GetEditToken()
             Catch ex As WebException
-                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _Title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
 
             Dim ntimestamp As String = GetLastTimeStamp()
-            If Not ntimestamp = _timestamp Then
-                EventLogger.Log(String.Format(Messages.EditConflict, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            If Not ntimestamp = _Timestamp Then
+                EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_conflict
             End If
 
@@ -323,7 +324,7 @@ Namespace WikiBot
                 additionalParams = additionalParams & "&bot="
             End If
 
-            Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, _title, UrlWebEncode(EditSummary), UrlWebEncode(pageContent), UrlWebEncode(EditToken))
+            Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, _Title, UrlWebEncode(EditSummary), UrlWebEncode(pageContent), UrlWebEncode(EditToken))
             Dim postresult As String = String.Empty
 
             Try
@@ -331,31 +332,31 @@ Namespace WikiBot
                 Threading.Thread.Sleep(1000) 'Some time for the server to process the data
                 Load() 'Update page data
             Catch ex As IO.IOException
-                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _Title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             Catch ex As WebException
-                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _Title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
 
             If String.IsNullOrWhiteSpace(postresult) Then
-                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, PsvSafeEncode(postresult)), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _Title, PsvSafeEncode(postresult)), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End If
 
             If postresult.Contains("""result"":""Success""") Then
-                EventLogger.Log(String.Format(Messages.SuccessfulEdit, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SuccessfulEdit, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_successful
             End If
 
             If postresult.ToLower.Contains("abusefilter") Then
-                EventLogger.Log(String.Format(Messages.AbuseFilter, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.AbuseFilter, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 EventLogger.Debug_Log("ABUSEFILTER: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.AbuseFilter
             End If
 
             If postresult.ToLower.Contains("spamblacklist") Then
-                EventLogger.Log(String.Format(Messages.SpamBlackList, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SpamBlackList, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 EventLogger.Debug_Log("SPAMBLACKLIST: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 If Spamreplace Then
                     Dim spamlinkRegex As String = TextInBetween(postresult, """spamblacklist"":""", """")(0)
@@ -363,7 +364,7 @@ Namespace WikiBot
                     If Not RetryCount > MaxRetry Then
                         Return SavePage(newtext, EditSummary, IsMinor, IsBot, True, RetryCount + 1)
                     Else
-                        EventLogger.Log(String.Format(Messages.MaxRetryCount, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                        EventLogger.Log(String.Format(Messages.MaxRetryCount, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                         Return EditResults.Max_retry_count
                     End If
                 Else
@@ -383,7 +384,7 @@ Namespace WikiBot
                 _bot.Relogin()
                 Return SavePage(pageContent, EditSummary, IsMinor, IsBot, True, RetryCount + 1)
             Else
-                EventLogger.Log(String.Format(Messages.SpamBlackList, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SpamBlackList, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Max_retry_count
             End If
             Return EditResults.Unexpected_Result
@@ -397,8 +398,8 @@ Namespace WikiBot
         ''' <param name="Minor">¿Marcar como menor?</param>
         ''' <returns></returns>
         Overloads Function CheckAndSave(ByVal pageContent As String, ByVal summary As String, ByVal minor As Boolean, ByVal bot As Boolean, ByVal spam As Boolean) As EditResults
-            If Not BotCanEdit(_content, _username) Then
-                EventLogger.Log(String.Format(Messages.NoBots, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            If Not BotCanEdit(_Content, _username) Then
+                EventLogger.Log(String.Format(Messages.NoBots, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.No_bots
             End If
             Return SavePage(pageContent, summary, minor, bot, spam, 0)
@@ -502,13 +503,13 @@ Namespace WikiBot
                 Throw New ArgumentNullException(System.Reflection.MethodBase.GetCurrentMethod().Name)
             End If
 
-            If Not GetLastTimeStamp() = _timestamp Then
-                EventLogger.Log(String.Format(Messages.EditConflict, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            If Not GetLastTimeStamp() = _Timestamp Then
+                EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_conflict
             End If
 
-            If Not BotCanEdit(_content, _username) Then
-                EventLogger.Log(String.Format(Messages.NoBots, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            If Not BotCanEdit(_Content, _username) Then
+                EventLogger.Log(String.Format(Messages.NoBots, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.No_bots
             End If
 
@@ -516,24 +517,24 @@ Namespace WikiBot
                 additionalParameters = additionalParameters & "&minor=true"
             End If
 
-            Dim postdata As String = String.Format(SStrings.AddThread, additionalParameters, UrlWebEncode(_title), UrlWebEncode(editSummary), UrlWebEncode(sectionTitle), UrlWebEncode(sectionContent), UrlWebEncode(GetEditToken()))
+            Dim postdata As String = String.Format(SStrings.AddThread, additionalParameters, UrlWebEncode(_Title), UrlWebEncode(editSummary), UrlWebEncode(sectionTitle), UrlWebEncode(sectionContent), UrlWebEncode(GetEditToken()))
             Dim postresult As String = String.Empty
             Try
                 postresult = _bot.POSTQUERY(postdata)
                 Threading.Thread.Sleep(1000) 'Some time to the server to process the data
                 Load() 'Update page data
             Catch ex As WebException
-                EventLogger.EX_Log(String.Format(Messages.POSTEX, _title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.EX_Log(String.Format(Messages.POSTEX, _Title, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.POST_error
             End Try
 
             If postresult.Contains("""result"":""Success""") Then
-                EventLogger.Log(String.Format(Messages.SuccessfulEdit, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.SuccessfulEdit, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_successful
             End If
 
             If postresult.Contains("abusefilter") Then
-                EventLogger.Log(String.Format(Messages.AbuseFilter, _title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+                EventLogger.Log(String.Format(Messages.AbuseFilter, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.AbuseFilter
             End If
 
@@ -698,7 +699,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Private Function GetLastTimeStamp() As String
-            Dim querystring As String = String.Format(SStrings.GetLastTimestamp, _title)
+            Dim querystring As String = String.Format(SStrings.GetLastTimestamp, _Title)
             Try
                 Dim QueryText As String = _bot.POSTQUERY(querystring)
                 Return TextInBetween(QueryText, """timestamp"":""", """")(0)
