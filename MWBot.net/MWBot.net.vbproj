@@ -4,8 +4,8 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.0.7256.6872</AssemblyVersion>
-    <FileVersion>1.0.7256.6872</FileVersion>
+    <AssemblyVersion>1.0.7256.8494</AssemblyVersion>
+    <FileVersion>1.0.7256.8494</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
