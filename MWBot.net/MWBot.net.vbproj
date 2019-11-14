@@ -4,12 +4,17 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.0.7256.8494</AssemblyVersion>
-    <FileVersion>1.0.7256.8494</FileVersion>
+    <AssemblyVersion>1.0.7257.6760</AssemblyVersion>
+    <FileVersion>1.0.7257.6760</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\Comp\</OutputPath>
+    <DocumentationFile>MWBot.net.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>MWBot.net.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@ Imports MWBot.net.GlobalVars
 Imports Utils.Utils
 Imports LogEngine
 Imports MWBot.net.My.Resources
+Imports System.Text.Json
 
 Namespace WikiBot
     ''' <summary>
@@ -295,63 +296,67 @@ Namespace WikiBot
             Return Regexes.ToArray
         End Function
 
+
         ''' <summary>
-        ''' Retorna el ultimo REVID (como integer) de las paginas indicadas como SortedList (con el formato {Pagename,Revid}), las paginas deben ser distintas. 
+        ''' Retorna la última revisión de las paginas indicadas, las paginas deben ser distintas. 
         ''' En caso de no existir la pagina, retorna -1 como REVID.
         ''' </summary>
-        ''' <param name="pageNames">Array con nombres de paginas unicos.</param>
+        ''' <param name="pageNames">Hashset de nombres de paginas unicos.</param>
         ''' <remarks></remarks>
-        Function GetLastRevIds(ByVal pageNames As String()) As SortedList(Of String, Integer)
+        Function GetLastRevisions(ByVal pageNames As HashSet(Of String)) As HashSet(Of WikiRevision)
             EventLogger.Debug_Log(String.Format(Messages.GetLastrevIDs, pageNames.Count), Reflection.MethodBase.GetCurrentMethod().Name)
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
             Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 50)
-            Dim PagenameAndLastId As New SortedList(Of String, Integer)
+            Dim RevisionSet As New HashSet(Of WikiRevision)
             For Each ListInList As List(Of String) In PageList
-                Dim Qstring As String = String.Empty
-                For Each s As String In ListInList
-                    s = UrlWebEncode(s)
-                    Qstring = Qstring & s & "|"
-                Next
-                Qstring = Qstring.Trim(CType("|", Char))
+                Dim Qstring As String = ConcatenateTextArrayWithChar(ListInList.ToArray, "|"c, True)
+                Dim queryResponse As String = GETQUERY((SStrings.GetLastRevIds & Qstring))
+                Dim response As JsonDocument = GetJsonDocument(queryResponse)
+                Dim responseElement As JsonElement = response.RootElement
+                Dim query As JsonElement = GetJsonElement(responseElement, "query")
+                Dim pages As JsonElement = GetJsonElement(query, "pages")
+                Dim ttext As String = pages.ToString
 
-                Dim QueryResponse As String = GETQUERY((SStrings.GetLastRevIds & Qstring))
-                Dim ResponseArray As String() = TextInBetweenInclusive(QueryResponse, ",""title"":", "}]")
+                For Each pageinfo As JsonProperty In pages.EnumerateObject
+                    Dim pageElement As JsonElement = pageinfo.Value
+                    Dim ns As Integer = pageElement.GetProperty("ns").GetInt32
+                    Dim title As String = NormalizeUnicodetext(pageElement.GetProperty("title").GetString).Replace(" ", "_")
+                    Dim missing As Boolean = IsJsonProperyPresent(pageElement, "missing")
 
-                For Each s As String In ResponseArray
-
-                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """,""")(0)
-
-                    If s.Contains(",""missing"":") Then
-                        If Not PagenameAndLastId.ContainsKey(pagetitle) Then
-                            PagenameAndLastId.Add(UrlWebDecode(NormalizeUnicodetext(pagetitle)).Replace(" ", "_"), -1)
-                        End If
-                    Else
-                        If Not PagenameAndLastId.ContainsKey(pagetitle) Then
-                            Dim TemplateTitle As String = String.Empty
-                            Dim Revid As String = TextInBetween(s, pagetitle & """,""revisions"":[{""revid"":", ",""parentid"":")(0)
-                            Dim Revid_ToInt As Integer = CType(Revid, Integer)
-
-                            Dim modlist As New List(Of String)
-
-                            For Each tx As String In PageNamesList.ToArray
-                                Dim tmp As String = tx.ToLower.Replace("_", " ")
-                                modlist.Add(tmp)
-                            Next
-
-                            Dim normtext As String = NormalizeUnicodetext(pagetitle)
-                            normtext = normtext.ToLower.Replace("_", " ")
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
-                            TemplateTitle = PageNamesList(ItemIndex)
-                            PagenameAndLastId.Add(TemplateTitle, Revid_ToInt)
-
-                        End If
+                    If missing Then
+                        Dim missingRevision As New WikiRevision With {
+                            .Title = title,
+                            .Missing = missing}
+                        RevisionSet.Add(missingRevision)
+                        Continue For
                     End If
+                    Dim pageid As Integer = pageElement.GetProperty("pageid").GetInt32
+                    Dim revisions As JsonElement = GetJsonElement(pageElement, "revisions")
+                    revisions = revisions(0)
+                    Dim revid As Integer = revisions.GetProperty("revid").GetInt32()
+                    Dim parentid As Integer = revisions.GetProperty("parentid").GetInt32()
+                    Dim minor As Boolean = IsJsonProperyPresent(revisions, "minor")
+                    Dim user As String = revisions.GetProperty("user").GetString
+                    Dim comment As String = revisions.GetProperty("comment").GetString
+                    Dim timestamp As Date = GetDateFromMWTimestamp(revisions.GetProperty("timestamp").GetString)
+                    Dim revision As New WikiRevision With {
+                        .NS = ns,
+                        .Comment = comment,
+                        .Minor = minor,
+                        .Missing = missing,
+                        .PageID = pageid,
+                        .ParentID = parentid,
+                        .RevID = revid,
+                        .Timestamp = timestamp,
+                        .Title = title,
+                        .User = user
+                        }
+                    RevisionSet.Add(revision)
                 Next
             Next
-            EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, PagenameAndLastId.Count), Reflection.MethodBase.GetCurrentMethod().Name)
-            Return PagenameAndLastId
-
+            EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, RevisionSet.Count), Reflection.MethodBase.GetCurrentMethod().Name)
+            Return RevisionSet
         End Function
 
         ''' <summary>
@@ -399,7 +404,7 @@ Namespace WikiBot
 
         ''' <summary>
         ''' Retorna el valor ORES (en %) de los EDIT ID (eswiki) indicados como SortedList (con el formato {ID,Score}), los EDIT ID deben ser distintos. 
-        ''' En caso de no existir el EDIT ID, retorna 0.
+        ''' En caso de no existir el EDIT ID, retorna {0,0}.
         ''' </summary>
         ''' <param name="revids">Array con EDIT ID's unicos.</param>
         ''' <remarks>Los EDIT ID deben ser distintos</remarks>
@@ -408,37 +413,35 @@ Namespace WikiBot
             Dim EditAndScoreList As New SortedList(Of Integer, Double())
             For Each ListOfList As List(Of Integer) In Revlist
 
-                Dim Qstring As String = String.Empty
+                Dim QueryString As String = String.Empty
                 For Each n As Integer In ListOfList
-                    Qstring = Qstring & n.ToString & "|"
+                    QueryString = QueryString & n.ToString & "|"
                 Next
-                Qstring = Qstring.Trim(CType("|", Char))
-                Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(Qstring))
-                Dim s As String = Api.GET(apiuri)
-
-                For Each m As Match In Regex.Matches(s, "({|, )(""[0-9]+"":).+?(}}}})")
-                    Dim EditID_str As String = Regex.Match(m.Value, """[0-9]+""").Value
-                    EditID_str = EditID_str.Trim(CType("""", Char()))
-                    EditID_str = RemoveAllAlphas(EditID_str)
-                    Dim EditID As Integer = Integer.Parse(EditID_str)
-
-                    If m.Value.Contains("error") Then
-
-                        EventLogger.Debug_Log(String.Format(Messages.OresQueryError, EditID_str), Reflection.MethodBase.GetCurrentMethod().Name)
-                        EditAndScoreList.Add(EditID, {0, 0})
-                    Else
-                        Try
-                            Dim DMGScore_str As String = TextInBetween(m.Value, """true"": ", "}")(0).Replace(".", DecimalSeparator)
-                            Dim GoodFaithScore_str As String = TextInBetween(m.Value, """true"": ", "}")(1).Replace(".", DecimalSeparator)
-                            Dim DMGScore As Double = Double.Parse(DMGScore_str) * 100
-                            Dim GoodFaithScore As Double = Double.Parse(GoodFaithScore_str) * 100
-                            EventLogger.Debug_Log(String.Format(Messages.OresQueryResult, EditID_str, GoodFaithScore.ToString, DMGScore.ToString), Reflection.MethodBase.GetCurrentMethod().Name)
-                            EditAndScoreList.Add(EditID, {DMGScore, GoodFaithScore})
-                        Catch ex As IndexOutOfRangeException
-                            EventLogger.Debug_Log(String.Format(Messages.OresQueryEx, EditID_str, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name)
-                            EditAndScoreList.Add(EditID, {0, 0})
-                        End Try
+                QueryString = QueryString.Trim(CType("|", Char))
+                Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(QueryString))
+                Dim apiRawResponse As String = Api.GET(apiuri)
+                Dim response As JsonDocument = GetJsonDocument(apiRawResponse)
+                Dim eswiki As JsonElement = GetJsonElement(response, "eswiki")
+                Dim scores As JsonElement = eswiki.GetProperty("scores")
+                For Each revid As JsonProperty In scores.EnumerateObject
+                    Dim editID As Integer = 0
+                    Integer.TryParse(revid.Name, editID)
+                    Dim element As JsonElement = revid.Value
+                    Dim damaging As JsonElement = element.GetProperty("damaging")
+                    Dim isError As Boolean = IsJsonProperyPresent(damaging, "error")
+                    If isError Then
+                        EditAndScoreList.Add(editID, {0, 0})
+                        Continue For
                     End If
+                    Dim damagingScore As JsonElement = damaging.GetProperty("score")
+                    Dim damagingProbability As JsonElement = damagingScore.GetProperty("probability")
+                    Dim damagingProbabilityTrue As Double = damagingProbability.GetProperty("true").GetDouble * 100
+
+                    Dim goodfaith As JsonElement = element.GetProperty("goodfaith")
+                    Dim goodfaithScore As JsonElement = goodfaith.GetProperty("score")
+                    Dim goodfaithProbability As JsonElement = goodfaithScore.GetProperty("probability")
+                    Dim goodfaithProbabilityTrue As Double = goodfaithProbability.GetProperty("true").GetDouble * 100
+                    EditAndScoreList.Add(editID, {damagingProbabilityTrue, goodfaithProbabilityTrue})
                 Next
             Next
             Return EditAndScoreList
@@ -452,54 +455,25 @@ Namespace WikiBot
         Function GetImagesExtract(ByVal pageNames As String()) As SortedList(Of String, String)
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
-
             Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 20)
             Dim PagenameAndImage As New SortedList(Of String, String)
 
             For Each ListInList As List(Of String) In PageList
-                Dim Qstring As String = String.Empty
+                Dim queryString As String = ConcatenateTextArrayWithChar(ListInList.ToArray, "|"c, True)
+                Dim queryResponse As String = GETQUERY(SStrings.GetPagesImage & queryString)
+                Dim response As JsonDocument = GetJsonDocument(queryResponse)
+                Dim query As JsonElement = GetJsonElement(response, "query")
+                Dim pages As JsonElement = query.GetProperty("pages")
 
-                For Each s As String In ListInList
-                    s = UrlWebEncode(s)
-                    Qstring = Qstring & s & "|"
-                Next
-                Qstring = Qstring.Trim(CType("|", Char))
-
-                Dim QueryResponse As String = GETQUERY(SStrings.GetPagesImage & Qstring)
-                Dim ResponseArray As New List(Of String)
-
-                For Each m As Match In Regex.Matches(QueryResponse, "({).+?(})(,|])(?={|})")
-                    ResponseArray.Add(m.Value)
-                Next
-
-                For Each s As String In ResponseArray.ToArray
-
-                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """")(0)
-                    Dim PageImage As String = String.Empty
-                    If Not s.Contains(",""missing"":") Then
-
-                        If Not PagenameAndImage.ContainsKey(pagetitle) Then
-                            Dim PageKey As String = String.Empty
-                            Dim modlist As New List(Of String)
-                            For Each tx As String In PageNamesList.ToArray
-                                modlist.Add(tx.ToLower.Replace("_", " "))
-                            Next
-                            Dim normtext As String = NormalizeUnicodetext(pagetitle)
-                            normtext = normtext.ToLower.Replace("_", " ")
-
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
-                            PageKey = PageNamesList(ItemIndex)
-
-                            If s.Contains("pageimage") Then
-                                PageImage = TextInBetweenInclusive(s, """title"":""" & pagetitle & """", """}")(0)
-                                PageImage = TextInBetween(PageImage, """pageimage"":""", """}")(0)
-                            Else
-                                PageImage = String.Empty
-                            End If
-                            PagenameAndImage.Add(PageKey, PageImage)
-
-                        End If
+                For Each pageProperty As JsonElement In pages.EnumerateArray
+                    Dim title As String = pageProperty.GetProperty("title").GetString
+                    Dim hasImage As Boolean = IsJsonProperyPresent(pageProperty, "pageimage")
+                    If Not hasImage Then
+                        PagenameAndImage.Add(title, "")
+                        Continue For
                     End If
+                    Dim pageimage As String = pageProperty.GetProperty("pageimage").GetString
+                    PagenameAndImage.Add(title, pageimage)
                 Next
             Next
             Return PagenameAndImage
@@ -634,36 +608,44 @@ Namespace WikiBot
         ''' <returns></returns>
         Function GetExtractsFromApiResponse(ByVal queryresponse As String, ByVal charLimit As Integer, ByVal wiki As Boolean) As HashSet(Of WikiExtract)
             Dim ExtractsList As New HashSet(Of WikiExtract)
-            Dim ResponseArray As String() = TextInBetweenInclusive(queryresponse, ",""title"":", """}")
-            For Each s As String In ResponseArray
-                If Not s.Contains(",""missing"":") Then
-                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """,""")(0).Replace("_"c, " ")
-                    Dim TreatedExtract As String = TextInBetween(s, pagetitle & """,""extract"":""", """}")(0)
-                    TreatedExtract = NormalizeUnicodetext(TreatedExtract)
-                    TreatedExtract = TreatedExtract.Replace("\n", Environment.NewLine)
-                    TreatedExtract = TreatedExtract.Replace("\""", """")
-                    TreatedExtract = Regex.Replace(TreatedExtract, "\{\\\\.*\}", " ")
-                    TreatedExtract = Regex.Replace(TreatedExtract, "\[[0-9]+\]", " ")
-                    TreatedExtract = Regex.Replace(TreatedExtract, "\[nota\ [0-9]+\]", " ")
-                    TreatedExtract = RemoveExcessOfSpaces(TreatedExtract)
-                    TreatedExtract = FixResumeNumericExp(TreatedExtract)
-                    If TreatedExtract.Contains(""",""missing"":""""}}}}") Then
-                        TreatedExtract = Nothing
-                    End If
-                    If TreatedExtract.Length > charLimit Then
-                        TreatedExtract = SafeTrimExtract(TreatedExtract.Substring(0, charLimit + 1), charLimit)
-                    End If
-                    'Si el título de la página está en el resumen, coloca en negritas la primera ocurrencia
-                    If wiki Then
-                        Dim regx As New Regex(Regex.Escape(pagetitle), RegexOptions.IgnoreCase)
-                        TreatedExtract = regx.Replace(TreatedExtract, "'''" & pagetitle & "'''", 1)
-                    End If
-                    Dim Extract As New WikiExtract With {
-                        .ExtractContent = TreatedExtract,
-                        .PageName = NormalizeUnicodetext(pagetitle)}
-                    ExtractsList.Add(Extract)
+
+            Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
+            Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
+            Dim pages As JsonElement = query.GetProperty("pages")
+
+            For Each queryPage As JsonProperty In pages.EnumerateObject
+                Dim pageElement As JsonElement = queryPage.Value
+                Dim title As String = pageElement.GetProperty("title").GetString
+                Dim missing As Boolean = IsJsonProperyPresent(pageElement, "missing")
+                If missing Then
+                    Dim WExtract As New WikiExtract With {
+                        .ExtractContent = "",
+                        .PageName = title}
+                    ExtractsList.Add(WExtract)
+                    Continue For
                 End If
+                Dim extract As String = pageElement.GetProperty("extract").GetString
+                extract = NormalizeUnicodetext(extract)
+                extract = extract.Replace("\n", Environment.NewLine)
+                extract = Regex.Replace(extract, "\[[0-9]+\]", " ")
+                extract = Regex.Replace(extract, "\[nota\ [0-9]+\]", " ")
+                extract = Regex.Replace(extract, "\[cita requerida\]", " ")
+                extract = RemoveExcessOfSpaces(extract)
+                extract = FixResumeNumericExp(extract)
+                If extract.Length > charLimit Then
+                    extract = SafeTrimExtract(extract.Substring(0, charLimit + 1), charLimit)
+                End If
+                'Si el título de la página está en el resumen, coloca en negritas la primera ocurrencia
+                If wiki Then
+                    Dim regx As New Regex(Regex.Escape(extract), RegexOptions.IgnoreCase)
+                    extract = regx.Replace(extract, "'''" & extract & "'''", 1)
+                End If
+                Dim ResultExtract As New WikiExtract With {
+                        .ExtractContent = extract,
+                        .PageName = title}
+                ExtractsList.Add(ResultExtract)
             Next
+
             Return ExtractsList
         End Function
 
@@ -795,12 +777,7 @@ Namespace WikiBot
             Dim PagenameAndResume As New SortedList(Of String, String)
 
             For Each ListInList As List(Of String) In PageList
-                Dim Qstring As String = String.Empty
-                For Each s As String In ListInList
-                    s = UrlWebEncode(s)
-                    Qstring = Qstring & s & "|"
-                Next
-                Qstring = Qstring.Trim(CType("|", Char))
+                Dim Qstring As String = ConcatenateTextArrayWithChar(ListInList.ToArray, "|"c, True)
                 Dim QueryResponse As String = GETQUERY(SStrings.GetPagesExtract & Qstring)
                 Dim ExtractsList As HashSet(Of WikiExtract) = GetExtractsFromApiResponse(QueryResponse, charLimit, wiki)
 
@@ -864,7 +841,7 @@ Namespace WikiBot
         ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
         Function GetallInclusions(ByVal pageName As String, Optional limit As Integer = 100) As String()
             Dim newlist As New List(Of String)
-            Dim s As String = String.Empty
+            Dim s As String
             s = POSTQUERY(SStrings.GetPageInclusions & pageName)
             Dim pages As New List(Of String)
             pages.AddRange(TextInBetween(s, """title"":""", """}"))
@@ -925,7 +902,7 @@ Namespace WikiBot
             End If
             Dim querydata As String = String.Format(SStrings.GetDiffQuery, fromid.ToString, toid.ToString)
             Dim querytext As String = POSTQUERY(querydata)
-            Dim difftext As String = String.Empty
+            Dim difftext As String
             Try
                 difftext = NormalizeUnicodetext(TextInBetween(querytext, ",""*"":""", "\n""}}")(0))
             Catch ex As IndexOutOfRangeException
@@ -1026,7 +1003,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="user">Usuario de Wiki</param>
         ''' <returns></returns>
-        Private Function ValidUser(ByVal user As WikiUser) As Boolean
+        Public Function UserIsActive(ByVal user As WikiUser) As Boolean
             EventLogger.Debug_Log(String.Format(Messages.CheckingUser, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
             'Verificar si el usuario existe
             If Not user.Exists Then

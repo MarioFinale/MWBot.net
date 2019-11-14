@@ -321,7 +321,7 @@ Namespace WikiBot
             End If
 
             If IsBot Then
-                additionalParams = additionalParams & "&bot="
+                additionalParams &= "&bot="
             End If
 
             Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, _Title, UrlWebEncode(EditSummary), UrlWebEncode(pageContent), UrlWebEncode(EditToken))
@@ -486,7 +486,7 @@ Namespace WikiBot
         ''' <param name="pageContent">Contenido como texto (wikicódigo) de la página</param>
         ''' <returns></returns>
         Overloads Function Save(ByVal pageContent As String) As EditResults
-            Return SavePage(Content, Messages.DefaultSumm, False, False, False, 0)
+            Return SavePage(pageContent, Messages.DefaultSumm, False, False, False, 0)
         End Function
 
         ''' <summary>
@@ -514,11 +514,11 @@ Namespace WikiBot
             End If
 
             If isMinor Then
-                additionalParameters = additionalParameters & "&minor=true"
+                additionalParameters &= "&minor=true"
             End If
 
             Dim postdata As String = String.Format(SStrings.AddThread, additionalParameters, UrlWebEncode(_Title), UrlWebEncode(editSummary), UrlWebEncode(sectionTitle), UrlWebEncode(sectionContent), UrlWebEncode(GetEditToken()))
-            Dim postresult As String = String.Empty
+            Dim postresult As String
             Try
                 postresult = _bot.POSTQUERY(postdata)
                 Threading.Thread.Sleep(1000) 'Some time to the server to process the data
@@ -786,7 +786,7 @@ Namespace WikiBot
 
                 If Month = 0 Then
                     Month = 12
-                    Year = Year - 1
+                    Year -= 1
                 End If
 
                 Dim Url As Uri = New Uri(String.Format(SStrings.GetPageViews, Project, page, Year, Currentyear, Month.ToString("00"), CurrentMonth.ToString("00"), FirstDay, LastDay))
@@ -796,7 +796,7 @@ Namespace WikiBot
                     Views.Add(Integer.Parse(view))
                 Next
                 For Each i As Integer In Views
-                    totalviews = totalviews + i
+                    totalviews += i
                 Next
                 ViewAverage = CInt((totalviews / (Views.Count - 1)))
 
