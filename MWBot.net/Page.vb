@@ -120,13 +120,6 @@ Namespace WikiBot
         ''' <returns></returns>
         Public ReadOnly Property ParentRevId As Integer
 
-
-        ''' <summary>
-        ''' Entrega la fecha de la edición en la página.
-        ''' </summary>
-        ''' <returns></returns>
-        Public ReadOnly Property EditDate As Date
-
         ''' <summary>
         ''' Indica si la pagina existe.
         ''' </summary>
