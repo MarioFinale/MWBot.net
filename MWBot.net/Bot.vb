@@ -322,7 +322,7 @@ Namespace WikiBot
                     Dim pageElement As JsonElement = pageinfo.Value
                     Dim ns As Integer = pageElement.GetProperty("ns").GetInt32
                     Dim title As String = NormalizeUnicodetext(pageElement.GetProperty("title").GetString).Replace(" ", "_")
-                    Dim missing As Boolean = IsJsonProperyPresent(pageElement, "missing")
+                    Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
 
                     If missing Then
                         Dim missingRevision As New WikiRevision With {
@@ -336,7 +336,7 @@ Namespace WikiBot
                     revisions = revisions(0)
                     Dim revid As Integer = revisions.GetProperty("revid").GetInt32()
                     Dim parentid As Integer = revisions.GetProperty("parentid").GetInt32()
-                    Dim minor As Boolean = IsJsonProperyPresent(revisions, "minor")
+                    Dim minor As Boolean = IsJsonPropertyPresent(revisions, "minor")
                     Dim user As String = revisions.GetProperty("user").GetString
                     Dim comment As String = revisions.GetProperty("comment").GetString
                     Dim timestamp As Date = GetDateFromMWTimestamp(revisions.GetProperty("timestamp").GetString)
@@ -428,7 +428,7 @@ Namespace WikiBot
                     Integer.TryParse(revid.Name, editID)
                     Dim element As JsonElement = revid.Value
                     Dim damaging As JsonElement = element.GetProperty("damaging")
-                    Dim isError As Boolean = IsJsonProperyPresent(damaging, "error")
+                    Dim isError As Boolean = IsJsonPropertyPresent(damaging, "error")
                     If isError Then
                         EditAndScoreList.Add(editID, {0, 0})
                         Continue For
@@ -467,7 +467,7 @@ Namespace WikiBot
 
                 For Each pageProperty As JsonElement In pages.EnumerateArray
                     Dim title As String = pageProperty.GetProperty("title").GetString
-                    Dim hasImage As Boolean = IsJsonProperyPresent(pageProperty, "pageimage")
+                    Dim hasImage As Boolean = IsJsonPropertyPresent(pageProperty, "pageimage")
                     If Not hasImage Then
                         PagenameAndImage.Add(title, "")
                         Continue For
@@ -616,7 +616,7 @@ Namespace WikiBot
             For Each queryPage As JsonProperty In pages.EnumerateObject
                 Dim pageElement As JsonElement = queryPage.Value
                 Dim title As String = pageElement.GetProperty("title").GetString
-                Dim missing As Boolean = IsJsonProperyPresent(pageElement, "missing")
+                Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
                 If missing Then
                     Dim WExtract As New WikiExtract With {
                         .ExtractContent = "",
@@ -833,39 +833,63 @@ Namespace WikiBot
 
         End Function
 
+        ''' <summary>
+        ''' Retorna un array de tipo string con todas las páginas donde el nombre de la página indicada es llamada (no confundir con "lo que enlaza aquí").
+        ''' </summary>
+        ''' <param name="pageName">Nombre exacto de la pagina.</param>
+        Function GetallInclusions(ByVal pageName As String) As String()
+            Return GetallInclusions(pageName, 10)
+        End Function
 
         ''' <summary>
         ''' Retorna un array de tipo string con todas las páginas donde el nombre de la página indicada es llamada (no confundir con "lo que enlaza aquí").
         ''' </summary>
         ''' <param name="pageName">Nombre exacto de la pagina.</param>
         ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
-        Function GetallInclusions(ByVal pageName As String, Optional limit As Integer = 100) As String()
-            Dim newlist As New List(Of String)
-            Dim s As String
-            s = POSTQUERY(SStrings.GetPageInclusions & pageName)
-            Dim pages As New List(Of String)
-            pages.AddRange(TextInBetween(s, """title"":""", """}"))
-            If s.Contains("""continue"":{""eicontinue"":""") Then
-                'Ok, esto es un poco confuso pero funciona
-                'Cuando una respuesta de la api tiene el parametro "continue", para continuar hay que responder con una query con nuevos parámetros, 
-                'estos deben ser los entregados por el "continue", usualmente no tienen un orden aparente (ej. de 100 salta a 1700 y luego a 10000)
-                'pero así es como funciona.
-                For i As Integer = 1 To limit
-                    If s.Contains("""continue"":{""eicontinue"":""") Then
-                        Dim tparam As String = TextInBetween(s, """continue"":{""", """},")(0).Replace("""", "")
-                        Dim tparam1 As String = "&" & tparam.Split(","c)(0).Replace(":"c, "="c).Trim()
-                        Dim tparam2 As String = "&" & tparam.Split(","c)(1).Replace(":"c, "="c).Trim()
-                        s = POSTQUERY(SStrings.GetPageInclusions & pageName & tparam1 & tparam2)
-                        pages.AddRange(TextInBetween(s, """title"":""", """}"))
-                    Else
-                        Exit For
-                    End If
-                Next
+        Function GetallInclusions(ByVal pageName As String, ByVal limit As Integer) As String()
+            '=====================================================
+            '                     !!WARNING!!
+            '                  SHITTY CODE AHEAD
+            '        TRY TO UNDERSTAND IT UNDER YOUR OWN RISK
+            '         BLAME THE MINDBENDING MW DOCUMENTATION
+            '=====================================================
+
+            Dim pages As New HashSet(Of String)
+            Dim queries As Integer = 1
+            Dim queryString As String = SStrings.GetPageInclusions & pageName
+            Dim rawQueryResponse As String = POSTQUERY(queryString)
+            Dim queryResponse As JsonDocument = GetJsonDocument(rawQueryResponse)
+            Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+            If mustContinue Then
+                Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
+                queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
             End If
-            For Each _pag As String In pages
-                newlist.Add(NormalizeUnicodetext(_pag))
+
+            Dim query As JsonElement = GetJsonElement(queryResponse, "query")
+            Dim embeddedin As JsonElement = query.GetProperty("embeddedin")
+
+            For Each qresult As JsonElement In embeddedin.EnumerateArray
+                Dim title As String = qresult.GetProperty("title").GetString
+                pages.Add(title)
             Next
-            Return newlist.ToArray
+
+            While mustContinue And queries < limit
+                queries += 1
+                rawQueryResponse = POSTQUERY(queryString)
+                queryResponse = GetJsonDocument(rawQueryResponse)
+                mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+                If mustContinue Then
+                    Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                    Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
+                    queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
+                End If
+                For Each qresult As JsonElement In embeddedin.EnumerateArray
+                    Dim title As String = qresult.GetProperty("title").GetString
+                    pages.Add(title)
+                Next
+            End While
+            Return pages.ToArray()
         End Function
 
         ''' <summary>
@@ -1031,14 +1055,18 @@ Namespace WikiBot
         ''' <param name="pagePrefix"></param>
         ''' <returns></returns>
         Function PrefixSearch(ByVal pagePrefix As String) As String()
-            Dim QueryString As String = SStrings.PrefixSearchQuery & UrlWebEncode(pagePrefix)
-            Dim QueryResult As String = POSTQUERY(QueryString)
-            Dim Pages As String() = TextInBetween(QueryResult, """title"":""", """,""")
-            Dim DecodedPages As New List(Of String)
-            For Each p As String In Pages
-                DecodedPages.Add(NormalizeUnicodetext(p))
+            Dim results As New List(Of String)
+            Dim queryString As String = SStrings.PrefixSearchQuery & UrlWebEncode(pagePrefix)
+            Dim queryRawResponse As String = POSTQUERY(queryString)
+            Dim queryResult As JsonDocument = GetJsonDocument(queryRawResponse)
+            Dim queryElement As JsonElement = GetJsonElement(queryResult, "query")
+            Dim qprefixsearch As JsonElement = queryElement.GetProperty("prefixsearch")
+
+            For Each searchResult As JsonElement In qprefixsearch.EnumerateArray
+                Dim title As String = searchResult.GetProperty("title").GetString
+                results.Add(title)
             Next
-            Return DecodedPages.ToArray
+            Return results.ToArray()
         End Function
 #End Region
 

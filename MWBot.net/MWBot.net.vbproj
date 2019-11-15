@@ -4,21 +4,26 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.0.7257.6760</AssemblyVersion>
-    <FileVersion>1.0.7257.6760</FileVersion>
+    <AssemblyVersion>1.0.7258.53</AssemblyVersion>
+    <FileVersion>1.0.7258.53</FileVersion>
+    <OptionStrict>On</OptionStrict>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\Comp\</OutputPath>
     <DocumentationFile>MWBot.net.xml</DocumentationFile>
+    <NoWarn />
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>MWBot.net.xml</DocumentationFile>
+    <NoWarn />
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0007" />
+    <PackageReference Include="System.Drawing.Common" Version="4.6.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.6.0" />
   </ItemGroup>
 

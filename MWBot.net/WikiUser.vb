@@ -55,6 +55,10 @@ Namespace WikiBot
             _LastEdit = GetLastEditTimestampUser(_UserName)
         End Sub
 
+        Sub New()
+            Exists = False
+        End Sub
+
         Sub LoadInfo()
             Dim queryresponse As String = _workerBot.POSTQUERY(SStrings.LoadUserQuery & _userName)
             Dim fequeryresponse As String = _workerBot.POSTQUERY(SStrings.UserFirstEditQuery & _userName)

@@ -1,6 +1,7 @@
 ﻿Option Strict On
 Option Explicit On
 Imports System.Net
+Imports System.Text.Json
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports MWBot.net.My.Resources
@@ -14,7 +15,6 @@ Namespace WikiBot
 
 #Region "Properties"
 
-        Private _ID As Integer
         Private _username As String
         Private _siteuri As Uri
 
@@ -22,8 +22,8 @@ Namespace WikiBot
         ''' Entrega el puntaje ORES {damaging,goodfaith} de la página.
         ''' </summary>
         ''' <returns></returns>
-        Public Function ORESScores() As Double()
-            Return GetORESScores(_CurrentRevId)
+        Public Function ORESScore() As Double()
+            Return GetORESScore(_CurrentRevId)
         End Function
         ''' <summary>
         ''' Entrega el contenido (wikitexto) de la página.
@@ -132,14 +132,6 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property Exists As Boolean
-            Get
-                If _ID = -1 Then
-                    Return False
-                Else
-                    Return True
-                End If
-            End Get
-        End Property
 
         ''' <summary>
         ''' Indica si la pagina puede ser editada por el bot.
@@ -156,23 +148,19 @@ Namespace WikiBot
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property LastEdit As Date
-            Get
-                Return GetLastEdit()
-            End Get
-        End Property
 
-
-        Public ReadOnly Property LastTimeStamp As String
-            Get
-                Return GetLastTimeStamp()
-            End Get
-        End Property
 
         Public ReadOnly Property URL As String
             Get
                 Return _bot.WikiUri.OriginalString & "wiki/" & Title.Replace(" ", "_")
             End Get
         End Property
+
+        ''' <summary>
+        ''' Entrega el ID de la página.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property PageID As Integer
 #End Region
         ''' <summary>
         ''' Inicializa una nueva página, por lo general no se llama de forma directa. Se puede obtener una página creandola con Bot.Getpage.
@@ -251,22 +239,8 @@ Namespace WikiBot
         ''' </summary>  
         ''' <param name="revid">EDIT ID de la edicion a revisar</param>
         ''' <remarks>Los EDIT ID deben ser distintos</remarks>
-        Private Function GetORESScores(ByVal revid As Integer) As Double()
-            EventLogger.Debug_Log(String.Format(Messages.LoadingOres, revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-            Try
-                Dim turi As Uri = New Uri(SStrings.GetOresScore & revid)
-                Dim s As String = _bot.GET(turi)
-
-                Dim DMGScore_str As String = TextInBetween(TextInBetweenInclusive(s, "{""damaging"": {""score"":", "}}}")(0), """true"": ", "}}}")(0).Replace(".", DecimalSeparator)
-                Dim GoodFaithScore_str As String = TextInBetween(TextInBetweenInclusive(s, """goodfaith"": {""score"":", "}}}")(0), """true"": ", "}}}")(0).Replace(".", DecimalSeparator)
-                Dim DMGScore As Double = Math.Round((Double.Parse(DMGScore_str) * 100), 2)
-                Dim GoodFaithScore As Double = Math.Round((Double.Parse(GoodFaithScore_str) * 100), 2)
-                EventLogger.Debug_Log(String.Format(Messages.OresLoaded, revid.ToString, DMGScore_str, GoodFaithScore_str), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-                Return {DMGScore, GoodFaithScore}
-            Catch ex As IndexOutOfRangeException
-                EventLogger.Debug_Log(String.Format(Messages.OresFailed, revid, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-                Return Nothing
-            End Try
+        Private Function GetORESScore(ByVal revid As Integer) As Double()
+            Return _bot.GetORESScores({revid})(0)
         End Function
 
 
@@ -307,7 +281,7 @@ Namespace WikiBot
                 Return EditResults.POST_error
             End Try
 
-            Dim ntimestamp As String = GetLastTimeStamp()
+            Dim ntimestamp As String = GetCurrentTimestamp()
             If Not ntimestamp = _Timestamp Then
                 EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_conflict
@@ -503,7 +477,7 @@ Namespace WikiBot
                 Throw New ArgumentNullException(System.Reflection.MethodBase.GetCurrentMethod().Name)
             End If
 
-            If Not GetLastTimeStamp() = _Timestamp Then
+            If Not GetCurrentTimestamp() = _Timestamp Then
                 EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, _username)
                 Return EditResults.Edit_conflict
             End If
@@ -610,7 +584,7 @@ Namespace WikiBot
         Private Overloads Sub PageInfoData(ByVal pageName As String)
             Dim querystring As String = String.Format(SStrings.PageInfo, UrlWebEncode(pageName))
             Dim QueryText As String = _bot.GETQUERY(querystring)
-            LoadPageInfo(querystring, pageName)
+            RetryLoad(querystring, 3)
         End Sub
 
         ''' <summary>
@@ -619,118 +593,130 @@ Namespace WikiBot
         ''' <param name="Revid">Revision ID de la página</param>
         Private Overloads Sub PageInfoData(ByVal Revid As Integer)
             Dim querystring As String = String.Format(SStrings.PageInfoRevid, Revid.ToString)
-            LoadPageInfo(querystring, Revid.ToString)
+            RetryLoad(querystring, 3)
         End Sub
 
-        Private Sub LoadPageInfo(ByVal querystring As String, ByVal PagenameOrID As String)
-            Dim QueryText As String = _bot.GETQUERY(querystring)
-            Dim Def As String = "-1"
+        Private Sub RetryLoad(ByVal querystring As String, ByVal maxRetries As Integer)
+            For i As Integer = 0 To maxRetries
+                If LoadPageInfo(querystring) Then Return
+            Next
+            Throw New MaxRetriesExeption
+        End Sub
 
-            Dim PTitle As String = NormalizeUnicodetext(TextInBetween(QueryText, """title"":""", """,").DefaultIfEmpty("").FirstOrDefault())
-            Dim WNamespace As String = TextInBetween(QueryText, """ns"":", ",").DefaultIfEmpty(Def).FirstOrDefault()
-            Dim PageID As String = TextInBetween(QueryText, "{""pageid"":", ",""ns").DefaultIfEmpty(Def).FirstOrDefault()
-            Dim PaRevID As String = TextInBetween(QueryText, """parentid"":", ",""").DefaultIfEmpty(Def).FirstOrDefault()
-            Dim PRevID As String = TextInBetween(QueryText, """revid"":", ",""").DefaultIfEmpty(Def).FirstOrDefault()
-            Dim User As String = NormalizeUnicodetext(TextInBetween(QueryText, """user"":""", """,").DefaultIfEmpty("").FirstOrDefault())
-            Dim Timestamp As String = TextInBetween(QueryText, """timestamp"":""", """,").DefaultIfEmpty("").FirstOrDefault()
-            Dim Size As String = NormalizeUnicodetext(TextInBetween(QueryText, ",""size"":", ",""").DefaultIfEmpty("0").FirstOrDefault())
-            Dim pComment As String = NormalizeUnicodetext(TextInBetween(QueryText, """comment"":""", """,").DefaultIfEmpty("").FirstOrDefault())
-            Dim Wikitext As String = If(Regex.Match(QueryText, "(wikitext"","".+?\*"":"")([\s\S]+?[^\\])(""}})", RegexOptions.IgnoreCase).Groups(2).Value, "")
-            Wikitext = NormalizeUnicodetext(Wikitext)
-            Dim PExtract As String = NormalizeUnicodetext(TextInBetween(QueryText, """extract"":""", """}").DefaultIfEmpty("").FirstOrDefault())
-            Dim PageImage As String = NormalizeUnicodetext(TextInBetween(QueryText, """pageimage"":""", """").DefaultIfEmpty("").FirstOrDefault())
-            Dim PCategories As New List(Of String)
+        Private Function LoadPageInfo(ByVal querystring As String) As Boolean
+            Dim queryresponse As String = _bot.GETQUERY(querystring)
+            Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
+            Dim iserror As Boolean = IsJsonPropertyPresent(jsonResponse.RootElement, "error")
+            If iserror Then
+                Return False
+            End If
+            Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
+            Dim pages As JsonElement = query.GetProperty("pages")
 
-            If PageID = "-1" Then
-                EventLogger.Debug_Log(String.Format(Messages.PageDoesNotExist, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
+            '===Prop===
+            Dim qpageTitle As String
+            Dim qpageNS As Integer
+            Dim qpageLastEdit As Date
+            Dim qpageLastTimestamp As String
+            Dim qpageRevID As Integer
+            Dim qpageParentRevID As Integer
+            Dim qpageLastUser As String = String.Empty
+            Dim qpageComment As String = String.Empty
+            Dim qpageThumbnail As String = String.Empty
+            Dim qpageCategories As New List(Of String)
+            Dim qpageSize As Integer
+            Dim qpageContent As String
+            Dim qpageDeletedInfo As Boolean
+            Dim qpageRoot As String
+            Dim qpageExtract As String
+            Dim qpageID As Integer
+
+            Dim pageProperty As JsonProperty = pages.EnumerateObject(0)
+            Dim pageElement As JsonElement = pageProperty.Value
+
+            qpageTitle = pageElement.GetProperty("title").GetString
+            qpageRoot = qpageTitle.Split("/"c)(0).Trim()
+            qpageNS = pageElement.GetProperty("ns").GetInt32
+            Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
+            If missing Then
+                _Exists = False
+                Return True
+            End If
+            If IsJsonPropertyPresent(pageElement, "pageimage") Then
+                qpageThumbnail = pageElement.GetProperty("pageimage").GetString
             End If
 
-            Dim deletedinfo As Func(Of Boolean) = Function()
-                                                      Dim vars As String() = {User, Wikitext}
-                                                      For Each v As String In vars
-                                                          If String.IsNullOrWhiteSpace(v) Then Return True
-                                                      Next
-                                                      Return False
-                                                  End Function
+            qpageID = pageElement.GetProperty("pageid").GetInt32
+            qpageExtract = pageElement.GetProperty("extract").GetString
 
-            If deletedinfo() Then
-                EventLogger.Debug_Log(String.Format(Messages.DeletedInfoMessage, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-                _HasHiddenInfo = True
-            End If
-
-            'Inutil
-            'If String.IsNullOrWhiteSpace(PageImage) Then
-            '    EventLogger.Debug_Log(String.Format(Messages.PageNoThumb, PagenameOrID), Reflection.MethodBase.GetCurrentMethod().Name, _username)
-            'End If
-
-            For Each m As Match In Regex.Matches(QueryText, "title"":""[Cc][a][t][\S\s]+?(?=""})")
-                PCategories.Add(NormalizeUnicodetext(m.Value.Replace("title"":""", "")))
+            Dim categories As JsonElement = pageElement.GetProperty("categories")
+            For Each category As JsonElement In categories.EnumerateArray
+                Dim categoryname As String = category.GetProperty("title").GetString
+                qpageCategories.Add(categoryname)
             Next
 
-            Dim Rootp As String
-            If Regex.Match(PTitle, "\/.+").Success Then
-                Rootp = PTitle.Split("/"c)(0)
+            Dim revisions As JsonElement = pageElement.GetProperty("revisions")
+            Dim currentrevision As JsonElement = revisions.EnumerateArray(0)
+            qpageRevID = currentrevision.GetProperty("revid").GetInt32
+            qpageParentRevID = currentrevision.GetProperty("parentid").GetInt32
+            qpageLastEdit = GetDateFromMWTimestamp(currentrevision.GetProperty("timestamp").GetString)
+            qpageLastTimestamp = currentrevision.GetProperty("timestamp").GetString
+            qpageSize = currentrevision.GetProperty("size").GetInt32
+
+            If IsJsonPropertyPresent(currentrevision, "comment") Then
+                qpageComment = currentrevision.GetProperty("comment").GetString
             Else
-                Rootp = PTitle
+                qpageDeletedInfo = True
+            End If
+            If IsJsonPropertyPresent(currentrevision, "user") Then
+                qpageLastUser = currentrevision.GetProperty("user").GetString
+            Else
+                qpageDeletedInfo = True
             End If
 
-            _RootPage = Rootp
-            _Title = PTitle
-            _ID = Integer.Parse(PageID)
-            _Lastuser = User
-            _Timestamp = Timestamp
-            _Content = Wikitext
-            _Size = Integer.Parse(Size)
-            _PageNamespace = Integer.Parse(WNamespace)
-            _Categories = PCategories.ToArray
-            _CurrentRevId = Integer.Parse(PRevID)
-            _ParentRevId = Integer.Parse(PaRevID)
-            _Extract = PExtract
-            _Thumbnail = PageImage
-            _Comment = pComment
-            _EditDate = ConvertTimestampToDate(Timestamp)
-        End Sub
+            Dim slots As JsonElement = currentrevision.GetProperty("slots")
+            Dim mainslot As JsonElement = slots.GetProperty("main")
+            qpageContent = mainslot.GetProperty("*").GetString
 
+            _Title = qpageTitle
+            _PageNamespace = qpageNS
+            _LastEdit = qpageLastEdit
+            _Timestamp = qpageLastTimestamp
+            _CurrentRevId = qpageRevID
+            _ParentRevId = qpageParentRevID
+            _Lastuser = qpageLastUser
+            _Comment = qpageComment
+            _Thumbnail = qpageThumbnail
+            _Categories = qpageCategories.ToArray
+            _Size = qpageSize
+            _Content = qpageContent
+            _Exists = True
+            _HasHiddenInfo = qpageDeletedInfo
+            _RootPage = qpageRoot
+            _Extract = qpageExtract
+            _PageID = qpageID
+            Return True
+        End Function
 
-
-
-        ''' <summary>
-        ''' Entrega la ultima marca de tiempo de la pagina.
-        ''' </summary>
-        ''' <returns></returns>
-        Private Function GetLastTimeStamp() As String
-            Dim querystring As String = String.Format(SStrings.GetLastTimestamp, _Title)
-            Try
-                Dim QueryText As String = _bot.POSTQUERY(querystring)
-                Return TextInBetween(QueryText, """timestamp"":""", """")(0)
-            Catch ex As IndexOutOfRangeException
+        Private Function GetCurrentTimestamp() As String
+            Dim querystring As String = String.Format(SStrings.GetLastTimestamp, Title)
+            Dim queryresponse As String = _bot.GETQUERY(querystring)
+            Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
+            Dim iserror As Boolean = IsJsonPropertyPresent(jsonResponse.RootElement, "error")
+            If iserror Then
                 Return ""
-            Catch ex As WebException
+            End If
+            Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
+            Dim pages As JsonElement = query.GetProperty("pages")
+            Dim pageProperty As JsonProperty = pages.EnumerateObject(0)
+            Dim pageElement As JsonElement = pageProperty.Value
+            If IsJsonPropertyPresent(pageElement, "missing") Then
                 Return ""
-            End Try
+            End If
+            Dim revisions As JsonElement = pageElement.GetProperty("revisions")
+            Dim currentrevision As JsonElement = revisions.EnumerateArray(0)
+            Return currentrevision.GetProperty("timestamp").GetString
         End Function
-
-        ''' <summary>
-        ''' Entrega la ultima marca de tiempo de la pagina.
-        ''' </summary>
-        ''' <returns></returns>
-        Private Function GetLastEdit() As Date
-            Dim timestamp As String = GetLastTimeStamp()
-            Return ConvertTimestampToDate(timestamp)
-        End Function
-
-        ''' <summary>
-        ''' Convierte un timestamp de mediawiki a un objeto Date
-        ''' </summary>
-        ''' <param name="timestamp"></param>
-        ''' <returns></returns>
-        Private Function ConvertTimestampToDate(ByVal timestamp As String) As Date
-            Dim timestringarray As String() = timestamp.Replace("T"c, " "c).Replace("Z"c, "").Replace("-"c, " "c).Replace(":"c, " "c).Split(" "c)
-            Dim timeintarray As Integer() = StringArrayToInt(timestringarray)
-            Dim editdate As Date = New Date(timeintarray(0), timeintarray(1), timeintarray(2), timeintarray(3), timeintarray(4), timeintarray(5), DateTimeKind.Utc)
-            Return editdate
-        End Function
-
 
         ''' <summary>
         ''' Elimina una referencia que contenga una cadena exacta.

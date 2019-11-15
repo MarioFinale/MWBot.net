@@ -1,19 +1,24 @@
-﻿Imports System.Drawing
+﻿Option Explicit On
+Option Strict On
 Imports System.Net
 Imports System.Text.RegularExpressions
 Imports Utils.Utils
 Imports MWBot.net.GlobalVars
-Imports SixLabors.ImageSharp
 Imports System.IO
+Imports sImage = System.Drawing.Image
+Imports System.Drawing
+Imports System.Text.Json
 
 Namespace WikiBot
     Public Class Image
         Property Name As String
-        Property Image As SixLabors.ImageSharp.Image
         Property Author As String
         Property Uri As Uri
         Property License As String
         Property LicenseUrl As String
+        Property Missing As Boolean
+
+        Private _image As sImage
 
         ''' <summary>
         ''' Obtiene una imagen de la wiki dado el nombre exacto (Máximo 1000px de ancho). Como el proyecto eswiki obtiene las imágenes de Commons se consulta a la wiki misma aunque se retorne una URL a Commons.
@@ -24,59 +29,78 @@ Namespace WikiBot
             If Not (CommonsFileName.ToUpper.EndsWith(".PNG") Or CommonsFileName.ToUpper.EndsWith(".JPG") Or CommonsFileName.ToUpper.EndsWith(".SVG") Or CommonsFileName.ToUpper.EndsWith(".GIF") Or CommonsFileName.ToUpper.EndsWith(".JPEG")) Then
                 Throw New ArgumentException("The file must be a image.", "CommonsFileName")
             End If
-            Dim timg As Tuple(Of SixLabors.ImageSharp.Image, String()) = GetCommonsFile(CommonsFileName, Workerbot)
-            Image = timg.Item1
+            Dim timg As Tuple(Of sImage, String()) = GetCommonsFile(CommonsFileName, Workerbot)
+            If timg Is Nothing Then
+                Missing = True
+                Return
+            End If
+            _image = timg.Item1
             Name = CommonsFileName
             Author = timg.Item2(2)
             License = timg.Item2(0)
             If Not String.IsNullOrWhiteSpace(timg.Item2(1)) Then
                 LicenseUrl = timg.Item2(1)
             End If
-            Uri = New Uri("https://commons.wikimedia.org/wiki/File:" & CommonsFileName.Replace(" ", "_"))
+            Uri = New Uri("https://commons.wikimedia.org/wiki/File:" & UrlWebEncode(CommonsFileName.Replace(" ", "_")))
         End Sub
 
-        Private Function GetCommonsFile(ByVal CommonsFilename As String, ByVal Workerbot As Bot) As Tuple(Of SixLabors.ImageSharp.Image, String())
-            Dim responsestring As String = NormalizeUnicodetext(Workerbot.GETQUERY("action=query&format=json&titles=File:" & UrlWebEncode(CommonsFilename) & "&prop=imageinfo&iiprop=extmetadata|url&iiurlwidth=1000"))
-            Dim thumburlmatches As String() = TextInBetween(responsestring, """thumburl"":""", """,")
-            Dim licencematches As String() = TextInBetween(responsestring, """LicenseShortName"":{""value"":""", """,")
-            Dim licenceurlmatches As String() = TextInBetween(responsestring, """LicenseUrl"":{""value"":""", """,")
-            Dim authormatches As String() = TextInBetween(responsestring, """Artist"":{""value"":""", """,")
-            Dim matchstring As String = "<[\S\s]+?>"
-            Dim matchstring2 As String = "\([\S\s]+?\)"
-            Dim licence As String = String.Empty
-            Dim licenceurl As String = String.Empty
-            Dim author As String = String.Empty
-            If licencematches.Count() > 0 Then licence = Regex.Replace(licencematches(0), matchstring, "")
-            If licenceurlmatches.Count() > 0 Then licenceurl = Regex.Replace(licenceurlmatches(0), matchstring, "")
-
-            If authormatches.Count() > 0 Then
-                author = Regex.Replace(authormatches(0), matchstring, "")
-                author = Regex.Replace(author, matchstring2, "").Trim()
-                Dim authors As String() = author.Split(Environment.NewLine.ToCharArray())
-
-                If authors.Count() > 1 Then
-
-                    For i As Integer = 0 To authors.Count() - 1
-                        If Not String.IsNullOrWhiteSpace(authors(i)) Then author = authors(i)
-                    Next
-                End If
-
-                If author.Contains(":") Then author = author.Split(":"c)(1).Trim()
+        Private Function NormalizeAuthor(ByVal text As String) As String
+            Dim regx1 As String = "<[\S\s]+?>"
+            Dim regx2 As String = "\([\S\s]+?\)"
+            text = Regex.Replace(text, regx1, "")
+            text = Regex.Replace(text, regx2, "").Trim()
+            Dim artists As String() = text.Split(Environment.NewLine.ToCharArray())
+            If artists.Count() > 1 Then
+                For aindx As Integer = 0 To artists.Count() - 1
+                    If Not String.IsNullOrWhiteSpace(artists(aindx)) Then text = artists(aindx)
+                Next
             End If
-
-            Dim img As SixLabors.ImageSharp.Image = Nothing
-            If thumburlmatches.Count() > 0 Then img = PicFromUrl(thumburlmatches(0))
-            If String.IsNullOrWhiteSpace(author) Or (author.ToLower().Contains("unknown")) Then author = "Desconocido"
-            Return New Tuple(Of SixLabors.ImageSharp.Image, String())(img, New String() {licence, licenceurl, author})
+            If text.Contains(":") Then text = text.Split(":"c)(1).Trim()
+            If String.IsNullOrWhiteSpace(text) Or (text.ToLower().Contains("unknown")) Then text = "Desconocido"
+            Return text
         End Function
 
-        Private Function PicFromUrl(ByVal url As String) As SixLabors.ImageSharp.Image
-            Dim img As SixLabors.ImageSharp.Image = Nothing
+        Private Function GetCommonsFile(ByVal CommonsFilename As String, ByVal Workerbot As Bot) As Tuple(Of sImage, String())
+            Dim fileInfo As New List(Of String)
+            Dim queryString As String = "action=query&format=json&titles=File:" & UrlWebEncode(CommonsFilename) & "&prop=imageinfo&iiprop=extmetadata|url&iiurlwidth=1000"
+            Dim responsestring As String = Workerbot.GETQUERY(queryString)
+            Dim queryResponse As JsonDocument = GetJsonDocument(responsestring)
+            Dim queryElement As JsonElement = GetJsonElement(queryResponse, "query")
+            Dim qpages As JsonElement = queryElement.GetProperty("pages")
+            For Each qpage As JsonProperty In qpages.EnumerateObject
+                Dim pageElement As JsonElement = qpage.Value
+                Dim title As String = pageElement.GetProperty("title").GetString
+                Dim missing As Boolean = Not IsJsonPropertyPresent(pageElement, "imageinfo")
+                If missing Then
+                    Return Nothing
+                End If
+                Dim imageInfo As JsonElement = pageElement.GetProperty("imageinfo")
+                Dim info As JsonElement = imageInfo.EnumerateArray(0)
+                Dim thumburl As String = info.GetProperty("thumburl").GetString
+                Dim url As String = info.GetProperty("thumburl").GetString
+                Dim extmetadata As JsonElement = info.GetProperty("extmetadata")
+                Dim objectname As JsonElement = extmetadata.GetProperty("ObjectName")
+                Dim name As String = objectname.GetProperty("value").GetString
+                Dim licenseshortname As JsonElement = extmetadata.GetProperty("LicenseShortName")
+                Dim slicenseshortname As String = licenseshortname.GetProperty("value").GetString
+                Dim licenseurl As JsonElement = extmetadata.GetProperty("LicenseUrl")
+                Dim slicenseurl As String = licenseurl.GetProperty("value").GetString
+                Dim artist As JsonElement = extmetadata.GetProperty("Artist")
+                Dim sartist As String = artist.GetProperty("value").GetString
+                sartist = NormalizeAuthor(sartist)
+                Dim img As sImage = PicFromUrl(thumburl)
+                Return New Tuple(Of sImage, String())(img, {slicenseshortname, slicenseurl, sartist})
+            Next
+            Return Nothing
+        End Function
+
+        Private Function PicFromUrl(ByVal url As String) As sImage
+            Dim img As sImage = Nothing
             Try
                 Dim request = WebRequest.Create(url)
                 Using response = request.GetResponse()
                     Using stream = response.GetResponseStream()
-                        img = SixLabors.ImageSharp.Image.Load(stream)
+                        img = sImage.FromStream(stream, True, True)
                     End Using
                 End Using
                 Return img
@@ -95,10 +119,11 @@ Namespace WikiBot
             Dim tex As String() = Path.Split("."c)
             Dim ext As String = "." & tex(tex.Count - 1)
             Dim endname As String = ReplaceLast(Path, ext, ".png")
-            Dim tstream As New MemoryStream
-            Image.SaveAsPng(tstream)
-            Dim imageBytes As Byte() = tstream.ToArray
-            IO.File.WriteAllBytes(endname, imageBytes)
+            Using tstream As New MemoryStream
+                _image.Save(endname, Imaging.ImageFormat.Png)
+                Dim imageBytes As Byte() = tstream.ToArray
+                IO.File.WriteAllBytes(endname, imageBytes)
+            End Using
         End Sub
 
     End Class

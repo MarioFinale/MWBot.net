@@ -1,13 +1,15 @@
-﻿Public Class WikiDiff
+﻿Imports MWBot.net.WikiBot
 
-    Property OldId As Integer
-    Property NewId As Integer
-    Property Diffs As IReadOnlyCollection(Of Tuple(Of String, String))
+Public Class WikiDiff
+
+    ReadOnly Property OldId As Integer
+    ReadOnly Property NewId As Integer
+    ReadOnly Property Diffs As IReadOnlyCollection(Of Tuple(Of String, String))
 
     Sub New(ByVal tOldid As Integer, tNewid As Integer, tDiff As ICollection(Of Tuple(Of String, String)))
         OldId = tOldid
         NewId = tNewid
-        Diffs = tDiff
+        Diffs = CType(tDiff, IReadOnlyCollection(Of Tuple(Of String, String)))
     End Sub
 
 End Class
