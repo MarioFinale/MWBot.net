@@ -201,7 +201,9 @@ Namespace WikiBot
             End If
             _siteuri = site
             PageInfoData(PageTitle)
-            _Threads = GetPageThreads(_Content)
+            If Exists Then
+                _Threads = GetPageThreads(_Content)
+            End If
             EventLogger.Debug_Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, _username)
             Return True
         End Function
@@ -632,6 +634,9 @@ Namespace WikiBot
             qpageNS = pageElement.GetProperty("ns").GetInt32
             Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
             If missing Then
+                _Title = qpageTitle
+                _PageNamespace = qpageNS
+                _RootPage = qpageRoot
                 _Exists = False
                 Return True
             End If
@@ -642,11 +647,13 @@ Namespace WikiBot
             qpageID = pageElement.GetProperty("pageid").GetInt32
             qpageExtract = pageElement.GetProperty("extract").GetString
 
-            Dim categories As JsonElement = pageElement.GetProperty("categories")
-            For Each category As JsonElement In categories.EnumerateArray
-                Dim categoryname As String = category.GetProperty("title").GetString
-                qpageCategories.Add(categoryname)
-            Next
+            If IsJsonPropertyPresent(pageElement, "categories") Then
+                Dim categories As JsonElement = pageElement.GetProperty("categories")
+                For Each category As JsonElement In categories.EnumerateArray
+                    Dim categoryname As String = category.GetProperty("title").GetString
+                    qpageCategories.Add(categoryname)
+                Next
+            End If
 
             Dim revisions As JsonElement = pageElement.GetProperty("revisions")
             Dim currentrevision As JsonElement = revisions.EnumerateArray(0)

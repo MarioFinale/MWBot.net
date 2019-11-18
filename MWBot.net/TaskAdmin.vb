@@ -69,7 +69,7 @@ Public Class TaskAdmin
                     tinfo.Status = "Running"
                     Try
                         tinfo.Task.Invoke
-                    Catch ex As Exception
+                    Catch ex As Exception When Not Debugger.IsAttached
                         tinfo.ExCount += 1
                         EventLogger.EX_Log("UNHANDLED TASK EX: """ & tinfo.Name & """  EX: " & ex.Message & " STACK:" & ex.StackTrace, "THREAD", tinfo.Author)
                     End Try
@@ -91,7 +91,7 @@ Public Class TaskAdmin
                     End If
                 End If
             Loop
-        Catch ex As Exception
+        Catch ex As Exception When Not Debugger.IsAttached
             tinfo.ExCount += 1
             EventLogger.EX_Log("UNHANDLED THREAD EX: """ & tinfo.Name & """  EX: " & ex.Message & " STACK:" & ex.StackTrace, "THREAD", tinfo.Author)
         End Try
@@ -134,7 +134,7 @@ Public Class TaskAdmin
 
                 End If
             Loop
-        Catch ex As Exception
+        Catch ex As Exception When Not Debugger.IsAttached
             tinfo.ExCount += 1
             EventLogger.EX_Log("TASK """ & tinfo.Name & """  EX: " & ex.Message & " STACK:" & ex.StackTrace, "THREAD", tinfo.Author)
         End Try

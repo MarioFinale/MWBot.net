@@ -6,6 +6,7 @@ Imports Utils.Utils
 Namespace WikiBot
 
     Public Class Template
+        Public ReadOnly Property Valid As Boolean
         Private _name As String
         Private _parameters As List(Of Tuple(Of String, String))
         Private _text As String
@@ -67,6 +68,7 @@ Namespace WikiBot
             Else
                 GetTemplateOfText(text)
             End If
+            _Valid = Not String.IsNullOrWhiteSpace(_name)
         End Sub
 
         ''' <summary>
@@ -78,6 +80,7 @@ Namespace WikiBot
             _name = templateName
             _parameters = templateParams
             _text = MakeTemplateText(templateName, templateParams)
+            _Valid = Not String.IsNullOrWhiteSpace(_name)
         End Sub
 
         ''' <summary>
@@ -87,6 +90,7 @@ Namespace WikiBot
             _name = String.Empty
             _text = String.Empty
             _parameters = New List(Of Tuple(Of String, String))
+            _Valid = False
         End Sub
 
         ''' <summary>
@@ -145,6 +149,18 @@ Namespace WikiBot
             templatetext = templatetext & closing
             Return templatetext
 
+        End Function
+
+        ''' <summary>
+        ''' Indica si la plantilla contiene el nombre exacto del parámetro indicado.
+        ''' </summary>
+        ''' <param name="parametername"></param>
+        ''' <returns></returns>
+        Function ContainsParameter(ByVal parametername As String) As Boolean
+            For Each ptup As Tuple(Of String, String) In Parameters
+                If ptup.Item1.Trim() = parametername Then Return True
+            Next
+            Return False
         End Function
 
         ''' <summary>
@@ -358,6 +374,7 @@ Namespace WikiBot
             _parameters = parameters
             _text = text
             _newtemplate = False
+            _Valid = Not String.IsNullOrWhiteSpace(_name)
         End Sub
 
         ''' <summary>
