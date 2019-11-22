@@ -17,8 +17,7 @@ Namespace WikiBot
         Property License As String
         Property LicenseUrl As String
         Property Missing As Boolean
-
-        Private _image As sImage
+        Private Property TImage As sImage
 
         ''' <summary>
         ''' Obtiene una imagen de la wiki dado el nombre exacto (Máximo 1000px de ancho). Como el proyecto eswiki obtiene las imágenes de Commons se consulta a la wiki misma aunque se retorne una URL a Commons.
@@ -27,14 +26,14 @@ Namespace WikiBot
         ''' <param name="Workerbot"></param>
         Public Sub New(ByVal CommonsFileName As String, ByRef Workerbot As Bot)
             If Not (CommonsFileName.ToUpper.EndsWith(".PNG") Or CommonsFileName.ToUpper.EndsWith(".JPG") Or CommonsFileName.ToUpper.EndsWith(".SVG") Or CommonsFileName.ToUpper.EndsWith(".GIF") Or CommonsFileName.ToUpper.EndsWith(".JPEG")) Then
-                Throw New ArgumentException("The file must be a image.", "CommonsFileName")
+                Throw New ArgumentException("The file must be a image.", NameOf(CommonsFileName))
             End If
             Dim timg As Tuple(Of sImage, String()) = GetCommonsFile(CommonsFileName, Workerbot)
             If timg Is Nothing Then
                 Missing = True
                 Return
             End If
-            _image = timg.Item1
+            TImage = timg.Item1
             Name = CommonsFileName
             Author = timg.Item2(2)
             License = timg.Item2(0)
@@ -83,8 +82,8 @@ Namespace WikiBot
                 Dim name As String = objectname.GetProperty("value").GetString
                 Dim licenseshortname As JsonElement = extmetadata.GetProperty("LicenseShortName")
                 Dim slicenseshortname As String = licenseshortname.GetProperty("value").GetString
-                Dim licenseurl As JsonElement = extmetadata.GetProperty("LicenseUrl")
-                Dim slicenseurl As String = licenseurl.GetProperty("value").GetString
+                Dim plicenseurl As JsonElement = extmetadata.GetProperty("LicenseUrl")
+                Dim slicenseurl As String = plicenseurl.GetProperty("value").GetString
                 Dim artist As JsonElement = extmetadata.GetProperty("Artist")
                 Dim sartist As String = artist.GetProperty("value").GetString
                 sartist = NormalizeAuthor(sartist)
@@ -120,7 +119,7 @@ Namespace WikiBot
             Dim ext As String = "." & tex(tex.Count - 1)
             Dim endname As String = ReplaceLast(Path, ext, ".png")
             Using tstream As New MemoryStream
-                _image.Save(endname, Imaging.ImageFormat.Png)
+                TImage.Save(endname, Imaging.ImageFormat.Png)
                 Dim imageBytes As Byte() = tstream.ToArray
                 IO.File.WriteAllBytes(endname, imageBytes)
             End Using

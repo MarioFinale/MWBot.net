@@ -130,14 +130,14 @@ Namespace WikiBot
             _UserName = Api.UserName
         End Sub
 
-        Sub SetLogEngine(ByVal eng As LogEngine.LogEngine)
+        Public Sub SetLogEngine(ByVal eng As LogEngine.LogEngine)
             EventLogger = eng
         End Sub
 
         ''' <summary>
         ''' Intenta loguear de nuevo en la API.
         ''' </summary>
-        Sub Relogin()
+        Public Sub Relogin()
             Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
         End Sub
 

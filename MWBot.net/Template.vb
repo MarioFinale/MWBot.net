@@ -116,7 +116,7 @@ Namespace WikiBot
             For Each t As Tuple(Of String, String) In templateparams
                 text = text & "|" & t.Item1 & "=" & t.Item2 & linechar
             Next
-            text = text & "}}"
+            text &= "}}"
             Return text
         End Function
 
@@ -146,7 +146,7 @@ Namespace WikiBot
             For Each s As String In paramstext
                 templatetext = templatetext & "|" & s
             Next
-            templatetext = templatetext & closing
+            templatetext &= closing
             Return templatetext
 
         End Function
@@ -231,7 +231,7 @@ Namespace WikiBot
             Dim innertext As String = NewText.Substring(2, NewText.Length - 4)
             For cha As Integer = 0 To innertext.Count - 1
                 If Not innertext(cha) = "|" Then
-                    tempname = tempname & innertext(cha)
+                    tempname &= innertext(cha)
                 Else
                     Exit For
                 End If

@@ -122,6 +122,7 @@ Namespace WikiBot
                     EventLogger.Log(Messages.NetworkError & ex1.Message, SStrings.LocalSource)
                 Catch ex2 As IOException
                     EventLogger.Log(Messages.NetworkError & ex2.Message, SStrings.LocalSource)
+#Disable Warning CA1031 ' Generic exceptions needs to be catched
                 Catch ex3 As Exception
                     EventLogger.Log(Messages.LoginError, SStrings.LocalSource)
                     If result.ToLower(Globalization.CultureInfo.InvariantCulture) = "failed" Then
@@ -135,6 +136,7 @@ Namespace WikiBot
                         Return result
                     End If
                     Return result
+#Enable Warning CA1031
                 End Try
                 Console.WriteLine(Environment.NewLine)
                 exitloop = PressKeyTimeout(5)
@@ -217,7 +219,7 @@ Namespace WikiBot
             Do Until tryCount = MaxRetry
 
                 If pageUri Is Nothing Then
-                    Throw New ArgumentNullException("pageUri", "Empty uri.")
+                    Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
                 End If
 
                 If cookies Is Nothing Then
@@ -242,8 +244,10 @@ Namespace WikiBot
                     tempcookies.Add(cookies.GetCookies(pageUri))
                 Catch ex As System.Net.WebException
                     tryCount += 1
+#Disable Warning CA1031
                 Catch ex2 As Exception
                     tryCount += 1
+#Enable Warning CA1031
                 Finally
                     client.Dispose()
                 End Try
@@ -256,22 +260,22 @@ Namespace WikiBot
             Throw New MaxRetriesExeption
         End Function
 
-        Function AdaptEncoding(ByVal responseBytes As Byte()) As String
+        Private Function AdaptEncoding(ByVal responseBytes As Byte()) As String
             Dim text As String
             Using reader As New StreamReader(New MemoryStream(responseBytes), True)
                 text = reader.ReadToEnd
-                If Text.Contains("�") Then
-                    If Regex.Match(Text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                If text.Contains("�") Then
+                    If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
                         Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
-                        Text = iso.GetString(responseBytes)
+                        text = iso.GetString(responseBytes)
                     End If
-                    If Regex.Match(Text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-9"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                    If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-9"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
                         Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28599)
-                        Text = iso.GetString(responseBytes)
+                        text = iso.GetString(responseBytes)
                     End If
                 End If
             End Using
-            Return Text
+            Return text
         End Function
 
         ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto.</summary>
@@ -287,7 +291,7 @@ Namespace WikiBot
         Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer, Optional retrycount As Integer = 0) As String
 
             If pageUri Is Nothing Then
-                Throw New ArgumentNullException("pageUri", "Empty uri.")
+                Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
             End If
 
             If cookies Is Nothing Then
@@ -319,10 +323,12 @@ Namespace WikiBot
                 If retrycount < 3 Then
                     Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                 End If
+#Disable Warning CA1031
             Catch ex2 As Exception
                 If retrycount < 3 Then
                     Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                 End If
+#Enable Warning CA1031
             Finally
                 client.Dispose()
                 content.Dispose()
