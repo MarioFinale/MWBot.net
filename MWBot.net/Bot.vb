@@ -8,6 +8,8 @@ Imports MWBot.net.My.Resources
 Imports System.Text.Json
 
 Namespace WikiBot
+#Disable Warning CA1822
+#Disable Warning CA1031
     ''' <summary>
     ''' Clase que media entre el programa y la API MediaWiki.
     ''' </summary>

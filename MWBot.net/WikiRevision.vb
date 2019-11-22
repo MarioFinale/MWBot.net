@@ -1,4 +1,4 @@
-﻿Public Structure WikiRevision
+﻿Public Class WikiRevision
     Public Property Title As String
     Public Property PageID As Integer
     Public Property NS As Integer
@@ -9,4 +9,4 @@
     Public Property Timestamp As Date
     Public Property Comment As String
     Public Property Missing As Boolean
-End Structure
+End Class
