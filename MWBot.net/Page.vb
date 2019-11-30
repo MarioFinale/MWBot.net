@@ -739,38 +739,6 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Elimina una referencia que contenga una cadena exacta.
-        ''' (No usar a menos de que se esté absolutamente seguro de lo que se hace).
-        ''' </summary>
-        ''' <param name="RequestedPage">Página a revisar</param>
-        ''' <param name="RequestedRef">Texto que determina que referencia se elimina</param>
-        ''' <returns></returns>
-        Function RemoveRef(ByVal requestedPage As Page, requestedRef As String) As Boolean
-            If String.IsNullOrWhiteSpace(requestedRef) Then
-                Return False
-            End If
-            If requestedPage Is Nothing Then
-                Return False
-            End If
-            Dim pageregex As String = String.Empty
-            Dim PageText As String = requestedPage.Content
-            For Each c As Char In requestedRef
-                pageregex = pageregex & "[" & c.ToString.ToUpper & c.ToString.ToLower & "]"
-            Next
-
-            If requestedPage.PageNamespace = 0 Then
-                For Each m As Match In Regex.Matches(PageText, "(<[REFref]+>)([^<]+?)" & pageregex & ".+?(<[/REFref]+>)")
-                    PageText = PageText.Replace(m.Value, "")
-                Next
-                requestedPage.CheckAndSave(PageText, String.Format(Messages.RemovingRefs, requestedRef), False, True)
-                Return True
-            Else
-                Return False
-            End If
-
-        End Function
-
-        ''' <summary>
         ''' Retorna el promedio de los últimos dos meses de la página entregada (solo para páginas wikimedia)
         ''' El proyecto se deduce extrayendo el texto entre "https://" y ".org"
         ''' </summary>

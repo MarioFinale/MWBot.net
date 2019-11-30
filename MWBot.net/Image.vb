@@ -82,8 +82,12 @@ Namespace WikiBot
                 Dim name As String = objectname.GetProperty("value").GetString
                 Dim licenseshortname As JsonElement = extmetadata.GetProperty("LicenseShortName")
                 Dim slicenseshortname As String = licenseshortname.GetProperty("value").GetString
-                Dim plicenseurl As JsonElement = extmetadata.GetProperty("LicenseUrl")
-                Dim slicenseurl As String = plicenseurl.GetProperty("value").GetString
+
+#Disable Warning CA1507
+                Dim filelicenseurl As JsonElement = extmetadata.GetProperty("LicenseUrl")
+#Enable Warning CA1507
+
+                Dim slicenseurl As String = filelicenseurl.GetProperty("value").GetString
                 Dim artist As JsonElement = extmetadata.GetProperty("Artist")
                 Dim sartist As String = artist.GetProperty("value").GetString
                 sartist = NormalizeAuthor(sartist)
@@ -103,8 +107,12 @@ Namespace WikiBot
                     End Using
                 End Using
                 Return img
-            Catch ex As Exception
-                EventLogger.EX_Log(ex.Message, "DailyRes")
+            Catch ioex As IOException
+                EventLogger.EX_Log(ioex.Message, "DailyRes")
+                img.Dispose()
+                Return Nothing
+            Catch webex As WebException
+                EventLogger.EX_Log(webex.Message, "DailyRes")
                 img.Dispose()
                 Return Nothing
             End Try
