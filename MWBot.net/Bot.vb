@@ -439,12 +439,12 @@ Namespace WikiBot
                     End If
                     Dim damagingScore As JsonElement = damaging.GetProperty("score")
                     Dim damagingProbability As JsonElement = damagingScore.GetProperty("probability")
-                    Dim damagingProbabilityTrue As Double = damagingProbability.GetProperty("true").GetDouble * 100
+                    Dim damagingProbabilityTrue As Double = Math.Round(damagingProbability.GetProperty("true").GetDouble * 100, 2)
 
                     Dim goodfaith As JsonElement = element.GetProperty("goodfaith")
                     Dim goodfaithScore As JsonElement = goodfaith.GetProperty("score")
                     Dim goodfaithProbability As JsonElement = goodfaithScore.GetProperty("probability")
-                    Dim goodfaithProbabilityTrue As Double = goodfaithProbability.GetProperty("true").GetDouble * 100
+                    Dim goodfaithProbabilityTrue As Double = Math.Round(goodfaithProbability.GetProperty("true").GetDouble * 100, 2)
                     EditAndScoreList.Add(editID, {damagingProbabilityTrue, goodfaithProbabilityTrue})
                 Next
             Next

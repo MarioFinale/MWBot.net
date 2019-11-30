@@ -241,7 +241,7 @@ Namespace WikiBot
         ''' <param name="revid">EDIT ID de la edicion a revisar</param>
         ''' <remarks>Los EDIT ID deben ser distintos</remarks>
         Private Function GetORESScore(ByVal revid As Integer) As Double()
-            Return WorkerBot.GetORESScores({revid})(0)
+            Return WorkerBot.GetORESScores({revid}).Last.Value()
         End Function
 
 
@@ -611,11 +611,20 @@ Namespace WikiBot
 
         Private Function LoadPageInfo(ByVal querystring As String) As Boolean
             Dim queryresponse As String = WorkerBot.GETQUERY(querystring)
-            Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
-            Dim iserror As Boolean = IsJsonPropertyPresent(jsonResponse.RootElement, "error")
-            If iserror Then
+            Dim jsonResponse As JsonDocument
+
+            Try
+                jsonResponse = GetJsonDocument(queryresponse)
+            Catch JsonEx As JsonException
+                Return False
+            Catch ArgumentEx As ArgumentException
+                Return False
+            End Try
+
+            If IsJsonPropertyPresent(jsonResponse.RootElement, "error") Then
                 Return False
             End If
+
             Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
             Dim pages As JsonElement = query.GetProperty("pages")
 

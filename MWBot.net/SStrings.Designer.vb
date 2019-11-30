@@ -465,7 +465,7 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to format=json&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}.
+        '''  Looks up a localized string similar to format=json&amp;assert=user&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}.
         '''</summary>
         Public Shared ReadOnly Property SavePage() As String
             Get

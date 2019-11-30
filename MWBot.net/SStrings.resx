@@ -218,7 +218,7 @@ ArchiveMessageTemplate="{10}"</value>
     <value>format=json&amp;action=query&amp;pslimit=max&amp;list=prefixsearch&amp;pssearch=</value>
   </data>
   <data name="SavePage" xml:space="preserve">
-    <value>format=json&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}</value>
+    <value>format=json&amp;assert=user&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>format=json&amp;action=query&amp;list=search&amp;utf8=1&amp;srsearch=</value>
