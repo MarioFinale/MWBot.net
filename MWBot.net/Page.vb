@@ -282,12 +282,6 @@ Namespace WikiBot
                 Return EditResults.POST_error
             End Try
 
-            Dim ntimestamp As String = GetCurrentTimestamp()
-            If Not ntimestamp = _Timestamp Then
-                EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
-                Return EditResults.Edit_conflict
-            End If
-
             Dim additionalParams As String = String.Empty
             If IsMinor Then
                 additionalParams = "&minor="
@@ -324,7 +318,7 @@ Namespace WikiBot
                 Return EditResults.Edit_successful
             End If
 
-            If Not postresult.ToLower.Contains("editconflict") Then
+            If postresult.ToLower.Contains("editconflict") Then
                 EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
                 Return EditResults.Edit_conflict
             End If
@@ -483,11 +477,6 @@ Namespace WikiBot
                 Throw New ArgumentNullException(System.Reflection.MethodBase.GetCurrentMethod().Name)
             End If
 
-            If Not GetCurrentTimestamp() = _Timestamp Then
-                EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
-                Return EditResults.Edit_conflict
-            End If
-
             If Not BotCanEdit(_Content, Username) Then
                 EventLogger.Log(String.Format(Messages.NoBots, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
                 Return EditResults.No_bots
@@ -516,6 +505,11 @@ Namespace WikiBot
             If postresult.Contains("abusefilter") Then
                 EventLogger.Log(String.Format(Messages.AbuseFilter, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
                 Return EditResults.AbuseFilter
+            End If
+
+            If postresult.ToLower.Contains("editconflict") Then
+                EventLogger.Log(String.Format(Messages.EditConflict, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
+                Return EditResults.Edit_conflict
             End If
 
             Return EditResults.Unexpected_Result
@@ -724,6 +718,7 @@ Namespace WikiBot
             Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
             Dim iserror As Boolean = IsJsonPropertyPresent(jsonResponse.RootElement, "error")
             If iserror Then
+                EventLogger.Debug_Log(jsonResponse.ToString, "GetCurrentTimestamp")
                 Return ""
             End If
             Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
