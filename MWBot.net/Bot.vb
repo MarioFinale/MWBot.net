@@ -529,10 +529,6 @@ Namespace WikiBot
             Return True
         End Function
 
-
-
-
-
         ''' <summary>
         ''' Entrega una lista con las URL en la lista negra en formato de expresión regular.
         ''' </summary>
