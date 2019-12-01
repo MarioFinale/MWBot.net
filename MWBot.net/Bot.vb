@@ -378,7 +378,7 @@ Namespace WikiBot
             EventLogger.Log("Logging in...", "StartUpCheck")
             Dim tbot As Bot
             Try
-                tbot = New Bot("./Config.cfg", New LogEngine.LogEngine("./", "./", "StartUpCheck", True))
+                tbot = New Bot("./Config.cfg", New LogEngine.LogEngine("./Log.psv", "./Users.psv", "StartUpCheck", True))
             Catch ex As Exception
                 EventLogger.Log("Test failed", "StartUpCheck")
                 EventLogger.Log(ex.Source, "StartUpCheck")
