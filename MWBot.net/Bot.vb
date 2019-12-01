@@ -106,11 +106,14 @@ Namespace WikiBot
 #End Region
 
 #Region "Init"
+
         ''' <summary>
         ''' Crea una nueva instancia del bot e intenta loguear en la API.
         ''' </summary>
         ''' <param name="configfile">Archivo de configuración.</param>
-        Sub New(ByVal configfile As String)
+        ''' <param name="logeng">Archivo de LOG.</param>
+        Sub New(ByVal configfile As String, ByRef logeng As LogEngine.LogEngine)
+            SetLogEngine(logeng)
             Dim valid As Boolean = LoadConfig(configfile)
             Do Until valid
                 valid = LoadConfig(configfile)
@@ -119,23 +122,7 @@ Namespace WikiBot
             _UserName = Api.UserName
         End Sub
 
-        ''' <summary>
-        ''' Crea una nueva instancia del bot e intenta loguear en la API.
-        ''' </summary>
-        ''' <param name="configPath">Archivo de configuración.</param>
-        ''' <param name="logpath">Archivo de LOG.</param>
-        Sub New(ByVal configPath As String, logpath As String)
-            Me.LogPath = logpath
-            Log_Filepath = logpath
-            Dim valid As Boolean = LoadConfig(configPath)
-            Do Until valid
-                valid = LoadConfig(configPath)
-            Loop
-            Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
-            _UserName = Api.UserName
-        End Sub
-
-        Public Sub SetLogEngine(ByVal eng As LogEngine.LogEngine)
+        Public Sub SetLogEngine(ByRef eng As LogEngine.LogEngine)
             EventLogger = eng
         End Sub
 
@@ -391,7 +378,7 @@ Namespace WikiBot
             EventLogger.Log("Logging in...", "StartUpCheck")
             Dim tbot As Bot
             Try
-                tbot = New Bot("./Config.cfg")
+                tbot = New Bot("./Config.cfg", New LogEngine.LogEngine("./", "./", "StartUpCheck", True))
             Catch ex As Exception
                 EventLogger.Log("Test failed", "StartUpCheck")
                 EventLogger.Log(ex.Source, "StartUpCheck")

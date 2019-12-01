@@ -4,8 +4,8 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.0.7274.6576</AssemblyVersion>
-    <FileVersion>1.0.7274.6576</FileVersion>
+    <AssemblyVersion>1.0.7274.35294</AssemblyVersion>
+    <FileVersion>1.0.7274.35294</FileVersion>
     <OptionStrict>On</OptionStrict>
   </PropertyGroup>
 
