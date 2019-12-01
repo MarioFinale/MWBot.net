@@ -344,7 +344,7 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to Contraseña de BOT en la Wiki: .
+        '''  Looks up a localized string similar to Contraseña de BOT en la Wiki  (botpassword, no usar contraseña de login): .
         '''</summary>
         Public Shared ReadOnly Property NewBotPassword() As String
             Get
@@ -389,7 +389,7 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to URL principal de la Wiki: .
+        '''  Looks up a localized string similar to URL principal de la Wiki (en formato https://subdominio.dominio.tld/): .
         '''</summary>
         Public Shared ReadOnly Property NewWikiMainUrl() As String
             Get

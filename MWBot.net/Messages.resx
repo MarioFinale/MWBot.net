@@ -166,7 +166,7 @@
     <value>Nombre del bot: </value>
   </data>
   <data name="NewBotPassword" xml:space="preserve">
-    <value>Contraseña de BOT en la Wiki: </value>
+    <value>Contraseña de BOT en la Wiki  (botpassword, no usar contraseña de login): </value>
   </data>
   <data name="NewConfigFileError" xml:space="preserve">
     <value>Error al crear un nuevo archivo de configuraciones</value>
@@ -181,7 +181,7 @@
     <value>URL de la API de la Wiki: </value>
   </data>
   <data name="NewWikiMainUrl" xml:space="preserve">
-    <value>URL principal de la Wiki: </value>
+    <value>URL principal de la Wiki (en formato https://subdominio.dominio.tld/): </value>
   </data>
   <data name="NoConfigFile" xml:space="preserve">
     <value>El archivo de configuraciones no existe</value>

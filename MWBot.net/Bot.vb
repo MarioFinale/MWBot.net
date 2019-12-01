@@ -6,6 +6,9 @@ Imports Utils.Utils
 Imports LogEngine
 Imports MWBot.net.My.Resources
 Imports System.Text.Json
+Imports System.Net.Sockets
+Imports System.IO
+Imports System.Net
 
 Namespace WikiBot
 #Disable Warning CA1822
@@ -199,13 +202,12 @@ Namespace WikiBot
                 MainBotName = Console.ReadLine
                 Console.WriteLine(Messages.NewUserName)
                 WPBotUserName = Console.ReadLine
+                WPBotUserName &= "@" & WPBotUserName
                 Console.WriteLine(Messages.NewBotPassword)
                 WPBotPassword = Console.ReadLine
                 Console.WriteLine(Messages.NewWikiMainUrl)
                 WPSite = Console.ReadLine
-                Console.WriteLine(Messages.NewWikiMainApiUrl)
-                WPAPI = Console.ReadLine
-
+                WPAPI = WPSite & "/w/api.php"
                 Dim configstr As String = String.Format(SStrings.ConfigTemplate, MainBotName, WPBotUserName, WPBotPassword, WPSite, WPAPI)
                 Try
                     System.IO.File.WriteAllText(Tfile, configstr)
@@ -278,6 +280,258 @@ Namespace WikiBot
 #End Region
 
 #Region "BotFunctions"
+
+        ''' <summary>
+        ''' Realiza varias pruebas para verificar las funciones del bot.
+        ''' </summary>
+        ''' <returns></returns>
+        Public Shared Function StartUpCheck() As Boolean
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Loading Enviroment info", "StartUpCheck")
+
+            Try
+                Dim OS As String = Utils.Utils.GetOsString
+                Dim osdesc As String = Utils.Utils.GetOSDescription
+                Dim platform As String = Utils.Utils.GetPlatform
+                EventLogger.Log("OS: " & OS, "StartUpCheck")
+                EventLogger.Log("OS description: " & osdesc, "StartUpCheck")
+                EventLogger.Log("Platform: " & platform, "StartUpCheck")
+
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a TCP client", "StartUpCheck")
+            Dim tclient As TcpClient
+            Try
+#Disable Warning IDE0068 ' Use recommended dispose pattern
+                tclient = New TcpClient("chat.freenode.net", 6667) With {
+                .ReceiveTimeout = 10000,
+                .SendTimeout = 10000}
+#Enable Warning IDE0068 ' Use recommended dispose pattern
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a network stream", "StartUpCheck")
+            Dim netStream As NetworkStream
+            Try
+                netStream = tclient.GetStream()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating streamreader and streamwriter", "StartUpCheck")
+            Dim tReader As StreamReader
+            Dim tWriter As StreamWriter
+            Try
+#Disable Warning IDE0068 ' Use recommended dispose pattern
+                tReader = New StreamReader(netStream)
+                tWriter = New StreamWriter(netStream)
+#Enable Warning IDE0068 ' Use recommended dispose pattern
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Reading and writting to the stream", "StartUpCheck")
+            Try
+                tReader.ReadLine()
+                tWriter.WriteLine("NICK MWBOTTEST")
+                tWriter.Flush()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Disposing Objects", "StartUpCheck")
+            Try
+                tReader.Dispose()
+                tWriter.Dispose()
+                netStream.Dispose()
+                tclient.Dispose()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Logging in...", "StartUpCheck")
+            Dim tbot As Bot
+            Try
+                tbot = New Bot("./Config.cfg")
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Loading a page", "StartUpCheck")
+            Dim tpage As Page
+            Try
+                tpage = tbot.Getpage("Sol")
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Loading a user", "StartUpCheck")
+            Dim tuser As WikiUser
+            Try
+                tuser = New WikiUser(tbot, "MarioFinale")
+                EventLogger.Log("User loaded", "StartUpCheck")
+                EventLogger.Log("User name: " & tuser.UserName, "StartUpCheck")
+                EventLogger.Log("Edit count: " & tuser.EditCount.ToString(), "StartUpCheck")
+                EventLogger.Log("Is blocked: " & tuser.Blocked.ToString(), "StartUpCheck")
+                EventLogger.Log("Last edit: " & tuser.LastEdit.ToShortDateString() & " " & tuser.LastEdit.ToShortTimeString(), "StartUpCheck")
+
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Editing a page", "StartUpCheck")
+            Dim botusername As String = tbot.UserName
+            Dim testpagename As String = "User:" & botusername & "/MWBot-TEST"
+            Dim testString As String = "IT WORKS! " & Date.UtcNow.ToShortDateString & " " & Date.UtcNow.ToLongTimeString
+            Dim testpage As Page
+            Try
+                testpage = tbot.Getpage(testpagename)
+                testpage.Save(testString, "Test")
+                EventLogger.Log("Checking page edit", "StartUpCheck")
+                testpage = tbot.Getpage(testpagename)
+                If Not testpage.Content = testString Then
+                    EventLogger.Log("The page has not been saved correctly", "StartUpCheck")
+                    EventLogger.Log("Test failed", "StartUpCheck")
+                    Return False
+                End If
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a new Func (RecentChanges Stream)", "StartUpCheck")
+            Dim tfunc As Func(Of Boolean)
+            Try
+                tfunc = New Func(Of Boolean)(Function()
+                                                 Dim ftclient As WebClient = New WebClient()
+                                                 Dim ftstream As Stream = ftclient.OpenRead(New Uri("https://stream.wikimedia.org/v2/stream/recentchange"))
+                                                 Dim ftstreamreader As StreamReader = New StreamReader(ftstream)
+                                                 For i As Integer = 0 To 20
+                                                     Dim currentLine As String = ftstreamreader.ReadLine()
+                                                     Console.WriteLine(currentLine)
+                                                 Next
+                                                 Return True
+                                             End Function)
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a new taskadmin", "StartUpCheck")
+            Dim taskadmin As TaskAdmin
+
+            Try
+                taskadmin = New TaskAdmin()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Adding a func to the taskadmin and running it", "StartUpCheck")
+            Console.WriteLine("3...")
+            System.Threading.Thread.Sleep(1000)
+            Console.WriteLine("2...")
+            System.Threading.Thread.Sleep(1000)
+            Console.WriteLine("1...")
+            System.Threading.Thread.Sleep(1000)
+            Try
+                taskadmin.NewTask("Test func", "TEST", tfunc, 0, False)
+
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            While (taskadmin.TaskList.Count > 0)
+                System.Threading.Thread.Sleep(1000)
+            End While
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.Clear()
+            Console.WriteLine("Tests passed.")
+            Console.WriteLine("Operation should be normal.")
+            Console.WriteLine()
+            Console.WriteLine()
+            Console.WriteLine("                                                             - Good luck")
+            Return True
+        End Function
+
+
+
+
 
         ''' <summary>
         ''' Entrega una lista con las URL en la lista negra en formato de expresión regular.
@@ -853,12 +1107,12 @@ Namespace WikiBot
         ''' <param name="pageName">Nombre exacto de la pagina.</param>
         ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
         Function GetallInclusions(ByVal pageName As String, ByVal limit As Integer) As String()
-            '=====================================================
+            '===============================================================================
             '                     !!WARNING!!
             '                  SHITTY CODE AHEAD
             '        TRY TO UNDERSTAND IT UNDER YOUR OWN RISK
             '         BLAME THE MINDBENDING MW DOCUMENTATION
-            '=====================================================
+            '===============================================================================
 
             Dim pages As New HashSet(Of String)
             Dim queries As Integer = 1

@@ -141,13 +141,7 @@ BOTName="{0}"
 WPUserName="{1}"
 WPBotPassword="{2}"
 PageURL="{3}"
-ApiURL="{4}"
-AutoArchiveTemplatePagename="{5}"
-AutoSignatureTemplatePageName="{6}"
-AutoArchiveProgrammedArchivePageName="{7}"
-AutoArchiveDoNotArchivePageName="{8}"
-ArchiveBoxTemplate="{9}"
-ArchiveMessageTemplate="{10}"</value>
+ApiURL="{4}"</value>
   </data>
   <data name="EditToken" xml:space="preserve">
     <value>format=json&amp;action=query&amp;meta=tokens</value>

@@ -151,13 +151,7 @@ Namespace My.Resources
         '''WPUserName=&quot;{1}&quot;
         '''WPBotPassword=&quot;{2}&quot;
         '''PageURL=&quot;{3}&quot;
-        '''ApiURL=&quot;{4}&quot;
-        '''AutoArchiveTemplatePagename=&quot;{5}&quot;
-        '''AutoSignatureTemplatePageName=&quot;{6}&quot;
-        '''AutoArchiveProgrammedArchivePageName=&quot;{7}&quot;
-        '''AutoArchiveDoNotArchivePageName=&quot;{8}&quot;
-        '''ArchiveBoxTemplate=&quot;{9}&quot;
-        '''ArchiveMessageTemplate=&quot;{10}&quot;.
+        '''ApiURL=&quot;{4}&quot;.
         '''</summary>
         Public Shared ReadOnly Property ConfigTemplate() As String
             Get
