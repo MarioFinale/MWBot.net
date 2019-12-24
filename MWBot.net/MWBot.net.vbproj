@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.0.7274.41781</AssemblyVersion>
-    <FileVersion>1.0.7274.41781</FileVersion>
+    <AssemblyVersion>1.0.7297.39424</AssemblyVersion>
+    <FileVersion>1.0.7297.39424</FileVersion>
     <OptionStrict>On</OptionStrict>
   </PropertyGroup>
 

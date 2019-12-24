@@ -1127,7 +1127,56 @@ Namespace WikiBot
                     Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
                     queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
                 End If
+                query = GetJsonElement(queryResponse, "query")
+                embeddedin = query.GetProperty("embeddedin")
                 For Each qresult As JsonElement In embeddedin.EnumerateArray
+                    Dim title As String = qresult.GetProperty("title").GetString
+                    pages.Add(title)
+                Next
+            End While
+            Return pages.ToArray()
+        End Function
+
+
+        ''' <summary>
+        ''' Retorna un array de tipo string con todas las páginas donde la cadena de texto especificada haya sido encontrada en el contenido.
+        ''' </summary>
+        ''' <param name="text">Cadena de texto a buscar</param>
+        ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
+        Function SearchPagesForText(ByVal text As String, ByVal limit As Integer) As String()
+            Dim pages As New HashSet(Of String)
+            Dim queries As Integer = 1
+            Dim queryString As String = SStrings.GetTextInclusions & UrlWebEncode(text)
+            Dim rawQueryResponse As String = POSTQUERY(queryString)
+            Dim queryResponse As JsonDocument = GetJsonDocument(rawQueryResponse)
+            Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+            If mustContinue Then
+                Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                Dim sroffset = qcontinue.GetProperty("sroffset").GetInt32
+                queryString = SStrings.GetTextInclusions & UrlWebEncode(text) & "&sroffset=" & sroffset.ToString()
+            End If
+
+            Dim query As JsonElement = GetJsonElement(queryResponse, "query")
+            Dim search As JsonElement = query.GetProperty("search")
+
+            For Each qresult As JsonElement In search.EnumerateArray
+                Dim title As String = qresult.GetProperty("title").GetString
+                pages.Add(title)
+            Next
+
+            While mustContinue And queries < limit
+                queries += 1
+                rawQueryResponse = POSTQUERY(queryString)
+                queryResponse = GetJsonDocument(rawQueryResponse)
+                mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+                If mustContinue Then
+                    Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                    Dim sroffset = qcontinue.GetProperty("sroffset").GetInt32
+                    queryString = SStrings.GetTextInclusions & UrlWebEncode(text) & "&sroffset=" & sroffset.ToString()
+                End If
+                query = GetJsonElement(queryResponse, "query")
+                search = query.GetProperty("search")
+                For Each qresult As JsonElement In search.EnumerateArray
                     Dim title As String = qresult.GetProperty("title").GetString
                     pages.Add(title)
                 Next
