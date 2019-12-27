@@ -250,15 +250,6 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to format=json&amp;action=query&amp;list=categorymembers&amp;cmlimit=500&amp;cmtitle=.
-        '''</summary>
-        Public Shared ReadOnly Property GetPagesInCategory() As String
-            Get
-                Return ResourceManager.GetString("GetPagesInCategory", resourceCulture)
-            End Get
-        End Property
-        
-        '''<summary>
         '''  Looks up a localized string similar to https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{0}/all-access/all-agents/{1}/daily/{2}{4}{6}00/{3}{5}{7}00.
         '''</summary>
         Public Shared ReadOnly Property GetPageViews() As String
