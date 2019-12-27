@@ -2,6 +2,7 @@
 Option Explicit On
 
 Namespace WikiBot
+#Disable Warning CA1036 ' Override methods on comparable types
     Public Class WikiTopicThread
         Implements IComparable(Of WikiTopicThread)
         Public Property Topics As List(Of String)
@@ -12,7 +13,7 @@ Namespace WikiBot
         Public Property FirstSignature As Date
         Public Property ThreadBytes As Integer
         Public Function CompareTo(other As WikiTopicThread) As Integer Implements IComparable(Of WikiTopicThread).CompareTo
-            If other Is Nothing Then Throw New ArgumentNullException("other")
+            If other Is Nothing Then Throw New ArgumentNullException(NameOf(other))
             Return Me.FirstSignature().CompareTo(other.FirstSignature())
         End Function
     End Class

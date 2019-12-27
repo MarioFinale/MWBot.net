@@ -2,7 +2,7 @@
 Option Explicit On
 Imports Utils.Utils
 Imports LogEngine
-Public Class GlobalVars
+Public NotInheritable Class GlobalVars
     Public Shared Codename As String = "MWBot.net"
     Public Shared MwBotVersion As String = Reflection.Assembly.GetExecutingAssembly.GetName.Version.ToString
     Public Shared MaxRetry As Integer = 3

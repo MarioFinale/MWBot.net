@@ -6,10 +6,11 @@ Imports Utils.Utils
 Namespace WikiBot
 
     Public Class Template
+        Public ReadOnly Property Valid As Boolean
         Private _name As String
         Private _parameters As List(Of Tuple(Of String, String))
         Private _text As String
-        Private _newtemplate As Boolean = True
+        Private Property Newtemplate As Boolean = True
         ''' <summary>
         ''' Nombre de la plantilla (con el espacio de nombres).
         ''' </summary>
@@ -29,7 +30,7 @@ Namespace WikiBot
         ''' <returns></returns>
         Public ReadOnly Property Text As String
             Get
-                If _newtemplate Then
+                If Newtemplate Then
                     _text = CreateTemplatetext(_name, _parameters, True)
                     Return _text
                 Else
@@ -59,7 +60,7 @@ Namespace WikiBot
         ''' <param name="Text">Texto a evaluar.</param>
         ''' <param name="newTemplate">¿Es una plantilla nueva?</param>
         Sub New(ByVal text As String, ByVal newTemplate As Boolean)
-            _newtemplate = newTemplate
+            Me.Newtemplate = newTemplate
             If newTemplate Then
                 _name = text
                 _text = MakeSimpleTemplateText(text)
@@ -67,6 +68,7 @@ Namespace WikiBot
             Else
                 GetTemplateOfText(text)
             End If
+            _Valid = Not String.IsNullOrWhiteSpace(_name)
         End Sub
 
         ''' <summary>
@@ -78,6 +80,7 @@ Namespace WikiBot
             _name = templateName
             _parameters = templateParams
             _text = MakeTemplateText(templateName, templateParams)
+            _Valid = Not String.IsNullOrWhiteSpace(_name)
         End Sub
 
         ''' <summary>
@@ -87,6 +90,7 @@ Namespace WikiBot
             _name = String.Empty
             _text = String.Empty
             _parameters = New List(Of Tuple(Of String, String))
+            _Valid = False
         End Sub
 
         ''' <summary>
@@ -112,7 +116,7 @@ Namespace WikiBot
             For Each t As Tuple(Of String, String) In templateparams
                 text = text & "|" & t.Item1 & "=" & t.Item2 & linechar
             Next
-            text = text & "}}"
+            text &= "}}"
             Return text
         End Function
 
@@ -142,9 +146,21 @@ Namespace WikiBot
             For Each s As String In paramstext
                 templatetext = templatetext & "|" & s
             Next
-            templatetext = templatetext & closing
+            templatetext &= closing
             Return templatetext
 
+        End Function
+
+        ''' <summary>
+        ''' Indica si la plantilla contiene el nombre exacto del parámetro indicado.
+        ''' </summary>
+        ''' <param name="parametername"></param>
+        ''' <returns></returns>
+        Function ContainsParameter(ByVal parametername As String) As Boolean
+            For Each ptup As Tuple(Of String, String) In Parameters
+                If ptup.Item1.Trim() = parametername Then Return True
+            Next
+            Return False
         End Function
 
         ''' <summary>
@@ -153,7 +169,7 @@ Namespace WikiBot
         ''' <param name="templatetext"></param>
         Sub GetTemplateOfText(ByVal templatetext As String)
             If String.IsNullOrWhiteSpace(templatetext) Then
-                Throw New ArgumentException("Empty parameter", "templatetext")
+                Throw New ArgumentException("Empty parameter", NameOf(templatetext))
             End If
             'Verificar si se paso una plantilla
             If Not templatetext.Substring(0, 2) = "{{" Then
@@ -215,7 +231,7 @@ Namespace WikiBot
             Dim innertext As String = NewText.Substring(2, NewText.Length - 4)
             For cha As Integer = 0 To innertext.Count - 1
                 If Not innertext(cha) = "|" Then
-                    tempname = tempname & innertext(cha)
+                    tempname &= innertext(cha)
                 Else
                     Exit For
                 End If
@@ -357,7 +373,8 @@ Namespace WikiBot
             _name = name
             _parameters = parameters
             _text = text
-            _newtemplate = False
+            Newtemplate = False
+            _Valid = Not String.IsNullOrWhiteSpace(_name)
         End Sub
 
         ''' <summary>
@@ -406,14 +423,13 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="text"></param>
         ''' <returns></returns>
-        Function AnalyzeTemplateParams(ByVal text As String) As Template
+        Private Function AnalyzeTemplateParams(ByVal text As String) As Template
             Dim settingName As Boolean = True
             Dim settingParameter As Boolean = False
             Dim paramlist As New List(Of Tuple(Of String, String))
             Dim templateName As String = String.Empty
             Dim Depth As Integer = 0
             Dim lDepth As Integer = 0
-            Dim htmDepth As Integer = 0
             Dim templateText As String = "{{"
             Dim currentParam As String = String.Empty
             Dim currentParamName As String = String.Empty
@@ -573,14 +589,14 @@ Namespace WikiBot
 
         End Function
 
-        Function CountString(ByVal text As String, stringToCount As String) As Integer
+        Private Function CountString(ByVal text As String, stringToCount As String) As Integer
             Dim newtext As String = text.Replace(stringToCount, "")
             Dim diff As Integer = text.Length - newtext.Length
             Dim Count As Integer = diff \ stringToCount.Length
             Return Count
         End Function
 
-        Function GetTokensIndexes(ByVal text As String, tokens As String()) As List(Of Tuple(Of String, Integer()))
+        Private Function GetTokensIndexes(ByVal text As String, tokens As String()) As List(Of Tuple(Of String, Integer()))
             Dim TokensList As New List(Of Tuple(Of String, Integer()))
             For Each token As String In tokens
                 Dim indexList As New List(Of Integer)
@@ -603,8 +619,9 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="text"></param>
         ''' <returns></returns>
+        <CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification:="Text parser")>
         Public Shared Function GetTemplateTextArray(ByVal text As String) As List(Of String)
-            Dim temptext As String = String.Empty
+            Dim temptext As String
             Dim templist As New List(Of String)
             If String.IsNullOrWhiteSpace(text) Then Return templist
             Dim CharArr As Char() = text.ToArray

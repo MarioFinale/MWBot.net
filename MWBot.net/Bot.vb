@@ -4,8 +4,15 @@ Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
 Imports LogEngine
+Imports MWBot.net.My.Resources
+Imports System.Text.Json
+Imports System.Net.Sockets
+Imports System.IO
+Imports System.Net
 
 Namespace WikiBot
+#Disable Warning CA1822
+#Disable Warning CA1031
     ''' <summary>
     ''' Clase que media entre el programa y la API MediaWiki.
     ''' </summary>
@@ -86,14 +93,27 @@ Namespace WikiBot
         ''' <returns></returns>
         Public ReadOnly Property WikiUri As Uri
 
+        ''' <summary>
+        ''' Entrega el ApiHandler interno del bot.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property BotApiHandler As ApiHandler
+            Get
+                Return Api
+            End Get
+        End Property
+
 #End Region
 
 #Region "Init"
+
         ''' <summary>
         ''' Crea una nueva instancia del bot e intenta loguear en la API.
         ''' </summary>
         ''' <param name="configfile">Archivo de configuración.</param>
-        Sub New(ByVal configfile As String)
+        ''' <param name="logeng">Archivo de LOG.</param>
+        Sub New(ByVal configfile As String, ByRef logeng As LogEngine.LogEngine)
+            SetLogEngine(logeng)
             Dim valid As Boolean = LoadConfig(configfile)
             Do Until valid
                 valid = LoadConfig(configfile)
@@ -102,26 +122,14 @@ Namespace WikiBot
             _UserName = Api.UserName
         End Sub
 
-        ''' <summary>
-        ''' Crea una nueva instancia del bot e intenta loguear en la API.
-        ''' </summary>
-        ''' <param name="configPath">Archivo de configuración.</param>
-        ''' <param name="logpath">Archivo de LOG.</param>
-        Sub New(ByVal configPath As String, logpath As String)
-            Me.LogPath = logpath
-            Log_Filepath = logpath
-            Dim valid As Boolean = LoadConfig(configPath)
-            Do Until valid
-                valid = LoadConfig(configPath)
-            Loop
-            Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
-            _UserName = Api.UserName
+        Public Sub SetLogEngine(ByRef eng As LogEngine.LogEngine)
+            EventLogger = eng
         End Sub
 
         ''' <summary>
         ''' Intenta loguear de nuevo en la API.
         ''' </summary>
-        Sub Relogin()
+        Public Sub Relogin()
             Api = New ApiHandler(_botUserName, _botPassword, _ApiUri)
         End Sub
 
@@ -181,13 +189,12 @@ Namespace WikiBot
                 MainBotName = Console.ReadLine
                 Console.WriteLine(Messages.NewUserName)
                 WPBotUserName = Console.ReadLine
+                WPBotUserName &= "@" & WPBotUserName
                 Console.WriteLine(Messages.NewBotPassword)
                 WPBotPassword = Console.ReadLine
                 Console.WriteLine(Messages.NewWikiMainUrl)
                 WPSite = Console.ReadLine
-                Console.WriteLine(Messages.NewWikiMainApiUrl)
-                WPAPI = Console.ReadLine
-
+                WPAPI = WPSite & "/w/api.php"
                 Dim configstr As String = String.Format(SStrings.ConfigTemplate, MainBotName, WPBotUserName, WPBotPassword, WPSite, WPAPI)
                 Try
                     System.IO.File.WriteAllText(Tfile, configstr)
@@ -262,6 +269,254 @@ Namespace WikiBot
 #Region "BotFunctions"
 
         ''' <summary>
+        ''' Realiza varias pruebas para verificar las funciones del bot.
+        ''' </summary>
+        ''' <returns></returns>
+        Public Shared Function StartUpCheck() As Boolean
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Loading Enviroment info", "StartUpCheck")
+
+            Try
+                Dim OS As String = Utils.Utils.GetOsString
+                Dim osdesc As String = Utils.Utils.GetOSDescription
+                Dim platform As String = Utils.Utils.GetPlatform
+                EventLogger.Log("OS: " & OS, "StartUpCheck")
+                EventLogger.Log("OS description: " & osdesc, "StartUpCheck")
+                EventLogger.Log("Platform: " & platform, "StartUpCheck")
+
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a TCP client", "StartUpCheck")
+            Dim tclient As TcpClient
+            Try
+#Disable Warning IDE0068 ' Use recommended dispose pattern
+                tclient = New TcpClient("chat.freenode.net", 6667) With {
+                .ReceiveTimeout = 10000,
+                .SendTimeout = 10000}
+#Enable Warning IDE0068 ' Use recommended dispose pattern
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a network stream", "StartUpCheck")
+            Dim netStream As NetworkStream
+            Try
+                netStream = tclient.GetStream()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating streamreader and streamwriter", "StartUpCheck")
+            Dim tReader As StreamReader
+            Dim tWriter As StreamWriter
+            Try
+#Disable Warning IDE0068 ' Use recommended dispose pattern
+                tReader = New StreamReader(netStream)
+                tWriter = New StreamWriter(netStream)
+#Enable Warning IDE0068 ' Use recommended dispose pattern
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Reading and writting to the stream", "StartUpCheck")
+            Try
+                tReader.ReadLine()
+                tWriter.WriteLine("NICK MWBOTTEST")
+                tWriter.Flush()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Disposing Objects", "StartUpCheck")
+            Try
+                tReader.Dispose()
+                tWriter.Dispose()
+                netStream.Dispose()
+                tclient.Dispose()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Logging in...", "StartUpCheck")
+            Dim tbot As Bot
+            Try
+                tbot = New Bot("./Config.cfg", New LogEngine.LogEngine("./Log.psv", "./Users.psv", "StartUpCheck", True))
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Loading a page", "StartUpCheck")
+            Dim tpage As Page
+            Try
+                tpage = tbot.Getpage("Sol")
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Loading a user", "StartUpCheck")
+            Dim tuser As WikiUser
+            Try
+                tuser = New WikiUser(tbot, "MarioFinale")
+                EventLogger.Log("User loaded", "StartUpCheck")
+                EventLogger.Log("User name: " & tuser.UserName, "StartUpCheck")
+                EventLogger.Log("Edit count: " & tuser.EditCount.ToString(), "StartUpCheck")
+                EventLogger.Log("Is blocked: " & tuser.Blocked.ToString(), "StartUpCheck")
+                EventLogger.Log("Last edit: " & tuser.LastEdit.ToShortDateString() & " " & tuser.LastEdit.ToShortTimeString(), "StartUpCheck")
+
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Editing a page", "StartUpCheck")
+            Dim botusername As String = tbot.UserName
+            Dim testpagename As String = "User:" & botusername & "/MWBot-TEST"
+            Dim testString As String = "IT WORKS! " & Date.UtcNow.ToShortDateString & " " & Date.UtcNow.ToLongTimeString
+            Dim testpage As Page
+            Try
+                testpage = tbot.Getpage(testpagename)
+                testpage.Save(testString, "Test")
+                EventLogger.Log("Checking page edit", "StartUpCheck")
+                testpage = tbot.Getpage(testpagename)
+                If Not testpage.Content = testString Then
+                    EventLogger.Log("The page has not been saved correctly", "StartUpCheck")
+                    EventLogger.Log("Test failed", "StartUpCheck")
+                    Return False
+                End If
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a new Func (RecentChanges Stream)", "StartUpCheck")
+            Dim tfunc As Func(Of Boolean)
+            Try
+                tfunc = New Func(Of Boolean)(Function()
+                                                 Dim ftclient As WebClient = New WebClient()
+                                                 Dim ftstream As Stream = ftclient.OpenRead(New Uri("https://stream.wikimedia.org/v2/stream/recentchange"))
+                                                 Dim ftstreamreader As StreamReader = New StreamReader(ftstream)
+                                                 For i As Integer = 0 To 20
+                                                     Dim currentLine As String = ftstreamreader.ReadLine()
+                                                     Console.WriteLine(currentLine)
+                                                 Next
+                                                 Return True
+                                             End Function)
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Creating a new taskadmin", "StartUpCheck")
+            Dim taskadmin As TaskAdmin
+
+            Try
+                taskadmin = New TaskAdmin()
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Adding a func to the taskadmin and running it", "StartUpCheck")
+            Console.WriteLine("3...")
+            System.Threading.Thread.Sleep(1000)
+            Console.WriteLine("2...")
+            System.Threading.Thread.Sleep(1000)
+            Console.WriteLine("1...")
+            System.Threading.Thread.Sleep(1000)
+            Try
+                taskadmin.NewTask("Test func", "TEST", tfunc, 0, False)
+
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            While (taskadmin.TaskList.Count > 0)
+                System.Threading.Thread.Sleep(1000)
+            End While
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.Clear()
+            Console.WriteLine("Tests passed.")
+            Console.WriteLine("Operation should be normal.")
+            Console.WriteLine()
+            Console.WriteLine()
+            Console.WriteLine("                                                             - Good luck")
+            Return True
+        End Function
+
+        ''' <summary>
         ''' Entrega una lista con las URL en la lista negra en formato de expresión regular.
         ''' </summary>
         ''' <param name="spamlistPage">Pagina que contiene la lista negra.</param>
@@ -284,63 +539,67 @@ Namespace WikiBot
             Return Regexes.ToArray
         End Function
 
+
         ''' <summary>
-        ''' Retorna el ultimo REVID (como integer) de las paginas indicadas como SortedList (con el formato {Pagename,Revid}), las paginas deben ser distintas. 
+        ''' Retorna la última revisión de las paginas indicadas, las paginas deben ser distintas. 
         ''' En caso de no existir la pagina, retorna -1 como REVID.
         ''' </summary>
-        ''' <param name="pageNames">Array con nombres de paginas unicos.</param>
+        ''' <param name="pageNames">Hashset de nombres de paginas unicos.</param>
         ''' <remarks></remarks>
-        Function GetLastRevIds(ByVal pageNames As String()) As SortedList(Of String, Integer)
+        Function GetLastRevisions(ByVal pageNames As HashSet(Of String)) As HashSet(Of WikiRevision)
             EventLogger.Debug_Log(String.Format(Messages.GetLastrevIDs, pageNames.Count), Reflection.MethodBase.GetCurrentMethod().Name)
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
             Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 50)
-            Dim PagenameAndLastId As New SortedList(Of String, Integer)
+            Dim RevisionSet As New HashSet(Of WikiRevision)
             For Each ListInList As List(Of String) In PageList
-                Dim Qstring As String = String.Empty
-                For Each s As String In ListInList
-                    s = UrlWebEncode(s)
-                    Qstring = Qstring & s & "|"
-                Next
-                Qstring = Qstring.Trim(CType("|", Char))
+                Dim Qstring As String = ConcatenateTextArrayWithChar(ListInList.ToArray, "|"c, True)
+                Dim queryResponse As String = GETQUERY((SStrings.GetLastRevIds & Qstring))
+                Dim response As JsonDocument = GetJsonDocument(queryResponse)
+                Dim responseElement As JsonElement = response.RootElement
+                Dim query As JsonElement = GetJsonElement(responseElement, "query")
+                Dim pages As JsonElement = GetJsonElement(query, "pages")
+                Dim ttext As String = pages.ToString
 
-                Dim QueryResponse As String = GETQUERY((SStrings.GetLastRevIds & Qstring))
-                Dim ResponseArray As String() = TextInBetweenInclusive(QueryResponse, ",""title"":", "}]")
+                For Each pageinfo As JsonProperty In pages.EnumerateObject
+                    Dim pageElement As JsonElement = pageinfo.Value
+                    Dim ns As Integer = pageElement.GetProperty("ns").GetInt32
+                    Dim title As String = NormalizeUnicodetext(pageElement.GetProperty("title").GetString).Replace(" ", "_")
+                    Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
 
-                For Each s As String In ResponseArray
-
-                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """,""")(0)
-
-                    If s.Contains(",""missing"":") Then
-                        If Not PagenameAndLastId.ContainsKey(pagetitle) Then
-                            PagenameAndLastId.Add(UrlWebDecode(NormalizeUnicodetext(pagetitle)).Replace(" ", "_"), -1)
-                        End If
-                    Else
-                        If Not PagenameAndLastId.ContainsKey(pagetitle) Then
-                            Dim TemplateTitle As String = String.Empty
-                            Dim Revid As String = TextInBetween(s, pagetitle & """,""revisions"":[{""revid"":", ",""parentid"":")(0)
-                            Dim Revid_ToInt As Integer = CType(Revid, Integer)
-
-                            Dim modlist As New List(Of String)
-
-                            For Each tx As String In PageNamesList.ToArray
-                                Dim tmp As String = tx.ToLower.Replace("_", " ")
-                                modlist.Add(tmp)
-                            Next
-
-                            Dim normtext As String = NormalizeUnicodetext(pagetitle)
-                            normtext = normtext.ToLower.Replace("_", " ")
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
-                            TemplateTitle = PageNamesList(ItemIndex)
-                            PagenameAndLastId.Add(TemplateTitle, Revid_ToInt)
-
-                        End If
+                    If missing Then
+                        Dim missingRevision As New WikiRevision With {
+                            .Title = title,
+                            .Missing = missing}
+                        RevisionSet.Add(missingRevision)
+                        Continue For
                     End If
+                    Dim pageid As Integer = pageElement.GetProperty("pageid").GetInt32
+                    Dim revisions As JsonElement = GetJsonElement(pageElement, "revisions")
+                    revisions = revisions(0)
+                    Dim revid As Integer = revisions.GetProperty("revid").GetInt32()
+                    Dim parentid As Integer = revisions.GetProperty("parentid").GetInt32()
+                    Dim minor As Boolean = IsJsonPropertyPresent(revisions, "minor")
+                    Dim user As String = revisions.GetProperty("user").GetString
+                    Dim comment As String = revisions.GetProperty("comment").GetString
+                    Dim timestamp As Date = GetDateFromMWTimestamp(revisions.GetProperty("timestamp").GetString)
+                    Dim revision As New WikiRevision With {
+                        .NS = ns,
+                        .Comment = comment,
+                        .Minor = minor,
+                        .Missing = missing,
+                        .PageID = pageid,
+                        .ParentID = parentid,
+                        .RevID = revid,
+                        .Timestamp = timestamp,
+                        .Title = title,
+                        .User = user
+                        }
+                    RevisionSet.Add(revision)
                 Next
             Next
-            EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, PagenameAndLastId.Count), Reflection.MethodBase.GetCurrentMethod().Name)
-            Return PagenameAndLastId
-
+            EventLogger.Debug_Log(String.Format(Messages.DoneXPagesReturned, RevisionSet.Count), Reflection.MethodBase.GetCurrentMethod().Name)
+            Return RevisionSet
         End Function
 
         ''' <summary>
@@ -388,7 +647,7 @@ Namespace WikiBot
 
         ''' <summary>
         ''' Retorna el valor ORES (en %) de los EDIT ID (eswiki) indicados como SortedList (con el formato {ID,Score}), los EDIT ID deben ser distintos. 
-        ''' En caso de no existir el EDIT ID, retorna 0.
+        ''' En caso de no existir el EDIT ID, retorna {0,0}.
         ''' </summary>
         ''' <param name="revids">Array con EDIT ID's unicos.</param>
         ''' <remarks>Los EDIT ID deben ser distintos</remarks>
@@ -397,37 +656,35 @@ Namespace WikiBot
             Dim EditAndScoreList As New SortedList(Of Integer, Double())
             For Each ListOfList As List(Of Integer) In Revlist
 
-                Dim Qstring As String = String.Empty
+                Dim QueryString As String = String.Empty
                 For Each n As Integer In ListOfList
-                    Qstring = Qstring & n.ToString & "|"
+                    QueryString = QueryString & n.ToString & "|"
                 Next
-                Qstring = Qstring.Trim(CType("|", Char))
-                Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(Qstring))
-                Dim s As String = Api.GET(apiuri)
-
-                For Each m As Match In Regex.Matches(s, "({|, )(""[0-9]+"":).+?(}}}})")
-                    Dim EditID_str As String = Regex.Match(m.Value, """[0-9]+""").Value
-                    EditID_str = EditID_str.Trim(CType("""", Char()))
-                    EditID_str = RemoveAllAlphas(EditID_str)
-                    Dim EditID As Integer = Integer.Parse(EditID_str)
-
-                    If m.Value.Contains("error") Then
-
-                        EventLogger.Debug_Log(String.Format(Messages.OresQueryError, EditID_str), Reflection.MethodBase.GetCurrentMethod().Name)
-                        EditAndScoreList.Add(EditID, {0, 0})
-                    Else
-                        Try
-                            Dim DMGScore_str As String = TextInBetween(m.Value, """true"": ", "}")(0).Replace(".", DecimalSeparator)
-                            Dim GoodFaithScore_str As String = TextInBetween(m.Value, """true"": ", "}")(1).Replace(".", DecimalSeparator)
-                            Dim DMGScore As Double = Double.Parse(DMGScore_str) * 100
-                            Dim GoodFaithScore As Double = Double.Parse(GoodFaithScore_str) * 100
-                            EventLogger.Debug_Log(String.Format(Messages.OresQueryResult, EditID_str, GoodFaithScore.ToString, DMGScore.ToString), Reflection.MethodBase.GetCurrentMethod().Name)
-                            EditAndScoreList.Add(EditID, {DMGScore, GoodFaithScore})
-                        Catch ex As IndexOutOfRangeException
-                            EventLogger.Debug_Log(String.Format(Messages.OresQueryEx, EditID_str, ex.Message), Reflection.MethodBase.GetCurrentMethod().Name)
-                            EditAndScoreList.Add(EditID, {0, 0})
-                        End Try
+                QueryString = QueryString.Trim(CType("|", Char))
+                Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(QueryString))
+                Dim apiRawResponse As String = Api.GET(apiuri)
+                Dim response As JsonDocument = GetJsonDocument(apiRawResponse)
+                Dim eswiki As JsonElement = GetJsonElement(response, "eswiki")
+                Dim scores As JsonElement = eswiki.GetProperty("scores")
+                For Each revid As JsonProperty In scores.EnumerateObject
+                    Dim editID As Integer = 0
+                    Integer.TryParse(revid.Name, editID)
+                    Dim element As JsonElement = revid.Value
+                    Dim damaging As JsonElement = element.GetProperty("damaging")
+                    Dim isError As Boolean = IsJsonPropertyPresent(damaging, "error")
+                    If isError Then
+                        EditAndScoreList.Add(editID, {0, 0})
+                        Continue For
                     End If
+                    Dim damagingScore As JsonElement = damaging.GetProperty("score")
+                    Dim damagingProbability As JsonElement = damagingScore.GetProperty("probability")
+                    Dim damagingProbabilityTrue As Double = Math.Round(damagingProbability.GetProperty("true").GetDouble * 100, 2)
+
+                    Dim goodfaith As JsonElement = element.GetProperty("goodfaith")
+                    Dim goodfaithScore As JsonElement = goodfaith.GetProperty("score")
+                    Dim goodfaithProbability As JsonElement = goodfaithScore.GetProperty("probability")
+                    Dim goodfaithProbabilityTrue As Double = Math.Round(goodfaithProbability.GetProperty("true").GetDouble * 100, 2)
+                    EditAndScoreList.Add(editID, {damagingProbabilityTrue, goodfaithProbabilityTrue})
                 Next
             Next
             Return EditAndScoreList
@@ -441,54 +698,25 @@ Namespace WikiBot
         Function GetImagesExtract(ByVal pageNames As String()) As SortedList(Of String, String)
             Dim PageNamesList As List(Of String) = pageNames.ToList
             PageNamesList.Sort()
-
             Dim PageList As List(Of List(Of String)) = SplitStringArrayIntoChunks(PageNamesList.ToArray, 20)
             Dim PagenameAndImage As New SortedList(Of String, String)
 
             For Each ListInList As List(Of String) In PageList
-                Dim Qstring As String = String.Empty
+                Dim queryString As String = ConcatenateTextArrayWithChar(ListInList.ToArray, "|"c, True)
+                Dim queryResponse As String = GETQUERY(SStrings.GetPagesImage & queryString)
+                Dim response As JsonDocument = GetJsonDocument(queryResponse)
+                Dim query As JsonElement = GetJsonElement(response, "query")
+                Dim pages As JsonElement = query.GetProperty("pages")
 
-                For Each s As String In ListInList
-                    s = UrlWebEncode(s)
-                    Qstring = Qstring & s & "|"
-                Next
-                Qstring = Qstring.Trim(CType("|", Char))
-
-                Dim QueryResponse As String = GETQUERY(SStrings.GetPagesImage & Qstring)
-                Dim ResponseArray As New List(Of String)
-
-                For Each m As Match In Regex.Matches(QueryResponse, "({).+?(})(,|])(?={|})")
-                    ResponseArray.Add(m.Value)
-                Next
-
-                For Each s As String In ResponseArray.ToArray
-
-                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """")(0)
-                    Dim PageImage As String = String.Empty
-                    If Not s.Contains(",""missing"":") Then
-
-                        If Not PagenameAndImage.ContainsKey(pagetitle) Then
-                            Dim PageKey As String = String.Empty
-                            Dim modlist As New List(Of String)
-                            For Each tx As String In PageNamesList.ToArray
-                                modlist.Add(tx.ToLower.Replace("_", " "))
-                            Next
-                            Dim normtext As String = NormalizeUnicodetext(pagetitle)
-                            normtext = normtext.ToLower.Replace("_", " ")
-
-                            Dim ItemIndex As Integer = modlist.IndexOf(normtext)
-                            PageKey = PageNamesList(ItemIndex)
-
-                            If s.Contains("pageimage") Then
-                                PageImage = TextInBetweenInclusive(s, """title"":""" & pagetitle & """", """}")(0)
-                                PageImage = TextInBetween(PageImage, """pageimage"":""", """}")(0)
-                            Else
-                                PageImage = String.Empty
-                            End If
-                            PagenameAndImage.Add(PageKey, PageImage)
-
-                        End If
+                For Each pageProperty As JsonElement In pages.EnumerateArray
+                    Dim title As String = pageProperty.GetProperty("title").GetString
+                    Dim hasImage As Boolean = IsJsonPropertyPresent(pageProperty, "pageimage")
+                    If Not hasImage Then
+                        PagenameAndImage.Add(title, "")
+                        Continue For
                     End If
+                    Dim pageimage As String = pageProperty.GetProperty("pageimage").GetString
+                    PagenameAndImage.Add(title, pageimage)
                 Next
             Next
             Return PagenameAndImage
@@ -623,36 +851,44 @@ Namespace WikiBot
         ''' <returns></returns>
         Function GetExtractsFromApiResponse(ByVal queryresponse As String, ByVal charLimit As Integer, ByVal wiki As Boolean) As HashSet(Of WikiExtract)
             Dim ExtractsList As New HashSet(Of WikiExtract)
-            Dim ResponseArray As String() = TextInBetweenInclusive(queryresponse, ",""title"":", """}")
-            For Each s As String In ResponseArray
-                If Not s.Contains(",""missing"":") Then
-                    Dim pagetitle As String = TextInBetween(s, ",""title"":""", """,""")(0).Replace("_"c, " ")
-                    Dim TreatedExtract As String = TextInBetween(s, pagetitle & """,""extract"":""", """}")(0)
-                    TreatedExtract = NormalizeUnicodetext(TreatedExtract)
-                    TreatedExtract = TreatedExtract.Replace("\n", Environment.NewLine)
-                    TreatedExtract = TreatedExtract.Replace("\""", """")
-                    TreatedExtract = Regex.Replace(TreatedExtract, "\{\\\\.*\}", " ")
-                    TreatedExtract = Regex.Replace(TreatedExtract, "\[[0-9]+\]", " ")
-                    TreatedExtract = Regex.Replace(TreatedExtract, "\[nota\ [0-9]+\]", " ")
-                    TreatedExtract = RemoveExcessOfSpaces(TreatedExtract)
-                    TreatedExtract = FixResumeNumericExp(TreatedExtract)
-                    If TreatedExtract.Contains(""",""missing"":""""}}}}") Then
-                        TreatedExtract = Nothing
-                    End If
-                    If TreatedExtract.Length > charLimit Then
-                        TreatedExtract = SafeTrimExtract(TreatedExtract.Substring(0, charLimit + 1), charLimit)
-                    End If
-                    'Si el título de la página está en el resumen, coloca en negritas la primera ocurrencia
-                    If wiki Then
-                        Dim regx As New Regex(Regex.Escape(pagetitle), RegexOptions.IgnoreCase)
-                        TreatedExtract = regx.Replace(TreatedExtract, "'''" & pagetitle & "'''", 1)
-                    End If
-                    Dim Extract As New WikiExtract With {
-                        .ExtractContent = TreatedExtract,
-                        .PageName = NormalizeUnicodetext(pagetitle)}
-                    ExtractsList.Add(Extract)
+
+            Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
+            Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
+            Dim pages As JsonElement = query.GetProperty("pages")
+
+            For Each queryPage As JsonProperty In pages.EnumerateObject
+                Dim pageElement As JsonElement = queryPage.Value
+                Dim title As String = pageElement.GetProperty("title").GetString
+                Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
+                If missing Then
+                    Dim WExtract As New WikiExtract With {
+                        .ExtractContent = "",
+                        .PageName = title}
+                    ExtractsList.Add(WExtract)
+                    Continue For
                 End If
+                Dim extract As String = pageElement.GetProperty("extract").GetString
+                extract = NormalizeUnicodetext(extract)
+                extract = extract.Replace("\n", Environment.NewLine)
+                extract = Regex.Replace(extract, "\[[0-9]+\]", " ")
+                extract = Regex.Replace(extract, "\[nota\ [0-9]+\]", " ")
+                extract = Regex.Replace(extract, "\[cita requerida\]", " ")
+                extract = RemoveExcessOfSpaces(extract)
+                extract = FixResumeNumericExp(extract)
+                If extract.Length > charLimit Then
+                    extract = SafeTrimExtract(extract.Substring(0, charLimit + 1), charLimit)
+                End If
+                'Si el título de la página está en el resumen, coloca en negritas la primera ocurrencia
+                If wiki Then
+                    Dim regx As New Regex(Regex.Escape(extract), RegexOptions.IgnoreCase)
+                    extract = regx.Replace(extract, "'''" & extract & "'''", 1)
+                End If
+                Dim ResultExtract As New WikiExtract With {
+                        .ExtractContent = extract,
+                        .PageName = title}
+                ExtractsList.Add(ResultExtract)
             Next
+
             Return ExtractsList
         End Function
 
@@ -784,12 +1020,7 @@ Namespace WikiBot
             Dim PagenameAndResume As New SortedList(Of String, String)
 
             For Each ListInList As List(Of String) In PageList
-                Dim Qstring As String = String.Empty
-                For Each s As String In ListInList
-                    s = UrlWebEncode(s)
-                    Qstring = Qstring & s & "|"
-                Next
-                Qstring = Qstring.Trim(CType("|", Char))
+                Dim Qstring As String = ConcatenateTextArrayWithChar(ListInList.ToArray, "|"c, True)
                 Dim QueryResponse As String = GETQUERY(SStrings.GetPagesExtract & Qstring)
                 Dim ExtractsList As HashSet(Of WikiExtract) = GetExtractsFromApiResponse(QueryResponse, charLimit, wiki)
 
@@ -845,39 +1076,112 @@ Namespace WikiBot
 
         End Function
 
+        ''' <summary>
+        ''' Retorna un array de tipo string con todas las páginas donde el nombre de la página indicada es llamada (no confundir con "lo que enlaza aquí").
+        ''' </summary>
+        ''' <param name="pageName">Nombre exacto de la pagina.</param>
+        Function GetallInclusions(ByVal pageName As String) As String()
+            Return GetallInclusions(pageName, 10)
+        End Function
 
         ''' <summary>
         ''' Retorna un array de tipo string con todas las páginas donde el nombre de la página indicada es llamada (no confundir con "lo que enlaza aquí").
         ''' </summary>
         ''' <param name="pageName">Nombre exacto de la pagina.</param>
         ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
-        Function GetallInclusions(ByVal pageName As String, Optional limit As Integer = 100) As String()
-            Dim newlist As New List(Of String)
-            Dim s As String = String.Empty
-            s = POSTQUERY(SStrings.GetPageInclusions & pageName)
-            Dim pages As New List(Of String)
-            pages.AddRange(TextInBetween(s, """title"":""", """}"))
-            If s.Contains("""continue"":{""eicontinue"":""") Then
-                'Ok, esto es un poco confuso pero funciona
-                'Cuando una respuesta de la api tiene el parametro "continue", para continuar hay que responder con una query con nuevos parámetros, 
-                'estos deben ser los entregados por el "continue", usualmente no tienen un orden aparente (ej. de 100 salta a 1700 y luego a 10000)
-                'pero así es como funciona.
-                For i As Integer = 1 To limit
-                    If s.Contains("""continue"":{""eicontinue"":""") Then
-                        Dim tparam As String = TextInBetween(s, """continue"":{""", """},")(0).Replace("""", "")
-                        Dim tparam1 As String = "&" & tparam.Split(","c)(0).Replace(":"c, "="c).Trim()
-                        Dim tparam2 As String = "&" & tparam.Split(","c)(1).Replace(":"c, "="c).Trim()
-                        s = POSTQUERY(SStrings.GetPageInclusions & pageName & tparam1 & tparam2)
-                        pages.AddRange(TextInBetween(s, """title"":""", """}"))
-                    Else
-                        Exit For
-                    End If
-                Next
+        Function GetallInclusions(ByVal pageName As String, ByVal limit As Integer) As String()
+            '===============================================================================
+            '                     !!WARNING!!
+            '                  SHITTY CODE AHEAD
+            '        TRY TO UNDERSTAND IT UNDER YOUR OWN RISK
+            '         BLAME THE MINDBENDING MW DOCUMENTATION
+            '===============================================================================
+
+            Dim pages As New HashSet(Of String)
+            Dim queries As Integer = 1
+            Dim queryString As String = SStrings.GetPageInclusions & pageName
+            Dim rawQueryResponse As String = POSTQUERY(queryString)
+            Dim queryResponse As JsonDocument = GetJsonDocument(rawQueryResponse)
+            Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+            If mustContinue Then
+                Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
+                queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
             End If
-            For Each _pag As String In pages
-                newlist.Add(NormalizeUnicodetext(_pag))
+
+            Dim query As JsonElement = GetJsonElement(queryResponse, "query")
+            Dim embeddedin As JsonElement = query.GetProperty("embeddedin")
+
+            For Each qresult As JsonElement In embeddedin.EnumerateArray
+                Dim title As String = qresult.GetProperty("title").GetString
+                pages.Add(title)
             Next
-            Return newlist.ToArray
+
+            While mustContinue And queries < limit
+                queries += 1
+                rawQueryResponse = POSTQUERY(queryString)
+                queryResponse = GetJsonDocument(rawQueryResponse)
+                mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+                If mustContinue Then
+                    Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                    Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
+                    queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
+                End If
+                query = GetJsonElement(queryResponse, "query")
+                embeddedin = query.GetProperty("embeddedin")
+                For Each qresult As JsonElement In embeddedin.EnumerateArray
+                    Dim title As String = qresult.GetProperty("title").GetString
+                    pages.Add(title)
+                Next
+            End While
+            Return pages.ToArray()
+        End Function
+
+
+        ''' <summary>
+        ''' Retorna un array de tipo string con todas las páginas donde la cadena de texto especificada haya sido encontrada en el contenido.
+        ''' </summary>
+        ''' <param name="text">Cadena de texto a buscar</param>
+        ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>
+        Function SearchPagesForText(ByVal text As String, ByVal limit As Integer) As String()
+            Dim pages As New HashSet(Of String)
+            Dim queries As Integer = 1
+            Dim queryString As String = SStrings.GetTextInclusions & UrlWebEncode(text)
+            Dim rawQueryResponse As String = POSTQUERY(queryString)
+            Dim queryResponse As JsonDocument = GetJsonDocument(rawQueryResponse)
+            Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+            If mustContinue Then
+                Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                Dim sroffset = qcontinue.GetProperty("sroffset").GetInt32
+                queryString = SStrings.GetTextInclusions & UrlWebEncode(text) & "&sroffset=" & sroffset.ToString()
+            End If
+
+            Dim query As JsonElement = GetJsonElement(queryResponse, "query")
+            Dim search As JsonElement = query.GetProperty("search")
+
+            For Each qresult As JsonElement In search.EnumerateArray
+                Dim title As String = qresult.GetProperty("title").GetString
+                pages.Add(title)
+            Next
+
+            While mustContinue And queries < limit
+                queries += 1
+                rawQueryResponse = POSTQUERY(queryString)
+                queryResponse = GetJsonDocument(rawQueryResponse)
+                mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+                If mustContinue Then
+                    Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                    Dim sroffset = qcontinue.GetProperty("sroffset").GetInt32
+                    queryString = SStrings.GetTextInclusions & UrlWebEncode(text) & "&sroffset=" & sroffset.ToString()
+                End If
+                query = GetJsonElement(queryResponse, "query")
+                search = query.GetProperty("search")
+                For Each qresult As JsonElement In search.EnumerateArray
+                    Dim title As String = qresult.GetProperty("title").GetString
+                    pages.Add(title)
+                Next
+            End While
+            Return pages.ToArray()
         End Function
 
         ''' <summary>
@@ -914,7 +1218,7 @@ Namespace WikiBot
             End If
             Dim querydata As String = String.Format(SStrings.GetDiffQuery, fromid.ToString, toid.ToString)
             Dim querytext As String = POSTQUERY(querydata)
-            Dim difftext As String = String.Empty
+            Dim difftext As String
             Try
                 difftext = NormalizeUnicodetext(TextInBetween(querytext, ",""*"":""", "\n""}}")(0))
             Catch ex As IndexOutOfRangeException
@@ -1015,7 +1319,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="user">Usuario de Wiki</param>
         ''' <returns></returns>
-        Private Function ValidUser(ByVal user As WikiUser) As Boolean
+        Public Function UserIsActive(ByVal user As WikiUser) As Boolean
             EventLogger.Debug_Log(String.Format(Messages.CheckingUser, user.UserName), Reflection.MethodBase.GetCurrentMethod().Name)
             'Verificar si el usuario existe
             If Not user.Exists Then
@@ -1043,14 +1347,18 @@ Namespace WikiBot
         ''' <param name="pagePrefix"></param>
         ''' <returns></returns>
         Function PrefixSearch(ByVal pagePrefix As String) As String()
-            Dim QueryString As String = SStrings.PrefixSearchQuery & UrlWebEncode(pagePrefix)
-            Dim QueryResult As String = POSTQUERY(QueryString)
-            Dim Pages As String() = TextInBetween(QueryResult, """title"":""", """,""")
-            Dim DecodedPages As New List(Of String)
-            For Each p As String In Pages
-                DecodedPages.Add(NormalizeUnicodetext(p))
+            Dim results As New List(Of String)
+            Dim queryString As String = SStrings.PrefixSearchQuery & UrlWebEncode(pagePrefix)
+            Dim queryRawResponse As String = POSTQUERY(queryString)
+            Dim queryResult As JsonDocument = GetJsonDocument(queryRawResponse)
+            Dim queryElement As JsonElement = GetJsonElement(queryResult, "query")
+            Dim qprefixsearch As JsonElement = queryElement.GetProperty("prefixsearch")
+
+            For Each searchResult As JsonElement In qprefixsearch.EnumerateArray
+                Dim title As String = searchResult.GetProperty("title").GetString
+                results.Add(title)
             Next
-            Return DecodedPages.ToArray
+            Return results.ToArray()
         End Function
 #End Region
 

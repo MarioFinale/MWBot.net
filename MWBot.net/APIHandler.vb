@@ -6,6 +6,9 @@ Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports MWBot.net.GlobalVars
 Imports Utils.Utils
+Imports MWBot.net.My.Resources
+Imports System.Net.Http
+Imports System.Text.Json
 
 Namespace WikiBot
 
@@ -16,7 +19,7 @@ Namespace WikiBot
         Private _botUsername As String = String.Empty
         Private _botPassword As String = String.Empty
         Private _apiUri As Uri
-        Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/Usuario_discusión:MarioFinale) .NET/MONO"
+        Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/User_talk:MarioFinale) .NET/MONO"
 
 #Region "Properties"
         Public ReadOnly Property UserName As String
@@ -77,7 +80,10 @@ Namespace WikiBot
             EventLogger.Log(Messages.RequestingToken, SStrings.LocalSource)
             Dim postdata As String = SStrings.GetWikiToken
             Dim postresponse As String = PostDataAndGetResult(_apiUri, postdata, ApiCookies)
-            Dim token As String = TextInBetween(postresponse, """logintoken"":""", """}}}")(0).Replace("\\", "\")
+            Dim queryResponse As JsonElement = GetJsonElement(GetJsonDocument(postresponse), "query")
+            Dim tokens As JsonElement = GetJsonElement(queryResponse, "tokens")
+            Dim logintoken As JsonElement = GetJsonElement(tokens, "logintoken")
+            Dim token As String = logintoken.GetString
             EventLogger.Log(Messages.TokenObtained, SStrings.LocalSource)
             Return token
         End Function
@@ -87,11 +93,12 @@ Namespace WikiBot
         ''' </summary>
         Public Function LogOn() As String
             EventLogger.Log(Messages.SigninIn, SStrings.LocalSource)
-            Dim token As String = String.Empty
+            Dim token As String
             Dim turi As Uri = _apiUri
-            Dim postdata As String = String.Empty
-            Dim postresponse As String = String.Empty
-            Dim lresult As String = String.Empty
+            Dim postdata As String
+            Dim postresponse As String
+            Dim login As JsonElement
+            Dim result As String = String.Empty
             Dim exitloop As Boolean = False
 
             Do Until exitloop
@@ -99,34 +106,43 @@ Namespace WikiBot
                     token = GetWikiToken()
                     postdata = String.Format(SStrings.Login, _botUsername, _botPassword, UrlWebEncode(token))
                     postresponse = PostDataAndGetResult(turi, postdata, ApiCookies)
-                    lresult = TextInBetween(postresponse, "{""result"":""", """,")(0)
-                    EventLogger.Log(Messages.LoginResult & lresult, SStrings.LocalSource)
-                    Dim lUserID As String = TextInBetween(postresponse, """lguserid"":", ",")(0)
-                    EventLogger.Log(Messages.LoginID & lUserID, SStrings.LocalSource)
-                    Dim lUsername As String = TextInBetween(postresponse, """lgusername"":""", """}")(0)
-                    EventLogger.Log(Messages.UserName & lUsername, SStrings.LocalSource)
-                    Return lresult
-                Catch ex As IndexOutOfRangeException
+
+                    Dim jsonResponse As JsonDocument = GetJsonDocument(postresponse)
+                    login = GetJsonElement(jsonResponse, "login")
+                    result = GetJsonElement(login, "result").GetString
+                    EventLogger.Log(Messages.LoginResult & result, SStrings.LocalSource)
+
+                    Dim lguserid As Integer = GetJsonElement(login, "lguserid").GetInt32
+                    EventLogger.Log(Messages.LoginID & lguserid, SStrings.LocalSource)
+
+                    Dim lgusername As String = GetJsonElement(login, "lgusername").GetString
+                    EventLogger.Log(Messages.UserName & lgusername, SStrings.LocalSource)
+                    Return result
+                Catch ex1 As WebException
+                    EventLogger.Log(Messages.NetworkError & ex1.Message, SStrings.LocalSource)
+                Catch ex2 As IOException
+                    EventLogger.Log(Messages.NetworkError & ex2.Message, SStrings.LocalSource)
+#Disable Warning CA1031 ' Generic exceptions needs to be catched
+                Catch ex3 As Exception
                     EventLogger.Log(Messages.LoginError, SStrings.LocalSource)
-                    If lresult.ToLower(Globalization.CultureInfo.InvariantCulture) = "failed" Then
-                        Dim reason As String = TextInBetween(postresponse, """reason"":""", """")(0)
+                    If result.ToLower(Globalization.CultureInfo.InvariantCulture) = "failed" Then
+                        Dim reason As String = GetJsonElement(login, "reason").GetString
                         Console.WriteLine(Environment.NewLine & Environment.NewLine)
                         Console.WriteLine(Messages.Reason & reason)
                         Console.WriteLine(Environment.NewLine & Environment.NewLine)
                         Console.Write(Messages.PressKey)
                         Console.ReadKey()
                         ExitProgram()
-                        Return lresult
+                        Return result
                     End If
-                    Return lresult
-                Catch ex2 As WebException
-                    EventLogger.Log(Messages.NetworkError & ex2.Message, SStrings.LocalSource)
+                    Return result
+#Enable Warning CA1031
                 End Try
                 Console.WriteLine(Environment.NewLine)
                 exitloop = PressKeyTimeout(5)
             Loop
             ExitProgram()
-            Return lresult
+            Return result
         End Function
 
         ''' <summary>
@@ -201,58 +217,64 @@ Namespace WikiBot
             Dim tryCount As Integer = 0
 
             Do Until tryCount = MaxRetry
+
+                If pageUri Is Nothing Then
+                    Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
+                End If
+
+                If cookies Is Nothing Then
+                    cookies = New CookieContainer
+                End If
+
+                Dim tempcookies As CookieContainer = cookies
+
+                Dim encoding As New Text.UTF8Encoding
+                Dim handler As HttpClientHandler = New HttpClientHandler With {
+                    .CookieContainer = cookies,
+                    .UseCookies = True
+                }
+                Dim client As HttpClient = New HttpClient(handler)
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.DefaultRequestHeaders.Add("Method", "GET")
+                Dim response As Byte() = Nothing
+
                 Try
-                    If cookies Is Nothing Then
-                        cookies = New CookieContainer
-                    End If
-                    Dim tempcookies As CookieContainer = cookies
-                    Dim postreq As HttpWebRequest = DirectCast(HttpWebRequest.Create(pageUri), HttpWebRequest)
-                    postreq.Method = "GET"
-                    postreq.KeepAlive = True
-                    postreq.Timeout = 60000
-                    postreq.CookieContainer = tempcookies
-                    postreq.UserAgent = _userAgent
-                    postreq.ContentType = "application/x-www-form-urlencoded"
-                    Dim postresponse As HttpWebResponse = DirectCast(postreq.GetResponse, HttpWebResponse)
-                    tempcookies.Add(postresponse.Cookies)
-                    cookies = tempcookies
-                    Return adaptEncoding(postresponse.GetResponseStream())
-                Catch ex As ProtocolViolationException 'Catch para los headers erróneos que a veces entrega la API de MediaWiki
-                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
+                    response = client.GetByteArrayAsync(pageUri).Result
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+                Catch ex As System.Net.WebException
                     tryCount += 1
-                Catch ex As WebException
-                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
-                    If ex.Message.Contains("404") Then
-                        Return String.Empty
-                    End If
+#Disable Warning CA1031
+                Catch ex2 As Exception
                     tryCount += 1
-                Catch ex As Sockets.SocketException
-                    EventLogger.EX_Log(ex.Message, ex.TargetSite.Name)
-                    EventLogger.Debug_Log(ex.StackTrace, ex.Source)
-                    tryCount += 1
+#Enable Warning CA1031
+                Finally
+                    client.Dispose()
                 End Try
+                If Not response Is Nothing Then
+                    cookies = tempcookies
+                    Return AdaptEncoding(response)
+                End If
+                Return Nothing
             Loop
             Throw New MaxRetriesExeption
         End Function
 
-        Function adaptEncoding(ByVal responseStream As Stream) As String
-            Dim memstream As MemoryStream = New MemoryStream()
-            responseStream.CopyTo(memstream)
-            Dim textbytes As Byte() = memstream.ToArray
-            Dim reader As New StreamReader(New MemoryStream(textbytes), True)
-            Dim text As String = reader.ReadToEnd
-            If text.Contains("�") Then
-                If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
-                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding("ISO-8859-1")
-                    text = iso.GetString(textbytes)
+        Private Function AdaptEncoding(ByVal responseBytes As Byte()) As String
+            Dim text As String
+            Using reader As New StreamReader(New MemoryStream(responseBytes), True)
+                text = reader.ReadToEnd
+                If text.Contains("�") Then
+                    If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                        Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
+                        text = iso.GetString(responseBytes)
+                    End If
+                    If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-9"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
+                        Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28599)
+                        text = iso.GetString(responseBytes)
+                    End If
                 End If
-                If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
-                    Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding("ISO-8859-9")
-                    text = iso.GetString(textbytes)
-                End If
-            End If
+            End Using
             Return text
         End Function
 
@@ -269,7 +291,7 @@ Namespace WikiBot
         Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer, Optional retrycount As Integer = 0) As String
 
             If pageUri Is Nothing Then
-                Throw New ArgumentNullException("pageUri", "Empty uri.")
+                Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
             End If
 
             If cookies Is Nothing Then
@@ -280,31 +302,40 @@ Namespace WikiBot
 
             Dim encoding As New Text.UTF8Encoding
             Dim byteData As Byte() = encoding.GetBytes(postData)
-            Dim postreq As HttpWebRequest = DirectCast(HttpWebRequest.Create(pageUri), HttpWebRequest)
+            Dim handler As HttpClientHandler = New HttpClientHandler With {
+                .CookieContainer = cookies,
+                .UseCookies = True
+            }
 
-            postreq.Method = "POST"
-            postreq.KeepAlive = True
-            postreq.CookieContainer = tempcookies
-            postreq.UserAgent = _userAgent
-            postreq.ContentType = "application/x-www-form-urlencoded"
-            postreq.ContentLength = byteData.Length
-
-            Dim postreqstream As Stream = postreq.GetRequestStream()
-            postreqstream.Write(byteData, 0, byteData.Length)
-            postreqstream.Close()
-
-            Dim postresponse As HttpWebResponse = Nothing
+            Dim client As HttpClient = New HttpClient(handler)
+            Dim content As StringContent = New StringContent(postData)
+            content.Headers.Add("Method", "POST")
+            content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
+            content.Headers.ContentLength = byteData.Length
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+            client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+            client.DefaultRequestHeaders.Add("Method", "POST")
+            Dim response As Byte() = Nothing
             Try
-                postresponse = DirectCast(postreq.GetResponse, HttpWebResponse)
-                tempcookies.Add(postresponse.Cookies)
+                response = client.PostAsync(pageUri, content).Result.Content.ReadAsByteArrayAsync.Result
+                tempcookies.Add(cookies.GetCookies(pageUri))
             Catch ex As System.Net.WebException
                 If retrycount < 3 Then
                     Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                 End If
+#Disable Warning CA1031
+            Catch ex2 As Exception
+                If retrycount < 3 Then
+                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                End If
+#Enable Warning CA1031
+            Finally
+                client.Dispose()
+                content.Dispose()
             End Try
-            If Not postresponse Is Nothing Then
+            If Not response Is Nothing Then
                 cookies = tempcookies
-                Return adaptEncoding(postresponse.GetResponseStream())
+                Return AdaptEncoding(response)
             End If
             Return Nothing
         End Function

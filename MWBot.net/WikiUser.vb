@@ -3,11 +3,12 @@ Option Explicit On
 Imports System.Globalization
 Imports Utils.Utils
 Imports MWBot.net.GlobalVars
+Imports MWBot.net.My.Resources
 
 Namespace WikiBot
 
     Public Class WikiUser
-        Private _workerBot As Bot
+        Private Property WorkerBot As Bot
 
 #Region "Properties"
         Public ReadOnly Property UserName As String
@@ -28,12 +29,12 @@ Namespace WikiBot
         Public ReadOnly Property Gender As String
         Public ReadOnly Property TalkPage As Page
             Get
-                Return _workerBot.Getpage("User talk:" & _UserName)
+                Return WorkerBot.Getpage("User talk:" & _UserName)
             End Get
         End Property
         Public ReadOnly Property UserPage As Page
             Get
-                Return _workerBot.Getpage("User:" & _UserName)
+                Return WorkerBot.Getpage("User:" & _UserName)
             End Get
         End Property
         Public ReadOnly Property IsBot As Boolean
@@ -49,14 +50,18 @@ Namespace WikiBot
 
         Sub New(ByRef wikiBot As Bot, userName As String)
             _UserName = userName
-            _workerBot = wikiBot
+            WorkerBot = wikiBot
             LoadInfo()
             _LastEdit = GetLastEditTimestampUser(_UserName)
         End Sub
 
+        Sub New()
+            Exists = False
+        End Sub
+
         Sub LoadInfo()
-            Dim queryresponse As String = _workerBot.POSTQUERY(SStrings.LoadUserQuery & _userName)
-            Dim fequeryresponse As String = _workerBot.POSTQUERY(SStrings.UserFirstEditQuery & _userName)
+            Dim queryresponse As String = WorkerBot.POSTQUERY(SStrings.LoadUserQuery & _UserName)
+            Dim fequeryresponse As String = WorkerBot.POSTQUERY(SStrings.UserFirstEditQuery & _UserName)
             Try
                 _UserName = NormalizeUnicodetext(TextInBetween(queryresponse, """name"":""", """")(0))
 
@@ -111,7 +116,7 @@ Namespace WikiBot
         ''' <returns></returns>
         Private Function GetLastEditTimestampUser(ByVal user As String) As Date
             user = UrlWebEncode(user)
-            Dim qtest As String = _workerBot.POSTQUERY(SStrings.LastUserEditQuery & user)
+            Dim qtest As String = WorkerBot.POSTQUERY(SStrings.LastUserEditQuery & user)
 
             If qtest.Contains("""usercontribs"":[]") Then
                 Return Nothing

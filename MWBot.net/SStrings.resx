@@ -141,13 +141,7 @@ BOTName="{0}"
 WPUserName="{1}"
 WPBotPassword="{2}"
 PageURL="{3}"
-ApiURL="{4}"
-AutoArchiveTemplatePagename="{5}"
-AutoSignatureTemplatePageName="{6}"
-AutoArchiveProgrammedArchivePageName="{7}"
-AutoArchiveDoNotArchivePageName="{8}"
-ArchiveBoxTemplate="{9}"
-ArchiveMessageTemplate="{10}"</value>
+ApiURL="{4}"</value>
   </data>
   <data name="EditToken" xml:space="preserve">
     <value>format=json&amp;action=query&amp;meta=tokens</value>
@@ -218,7 +212,7 @@ ArchiveMessageTemplate="{10}"</value>
     <value>format=json&amp;action=query&amp;pslimit=max&amp;list=prefixsearch&amp;pssearch=</value>
   </data>
   <data name="SavePage" xml:space="preserve">
-    <value>format=json&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}</value>
+    <value>format=json&amp;assert=user&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>format=json&amp;action=query&amp;list=search&amp;utf8=1&amp;srsearch=</value>
@@ -291,5 +285,8 @@ ArchiveMessageTemplate="{10}"</value>
   </data>
   <data name="RandomPageQuery" xml:space="preserve">
     <value>format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1</value>
+  </data>
+  <data name="GetTextInclusions" xml:space="preserve">
+    <value>format=json&amp;action=query&amp;list=search&amp;srwhat=text&amp;srlimit=500&amp;srsearch=</value>
   </data>
 </root>
