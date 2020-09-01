@@ -9,6 +9,7 @@ Imports System.Text.Json
 Imports System.Net.Sockets
 Imports System.IO
 Imports System.Net
+Imports System.Reflection
 
 Namespace WikiBot
 #Disable Warning CA1822
@@ -22,6 +23,27 @@ Namespace WikiBot
         Private _botPassword As String
         Private _botUserName As String
         Private Api As ApiHandler
+
+        ''' <summary>
+        ''' Entrega la versión de MWBot.net que se está ejecutando.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property Version As String
+            Get
+                Return Assembly.GetExecutingAssembly().GetName().Version.ToString()
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Entrega la versión de MWBot.net que se está ejecutando.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property MWBotVersion As String
+            Get
+                Return Version
+            End Get
+        End Property
+
 
         ''' <summary>
         ''' Ruta del archivo PSV que contiene el registro de eventos.

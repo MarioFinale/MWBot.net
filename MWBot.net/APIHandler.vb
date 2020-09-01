@@ -315,6 +315,7 @@ Namespace WikiBot
             client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
             client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
             client.DefaultRequestHeaders.Add("Method", "POST")
+            client.Timeout = New TimeSpan(0, 0, 30)
             Dim response As Byte() = Nothing
             Try
                 response = client.PostAsync(pageUri, content).Result.Content.ReadAsByteArrayAsync.Result
