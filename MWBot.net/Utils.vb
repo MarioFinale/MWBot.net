@@ -27,7 +27,6 @@ Public NotInheritable Class Utils
 #Region "Text Functions"
     Public Shared signpattern As String = "([0-9]{2}):([0-9]{2}) ([0-9]{2}|[0-9]) ([A-z]{3})([\.,])* [0-9]{4}( \([A-z]{3,4}\))*"
 
-
     Public Shared Function GetJsonDocument(ByVal jsonString As String) As JsonDocument
         Return JsonDocument.Parse(jsonString)
     End Function

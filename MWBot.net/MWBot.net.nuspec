@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>MWBot.net</id>
-    <version>1.0</version>
+    <version>1.1.1</version>
     <title>MWBot.net</title>
     <authors>MarioFinale</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">LGPL-2.0-only</license>
     <projectUrl>https://github.com/MarioFinale/MWBot.net</projectUrl>
-    <description>Base library for creating tools for sites based on Mediawiki software.</description>
-    <releaseNotes>Release</releaseNotes>
+    <description>Base library to create tools for sites based on Mediawiki software.</description>
+    <releaseNotes>Update description</releaseNotes>
     <copyright>MarioFinale</copyright>
     <tags>Mediawiki VisualBasic bot</tags>
   </metadata>
