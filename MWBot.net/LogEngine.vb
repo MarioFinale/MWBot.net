@@ -317,7 +317,6 @@ Public Class LogEngine
     ''' <summary>
     ''' Guarda los datos desde un queue a un archivo de log.
     ''' </summary>
-    ''' <param name="filepath"></param>
     ''' <param name="_queue"></param>
     ''' <returns></returns>
     Private Function SaveData(ByRef _queue As Queue(Of String())) As Boolean

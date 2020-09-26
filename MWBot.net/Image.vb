@@ -2,7 +2,7 @@
 Option Strict On
 Imports System.Net
 Imports System.Text.RegularExpressions
-Imports Utils.Utils
+Imports MWBot.net.Utils
 Imports MWBot.net.GlobalVars
 Imports System.IO
 Imports sImage = System.Drawing.Image
@@ -100,9 +100,9 @@ Namespace WikiBot
         Private Function PicFromUrl(ByVal url As String) As sImage
             Dim img As sImage = Nothing
             Try
-                Dim request = WebRequest.Create(url)
-                Using response = request.GetResponse()
-                    Using stream = response.GetResponseStream()
+                Dim request As WebRequest = WebRequest.Create(url)
+                Using response As WebResponse = request.GetResponse()
+                    Using stream As Stream = response.GetResponseStream()
                         img = sImage.FromStream(stream, True, True)
                     End Using
                 End Using
