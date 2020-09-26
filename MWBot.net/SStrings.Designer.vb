@@ -450,6 +450,15 @@ Namespace My.Resources
         End Property
         
         '''<summary>
+        '''  Looks up a localized string similar to Presiona cualquier tecla para continuar....
+        '''</summary>
+        Public Shared ReadOnly Property PressKey() As String
+            Get
+                Return ResourceManager.GetString("PressKey", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Looks up a localized string similar to format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1.
         '''</summary>
         Public Shared ReadOnly Property RandomPageQuery() As String

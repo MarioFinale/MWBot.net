@@ -2,8 +2,7 @@
 Option Explicit On
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
-Imports Utils.Utils
-Imports LogEngine
+Imports MWBot.net.Utils
 Imports MWBot.net.My.Resources
 Imports System.Text.Json
 Imports System.Net.Sockets
@@ -134,7 +133,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="configfile">Archivo de configuración.</param>
         ''' <param name="logeng">Archivo de LOG.</param>
-        Sub New(ByVal configfile As String, ByRef logeng As LogEngine.LogEngine)
+        Sub New(ByVal configfile As String, ByRef logeng As LogEngine)
             SetLogEngine(logeng)
             Dim valid As Boolean = LoadConfig(configfile)
             Do Until valid
@@ -144,7 +143,7 @@ Namespace WikiBot
             _UserName = Api.UserName
         End Sub
 
-        Public Sub SetLogEngine(ByRef eng As LogEngine.LogEngine)
+        Public Sub SetLogEngine(ByRef eng As LogEngine)
             EventLogger = eng
         End Sub
 
@@ -157,7 +156,7 @@ Namespace WikiBot
 
         Function SetLogConfig(ByVal Logpath As String, Userpath As String, BotName As String, Verbose As Boolean) As Boolean
             Try
-                Dim newLogger As New LogEngine.LogEngine(Logpath, Userpath, BotName, Verbose)
+                Dim newLogger As New LogEngine(Logpath, Userpath, BotName, Verbose)
                 EventLogger = newLogger
             Catch ex As Exception
                 EventLogger.EX_Log(ex.Message, "MWBOT.Net:SetLogConfig", "N/A")
@@ -179,9 +178,9 @@ Namespace WikiBot
             Dim WPBotUserName As String = String.Empty
             Dim WPBotPassword As String = String.Empty
             Dim ConfigOK As Boolean = False
-            Console.WriteLine(String.Format(Messages.GreetingMsg, MwBotVersion))
+            Console.WriteLine(String.Format(Messages.GreetingMsg, MWBotVersion))
 
-            EventLogger.Debug_Log(Messages.BotEngine & " " & MwBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
+            EventLogger.Debug_Log(Messages.BotEngine & " " & MWBotVersion, Reflection.MethodBase.GetCurrentMethod().Name)
             If System.IO.File.Exists(Tfile) Then
                 EventLogger.Log(Messages.LoadingConfig, Reflection.MethodBase.GetCurrentMethod().Name)
                 Dim Configstr As String = System.IO.File.ReadAllText(Tfile)
@@ -299,9 +298,9 @@ Namespace WikiBot
             EventLogger.Log("Loading Enviroment info", "StartUpCheck")
 
             Try
-                Dim OS As String = Utils.Utils.GetOsString
-                Dim osdesc As String = Utils.Utils.GetOSDescription
-                Dim platform As String = Utils.Utils.GetPlatform
+                Dim OS As String = Utils.GetOsString
+                Dim osdesc As String = Utils.GetOSDescription
+                Dim platform As String = Utils.GetPlatform
                 EventLogger.Log("OS: " & OS, "StartUpCheck")
                 EventLogger.Log("OS description: " & osdesc, "StartUpCheck")
                 EventLogger.Log("Platform: " & platform, "StartUpCheck")
@@ -400,7 +399,7 @@ Namespace WikiBot
             EventLogger.Log("Logging in...", "StartUpCheck")
             Dim tbot As Bot
             Try
-                tbot = New Bot("./Config.cfg", New LogEngine.LogEngine("./Log.psv", "./Users.psv", "StartUpCheck", True))
+                tbot = New Bot("./Config.cfg", New LogEngine("./Log.psv", "./Users.psv", "StartUpCheck", True))
             Catch ex As Exception
                 EventLogger.Log("Test failed", "StartUpCheck")
                 EventLogger.Log(ex.Source, "StartUpCheck")
@@ -1200,7 +1199,7 @@ Namespace WikiBot
             Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
             If mustContinue Then
                 Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-                Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
+                Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString
                 queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
             End If
 
@@ -1219,7 +1218,7 @@ Namespace WikiBot
                 mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
                 If mustContinue Then
                     Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-                    Dim eicontinue = qcontinue.GetProperty("eicontinue").GetString
+                    Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString
                     queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
                 End If
                 query = GetJsonElement(queryResponse, "query")
@@ -1247,7 +1246,7 @@ Namespace WikiBot
             Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
             If mustContinue Then
                 Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-                Dim sroffset = qcontinue.GetProperty("sroffset").GetInt32
+                Dim sroffset As Integer = qcontinue.GetProperty("sroffset").GetInt32
                 queryString = SStrings.GetTextInclusions & UrlWebEncode(text) & "&sroffset=" & sroffset.ToString()
             End If
 
@@ -1266,7 +1265,7 @@ Namespace WikiBot
                 mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
                 If mustContinue Then
                     Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-                    Dim sroffset = qcontinue.GetProperty("sroffset").GetInt32
+                    Dim sroffset As Integer = qcontinue.GetProperty("sroffset").GetInt32
                     queryString = SStrings.GetTextInclusions & UrlWebEncode(text) & "&sroffset=" & sroffset.ToString()
                 End If
                 query = GetJsonElement(queryResponse, "query")

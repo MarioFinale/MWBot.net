@@ -292,4 +292,7 @@ ApiURL="{4}"</value>
   <data name="UrlShortenerQuery" xml:space="preserve">
     <value>format=json&amp;action=shortenurl&amp;url=</value>
   </data>
+  <data name="PressKey" xml:space="preserve">
+    <value>Presiona cualquier tecla para continuar...</value>
+  </data>
 </root>
