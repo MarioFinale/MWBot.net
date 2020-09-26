@@ -531,6 +531,15 @@ Namespace My.Resources
         End Property
         
         '''<summary>
+        '''  Looks up a localized string similar to format=json&amp;action=shortenurl&amp;url=.
+        '''</summary>
+        Public Shared ReadOnly Property UrlShortenerQuery() As String
+            Get
+                Return ResourceManager.GetString("UrlShortenerQuery", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Looks up a localized string similar to format=json&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=.
         '''</summary>
         Public Shared ReadOnly Property UserFirstEditQuery() As String

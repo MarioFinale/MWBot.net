@@ -539,6 +539,39 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
+        ''' Entrega una versión acortada de la URL entregada. Hace uso de la extensión UrlShorneter en la Wiki consultada. 
+        ''' Ver: https://www.mediawiki.org/wiki/Extension:UrlShortener
+        ''' </summary>
+        ''' <param name="WikiUrl"></param>
+        ''' <returns></returns>
+        Public Function GetShortenWikiUrl(ByVal WikiUrl As String) As String
+            Dim result As String = String.Empty
+            Dim postResponse As String = Me.POSTQUERY(SStrings.UrlShortenerQuery & UrlWebEncode(WikiUrl))
+            Dim shortenedLink As String() = TextInBetween(postResponse, "shorturl"":""", """")
+            For Each s As String In shortenedLink
+                result = s
+            Next
+            Return result
+        End Function
+
+        ''' <summary>
+        ''' Entrega una versión acortada de la URL entregada de proyectos Wikimedia. Hace la consulta a Meta Wiki.
+        ''' Ver: https://meta.wikimedia.org/wiki/Special:UrlShortener
+        ''' </summary>
+        ''' <param name="WikiUrl"></param>
+        ''' <returns></returns>
+        Public Function GetShortenMetaWikiUrl(ByVal WikiUrl As String) As String
+            Dim result As String = String.Empty
+            Dim postResponse As String = Me.POST(New Uri("https://meta.wikimedia.org/w/api.php?"), SStrings.UrlShortenerQuery & UrlWebEncode(WikiUrl))
+            Dim shortenedLink As String() = TextInBetween(postResponse, "shorturl"":""", """")
+            For Each s As String In shortenedLink
+                result = s
+            Next
+            Return result
+        End Function
+
+
+        ''' <summary>
         ''' Entrega una lista con las URL en la lista negra en formato de expresión regular.
         ''' </summary>
         ''' <param name="spamlistPage">Pagina que contiene la lista negra.</param>
@@ -1001,6 +1034,46 @@ Namespace WikiBot
             End If
             Return Nothing
         End Function
+
+
+        ''' <summary>
+        ''' Retorna una versión en texto plano del wikitexto entregado como parámetro
+        ''' </summary>
+        ''' <param name="wikiText">Wikitexto a por aplanar.</param>
+        ''' <returns></returns>
+        Public Function GetFlattenText(ByVal wikiText As String) As String
+            Dim treatedString As String = wikiText
+            Dim templates As String() = Template.GetTemplateTextArray(treatedString).ToArray
+            For Each temp As String In templates
+                treatedString = treatedString.Replace(temp, "").Trim()
+            Next
+            treatedString = Regex.Replace(treatedString, "(\n\{\|)([\s\S]+?)(\n\|\})", "")
+            treatedString = Regex.Replace(treatedString, "<[rR]ef ?(|.+)>([\s\S]+?|)<\/[rR]ef>", "")
+            treatedString = Regex.Replace(treatedString, "(<[Rr]ef.+?)(\/>)", "")
+            treatedString = Regex.Replace(treatedString, "(\[\[[Cc]ategoría:)(.+?)(\]\])", "")
+            treatedString = Regex.Replace(treatedString, "\[nota\ [0-9]+\]", "")
+            treatedString = FlattenLinks(treatedString)
+            treatedString = Removefiles(treatedString)
+            treatedString = RemoveExcessOfSpaces(treatedString)
+            treatedString = treatedString.Trim()
+            Return treatedString
+        End Function
+
+
+        ''' <summary>
+        ''' Reemplaza todos los enlaces por texto plano.
+        ''' </summary>
+        ''' <param name="str">Cadena a limpiar.</param>
+        ''' <returns></returns>
+        Public Function FlattenLinks(ByVal str As String) As String
+            Dim links As String() = TextInBetweenInclusive(str, "[[", "]]")
+            Dim res As String = str
+            For Each l As String In links
+                res = res.Replace(l, GetLinkText(l).Item2)
+            Next
+            Return res
+        End Function
+
 
         ''' <summary>
         ''' Elimina todos los enlaces de tipo [[Archivo:]] o [[File:]]

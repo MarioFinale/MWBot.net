@@ -289,4 +289,7 @@ ApiURL="{4}"</value>
   <data name="GetTextInclusions" xml:space="preserve">
     <value>format=json&amp;action=query&amp;list=search&amp;srwhat=text&amp;srlimit=500&amp;srsearch=</value>
   </data>
+  <data name="UrlShortenerQuery" xml:space="preserve">
+    <value>format=json&amp;action=shortenurl&amp;url=</value>
+  </data>
 </root>
