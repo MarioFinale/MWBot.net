@@ -1,7 +1,8 @@
 ﻿Option Strict On
 Option Explicit On
 Imports System.Text.RegularExpressions
-Imports MWBot.net.Utils
+Imports MWBot.net.Utility
+Imports MWBot.net.Utility.Utils
 
 Namespace WikiBot
 

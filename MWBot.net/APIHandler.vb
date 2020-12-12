@@ -5,7 +5,8 @@ Imports System.Resources
 Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports MWBot.net.GlobalVars
-Imports MWBot.net.Utils
+Imports MWBot.net.Utility
+Imports MWBot.net.Utility.Utils
 Imports MWBot.net.My.Resources
 Imports System.Net.Http
 Imports System.Text.Json

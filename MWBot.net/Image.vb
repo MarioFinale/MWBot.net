@@ -2,7 +2,8 @@
 Option Strict On
 Imports System.Net
 Imports System.Text.RegularExpressions
-Imports MWBot.net.Utils
+Imports MWBot.net.Utility
+Imports MWBot.net.Utility.Utils
 Imports MWBot.net.GlobalVars
 Imports System.IO
 Imports sImage = System.Drawing.Image

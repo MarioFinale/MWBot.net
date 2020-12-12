@@ -2,7 +2,8 @@
 Option Explicit On
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
-Imports MWBot.net.Utils
+Imports MWBot.net.Utility
+Imports MWBot.net.Utility.Utils
 Imports MWBot.net.My.Resources
 Imports System.Text.Json
 Imports System.Net.Sockets
@@ -133,7 +134,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="configfile">Archivo de configuración.</param>
         ''' <param name="logeng">Archivo de LOG.</param>
-        Sub New(ByVal configfile As String, ByRef logeng As LogEngine)
+        Sub New(ByVal configfile As String, ByRef logeng As SimpleLogger)
             SetLogEngine(logeng)
             Dim valid As Boolean = LoadConfig(configfile)
             Do Until valid
@@ -143,7 +144,7 @@ Namespace WikiBot
             _UserName = Api.UserName
         End Sub
 
-        Public Sub SetLogEngine(ByRef eng As LogEngine)
+        Public Sub SetLogEngine(ByRef eng As SimpleLogger)
             EventLogger = eng
         End Sub
 
@@ -156,7 +157,7 @@ Namespace WikiBot
 
         Function SetLogConfig(ByVal Logpath As String, Userpath As String, BotName As String, Verbose As Boolean) As Boolean
             Try
-                Dim newLogger As New LogEngine(Logpath, Userpath, BotName, Verbose)
+                Dim newLogger As New SimpleLogger(Logpath, Userpath, BotName, Verbose)
                 EventLogger = newLogger
             Catch ex As Exception
                 EventLogger.EX_Log(ex.Message, "MWBOT.Net:SetLogConfig", "N/A")
@@ -399,7 +400,7 @@ Namespace WikiBot
             EventLogger.Log("Logging in...", "StartUpCheck")
             Dim tbot As Bot
             Try
-                tbot = New Bot("./Config.cfg", New LogEngine("./Log.psv", "./Users.psv", "StartUpCheck", True))
+                tbot = New Bot("./Config.cfg", New SimpleLogger("./Log.psv", "./Users.psv", "StartUpCheck", True))
             Catch ex As Exception
                 EventLogger.Log("Test failed", "StartUpCheck")
                 EventLogger.Log(ex.Source, "StartUpCheck")

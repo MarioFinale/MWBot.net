@@ -1,7 +1,8 @@
 ﻿Option Strict On
 Option Explicit On
 Imports System.Globalization
-Imports MWBot.net.Utils
+Imports MWBot.net.Utility
+Imports MWBot.net.Utility.Utils
 Imports MWBot.net.GlobalVars
 Imports MWBot.net.My.Resources
 

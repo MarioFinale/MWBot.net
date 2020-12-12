@@ -5,7 +5,8 @@ Imports System.Text.Json
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports MWBot.net.My.Resources
-Imports MWBot.net.Utils
+Imports MWBot.net.Utility
+Imports MWBot.net.Utility.Utils
 
 Namespace WikiBot
     Public Class Page
