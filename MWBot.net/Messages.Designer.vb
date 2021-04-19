@@ -128,6 +128,15 @@ Namespace My.Resources
         End Property
         
         '''<summary>
+        '''  Looks up a localized string similar to Se han eliminado los enlaces a &apos;{0}&apos;..
+        '''</summary>
+        Public Shared ReadOnly Property DeletedLink() As String
+            Get
+                Return ResourceManager.GetString("DeletedLink", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Looks up a localized string similar to Hecho, retornando {0} páginas..
         '''</summary>
         Public Shared ReadOnly Property DoneXPagesReturned() As String

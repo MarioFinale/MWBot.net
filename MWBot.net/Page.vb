@@ -334,8 +334,16 @@ Namespace WikiBot
                 EventLogger.Log(String.Format(Messages.SpamBlackList, _Title), Reflection.MethodBase.GetCurrentMethod().Name, Username)
                 EventLogger.Debug_Log("SPAMBLACKLIST: " & postresult, Reflection.MethodBase.GetCurrentMethod().Name, Username)
                 If Spamreplace Then
-                    Dim spamlinkRegex As String = TextInBetween(postresult, """spamblacklist"":""", """")(0)
-                    Dim newtext As String = Regex.Replace(pageContent, SpamListParser(spamlinkRegex), Function(x) "<nowiki>" & x.Value & "</nowiki>") 'Reeplazar links con el Nowiki
+                    Dim jsondoc As JsonDocument = GetJsonDocument(postresult)
+                    Dim errorElement As JsonElement = GetJsonElement(jsondoc, "error")
+                    Dim spamBlackListElement As JsonElement = GetJsonElement(errorElement, "spamblacklist")
+                    Dim matchesElement As JsonElement = spamBlackListElement.GetProperty("matches")
+                    Dim tmatches As MatchCollection = Regex.Matches(matchesElement.GetRawText, "(\"")(.+?)(\"")")
+                    Dim newtext As String = pageContent
+                    For Each s As Match In tmatches
+                        newtext = newtext.Replace(s.Groups(2).Value, "deleted-link")
+                        EventLogger.Log(String.Format(Messages.DeletedLink, s), Reflection.MethodBase.GetCurrentMethod().Name, Username)
+                    Next
                     If Not RetryCount > MaxRetry Then
                         Return SavePage(newtext, EditSummary, IsMinor, IsBot, True, RetryCount + 1)
                     Else

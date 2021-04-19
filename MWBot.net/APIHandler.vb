@@ -10,6 +10,7 @@ Imports MWBot.net.Utility.Utils
 Imports MWBot.net.My.Resources
 Imports System.Net.Http
 Imports System.Text.Json
+Imports System.Text
 
 Namespace WikiBot
 
@@ -238,11 +239,15 @@ Namespace WikiBot
                 client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
                 client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
                 client.DefaultRequestHeaders.Add("Method", "GET")
-                Dim response As Byte() = Nothing
+                Dim response As String = Nothing
 
                 Try
-                    response = client.GetByteArrayAsync(pageUri).Result
+                    Dim message As Task(Of HttpResponseMessage) = client.GetAsync(pageUri)
+                    Dim res As HttpResponseMessage = message.Result
+                    Dim theaders As Headers.HttpResponseHeaders = res.Headers
+                    response = res.Content.ReadAsStringAsync.Result()
                     tempcookies.Add(cookies.GetCookies(pageUri))
+
                 Catch ex As System.Net.WebException
                     tryCount += 1
 #Disable Warning CA1031
@@ -261,19 +266,25 @@ Namespace WikiBot
             Throw New MaxRetriesExeption
         End Function
 
-        Private Function AdaptEncoding(ByVal responseBytes As Byte()) As String
+        Private Function AdaptEncoding(ByVal proposedtext As String) As String
+            Dim responsebytes As Byte() = Encoding.UTF8.GetBytes(proposedtext)
             Dim text As String
-            Using reader As New StreamReader(New MemoryStream(responseBytes), True)
+            Using reader As New StreamReader(New MemoryStream(responsebytes), True)
                 text = reader.ReadToEnd
                 If text.Contains("�") Then
                     If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
                         Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
-                        text = iso.GetString(responseBytes)
+                        text = iso.GetString(responsebytes)
                     End If
                     If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-9"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
                         Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28599)
-                        text = iso.GetString(responseBytes)
+                        text = iso.GetString(responsebytes)
                     End If
+                    If text.Contains("�") Then 'Try ISO/IEC 8859-1
+                        Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
+                        text = iso.GetString(responsebytes)
+                    End If
+                    'If it doesn't work, give up
                 End If
             End Using
             Return text
@@ -317,9 +328,12 @@ Namespace WikiBot
             client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
             client.DefaultRequestHeaders.Add("Method", "POST")
             client.Timeout = New TimeSpan(0, 0, 30)
-            Dim response As Byte() = Nothing
+            Dim response As String = Nothing
             Try
-                response = client.PostAsync(pageUri, content).Result.Content.ReadAsByteArrayAsync.Result
+                Dim message As Task(Of HttpResponseMessage) = client.PostAsync(pageUri, content)
+                Dim res As HttpResponseMessage = message.Result
+                Dim theaders As Headers.HttpResponseHeaders = res.Headers
+                response = res.Content.ReadAsStringAsync.Result()
                 tempcookies.Add(cookies.GetCookies(pageUri))
             Catch ex As System.Net.WebException
                 If retrycount < 3 Then
