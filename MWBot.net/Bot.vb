@@ -1016,13 +1016,13 @@ Namespace WikiBot
                     End If
                 Next
                 TreatedExtract = Regex.Replace(TreatedExtract, "(\n\{\|)([\s\S]+?)(\n\|\})", "")
-                TreatedExtract = Regex.Replace(TreatedExtract, "<[rR]ef ?(|.+)>([\s\S]+?|)<\/[rR]ef>", "")
-                TreatedExtract = Regex.Replace(TreatedExtract, "(<[Rr]ef.+?)(\/>)", "")
+                TreatedExtract = Regex.Replace(TreatedExtract, "(<ref[^>]*?[^/]>.*?<\/ref>|<ref *>.*?<\/ref>|<ref[^>]*?\/>)", "", RegexOptions.IgnoreCase)
                 TreatedExtract = Regex.Replace(TreatedExtract, "(\[\[[Cc]ategoría:)(.+?)(\]\])", "")
                 TreatedExtract = Regex.Replace(TreatedExtract, "\[nota\ [0-9]+\]", "")
                 TreatedExtract = RemoveExcessOfSpaces(TreatedExtract)
                 TreatedExtract = Removefiles(TreatedExtract)
                 TreatedExtract = TreatedExtract.Trim()
+
                 If TreatedExtract.Length > charLimit Then
                     TreatedExtract = SafeTrimExtract(TreatedExtract.Substring(0, charLimit + 1), charLimit)
                 End If

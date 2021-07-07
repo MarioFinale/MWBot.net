@@ -330,4 +330,7 @@
   <data name="DeletedLink" xml:space="preserve">
     <value>Se han eliminado los enlaces a '{0}'.</value>
   </data>
+  <data name="InvalidParameterNameOnTemplateError" xml:space="preserve">
+    <value>Los nombres de parámetros no deben contener carácteres especiales como '{}|=:'</value>
+  </data>
 </root>

@@ -209,6 +209,15 @@ Namespace My.Resources
         End Property
         
         '''<summary>
+        '''  Looks up a localized string similar to Los nombres de parámetros no deben contener carácteres especiales como &apos;{}|=:&apos;.
+        '''</summary>
+        Public Shared ReadOnly Property InvalidParameterNameOnTemplateError() As String
+            Get
+                Return ResourceManager.GetString("InvalidParameterNameOnTemplateError", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Looks up a localized string similar to La url ingresada es inválida.
         '''</summary>
         Public Shared ReadOnly Property InvalidUrl() As String

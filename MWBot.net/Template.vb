@@ -331,7 +331,7 @@ Namespace WikiBot
                 Return New List(Of Template)
             End If
             Dim TemplateList As New List(Of Template)
-            Dim temps As List(Of String) = Template.GetTemplateTextArray(wikiPage.Content)
+            Dim temps As List(Of String) = GetTemplateTextArray(wikiPage.Content)
 
             For Each t As String In temps
                 TemplateList.Add(New Template(t, False))
@@ -370,6 +370,100 @@ Namespace WikiBot
             Return te.GetTemplatesTest(text).ToList
         End Function
 
+        ''' <summary>
+        ''' Entrega los nombres (normalizados) de las plantillas presentes en el texto entregado
+        ''' </summary>
+        ''' <param name="text"></param>
+        ''' <returns></returns>
+        Public Shared Function GetTemplatesNamesInText(ByVal text As String) As String()
+            Dim temps As List(Of String) = GetTemplateTextArray(text)
+            Dim templateNames As New HashSet(Of String)
+            For Each t As String In temps
+                Dim currentTemplate As New Template(t, False)
+                Dim name As String = currentTemplate.Name.Trim()
+                name = UppercaseFirstCharacter(name)
+                templateNames.Add(name)
+            Next
+            Return templateNames.ToArray()
+        End Function
+
+        ''' <summary>
+        ''' Entrega los nombres (normalizados) de las plantillas presentes en el texto entregado con la posibilidad de ignorar el espacio de nombres.
+        ''' </summary>
+        ''' <param name="text">Texto a analizar.</param>
+        ''' <param name="ignoreNamespaces">Ignorar espacio de nombres y entregar solo los nombres.</param>
+        ''' <returns></returns>
+        Public Shared Function GetTemplatesNamesInText(ByVal text As String, ByVal ignoreNamespaces As Boolean) As String()
+            If ignoreNamespaces = False Then
+                Return GetTemplatesNamesInText(text)
+            End If
+            Dim templateNamesInText As String() = GetTemplatesNamesInText(text)
+            Dim normalizedTemplateNames As New HashSet(Of String)
+            For Each name As String In templateNamesInText
+                Dim normalizedName As String = Regex.Replace(name, ".+:", "").Trim()
+                normalizedName = UppercaseFirstCharacter(normalizedName)
+                normalizedTemplateNames.Add(normalizedName)
+            Next
+            Return normalizedTemplateNames.ToArray()
+        End Function
+
+        ''' <summary>
+        ''' Entrega los nombres (normalizados) de las plantillas presentes en el texto entregado con la posibilidad de ignorar un espacio de nombres específico.
+        ''' </summary>
+        ''' <param name="text">Texto a analizar.</param>
+        ''' <param name="ignoreNamespace">Espacio de nombres a ignorar.</param>
+        ''' <returns></returns>
+        Public Shared Function GetTemplatesNamesInText(ByVal text As String, ByVal ignoreNamespace As String) As String()
+            If String.IsNullOrWhiteSpace(ignoreNamespace) Then
+                Return GetTemplatesNamesInText(text)
+            End If
+            Dim templateNamesInText As String() = GetTemplatesNamesInText(text)
+            Dim normalizedTemplateNames As New HashSet(Of String)
+            For Each name As String In templateNamesInText
+                Dim normalizedName As String = Regex.Replace(name, Regex.Escape(ignoreNamespace) & " *:", "").Trim()
+                normalizedName = UppercaseFirstCharacter(normalizedName)
+                normalizedTemplateNames.Add(normalizedName)
+            Next
+            Return normalizedTemplateNames.ToArray()
+        End Function
+
+        ''' <summary>
+        ''' Comprueba si en el texto entregado se encuentra una plantilla con el nombre indicado.
+        ''' </summary>
+        ''' <param name="text">Texto a analizar.</param>
+        ''' <param name="templateName">Nombre de la plantilla, con primer carácter en mayúsculas.</param>
+        ''' <returns></returns>
+        Public Shared Function IsTemplatePresentInText(ByVal text As String, ByVal templateName As String) As Boolean
+            Return GetTemplatesNamesInText(text).Contains(templateName.Trim())
+        End Function
+
+
+        ''' <summary>
+        ''' Comprueba si en el texto entregado se encuentra una plantilla con el nombre indicado ignorando los espacios de nombre.
+        ''' </summary>
+        ''' <param name="text">Texto a analizar.</param>
+        ''' <param name="templateName">Nombre de la plantilla, con primer carácter en mayúsculas.</param>
+        ''' <returns></returns>
+        Public Shared Function IsTemplatePresentInText(ByVal text As String, ByVal templateName As String, ignoreNamespaces As Boolean) As Boolean
+            If ignoreNamespaces = False Then
+                Return IsTemplatePresentInText(text, templateName)
+            End If
+            Return GetTemplatesNamesInText(text, ignoreNamespaces).Contains(templateName.Trim())
+        End Function
+
+        ''' <summary>
+        ''' Comprueba si en el texto entregado se encuentra una plantilla con el nombre indicado ignorando un espacio de nombres específico.
+        ''' </summary>
+        ''' <param name="text">Texto a analizar.</param>
+        ''' <param name="templateName">Nombre de la plantilla, con primer carácter en mayúsculas.</param>
+        ''' <param name="ignoreNamespace">Espacio de nombres a ignorar.</param>
+        ''' <returns></returns>
+        Public Shared Function IsTemplatePresentInText(ByVal text As String, ByVal templateName As String, ignoreNamespace As String) As Boolean
+            If String.IsNullOrWhiteSpace(ignoreNamespace) Then
+                Return IsTemplatePresentInText(text, templateName)
+            End If
+            Return GetTemplatesNamesInText(text, ignoreNamespace).Contains(templateName.Trim())
+        End Function
 
         Sub New(name As String, parameters As List(Of Tuple(Of String, String)), text As String)
             _name = name
@@ -385,7 +479,6 @@ Namespace WikiBot
         ''' <param name="text"></param>
         ''' <returns></returns>
         Function GetTemplatesTest(ByVal text As String) As Template()
-
             Dim templatelist As New List(Of Template)
             Dim tokens As String() = {"{{", "}}", "[", "]", "{{{", "}}}", Environment.NewLine & "{|", Environment.NewLine & "|}"}
             Dim tokensList As List(Of Tuple(Of String, Integer())) = GetTokensIndexes(text, tokens)
@@ -698,7 +791,6 @@ Namespace WikiBot
         ''' <returns></returns>
         Function OptimizeTemplate() As Boolean
             Dim newParameters As New List(Of Tuple(Of String, String))
-
             For Each parameter As Tuple(Of String, String) In _parameters
                 If Not String.IsNullOrWhiteSpace(parameter.Item2.ToString) Then
                     newParameters.Add(parameter)
@@ -708,7 +800,36 @@ Namespace WikiBot
             _text = MakeTemplateText(_name, newParameters)
             Return True
         End Function
+
+        ''' <summary>
+        ''' Añade un parámetro sin valor al final de la plantilla, no comprueba si el parámetro ya estaba presente en la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName">Nombre del parámetro.</param>
+        ''' <returns></returns>
+        Function AddParameter(ByVal parameterName As String) As Boolean
+            If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
+            _text = Regex.Replace(_text, "\}\}$", " |" & parameterName.Trim() & " }}")
+            _parameters.Add(New Tuple(Of String, String)(parameterName, ""))
+            Return True
+        End Function
+
+        ''' <summary>
+        ''' Añade un parámetro y su valor al final de la plantilla, no comprueba si el parámetro ya estaba presente en la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName">Nombre del parámetro.</param>
+        ''' <param name="parameterValue">Valor del parámetro.</param>
+        ''' <returns></returns>
+        Function AddParameter(ByVal parameterName As String, ByVal parameterValue As String) As Boolean
+            If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
+            _text = Regex.Replace(_text, "\}\}$", " |" & parameterName.Trim() & " =" & parameterValue & " }}")
+            _parameters.Add(New Tuple(Of String, String)(parameterName, ""))
+            Return True
+        End Function
+
+
     End Class
+
+
 
     Public Class WikiLink
         Property Text As String

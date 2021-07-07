@@ -40,7 +40,7 @@ Namespace WikiBot
         End Property
         Public ReadOnly Property IsBot As Boolean
             Get
-                If (Not _Groups Is Nothing) AndAlso _Groups.Contains("bot") Then
+                If (_Groups IsNot Nothing) AndAlso _Groups.Contains("bot") Then
                     Return True
                 Else
                     Return False
@@ -118,7 +118,6 @@ Namespace WikiBot
         Private Function GetLastEditTimestampUser(ByVal user As String) As Date
             user = UrlWebEncode(user)
             Dim qtest As String = WorkerBot.POSTQUERY(SStrings.LastUserEditQuery & user)
-
             If qtest.Contains("""usercontribs"":[]") Then
                 Return Nothing
             Else
