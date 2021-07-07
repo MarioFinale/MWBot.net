@@ -202,7 +202,6 @@ Namespace WikiBot
             If site Is Nothing Then
                 Throw New ArgumentNullException(NameOf(site), "Empty parameter")
             End If
-
             If String.IsNullOrEmpty(PageTitle) Then
                 Throw New ArgumentNullException(NameOf(PageTitle), "Empty parameter")
             End If
@@ -629,7 +628,13 @@ Namespace WikiBot
             End If
 
             Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
-            Dim pages As JsonElement = query.GetProperty("pages")
+            Dim pages As JsonElement
+            Try
+                pages = query.GetProperty("pages")
+            Catch ex As KeyNotFoundException
+                _Exists = False
+                Return True
+            End Try
 
             '===Prop===
             Dim qpageTitle As String

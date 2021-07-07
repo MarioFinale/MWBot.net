@@ -12,6 +12,8 @@ Public NotInheritable Class GlobalVars
     Public Shared SettingsPath As String = Exepath & "Settings.psv"
     Public Shared EventLogger As New SimpleLogger(Log_Filepath, UserPath, Codename, True)
     Public Shared SettingsProvider As New Settings(SettingsPath)
+    Public Shared LastRequestTimestamp As DateTime = Date.UtcNow()
+    Public Shared RequestLock As Object = New Object()
 
 
 End Class

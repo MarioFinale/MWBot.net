@@ -22,6 +22,7 @@ Namespace WikiBot
         Private _botPassword As String = String.Empty
         Private _apiUri As Uri
         Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/User_talk:MarioFinale) .NET/MONO"
+        Private _requestDelay As Double = 100
 
 #Region "Properties"
         Public ReadOnly Property UserName As String
@@ -42,6 +43,15 @@ Namespace WikiBot
             End Get
             Set(value As String)
                 _userAgent = value
+            End Set
+        End Property
+
+        Public Property RequestDelay As Double
+            Get
+                Return _requestDelay
+            End Get
+            Set(value As Double)
+                _requestDelay = value
             End Set
         End Property
 #End Region
@@ -228,6 +238,17 @@ Namespace WikiBot
                     cookies = New CookieContainer
                 End If
 
+                Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                While (RequestDelayInMS < _requestDelay) 'Limit post requests per second
+                    Thread.Sleep(1)
+                    SyncLock RequestLock
+                        RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                    End SyncLock
+                End While
+                SyncLock RequestLock
+                    LastRequestTimestamp = Date.UtcNow
+                End SyncLock
+
                 Dim tempcookies As CookieContainer = cookies
 
                 Dim encoding As New Text.UTF8Encoding
@@ -309,6 +330,17 @@ Namespace WikiBot
             If cookies Is Nothing Then
                 cookies = New CookieContainer
             End If
+
+            Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+            While (RequestDelayInMS < _requestDelay) 'Limit post requests per second
+                Thread.Sleep(1)
+                SyncLock RequestLock
+                    RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                End SyncLock
+            End While
+            SyncLock RequestLock
+                LastRequestTimestamp = Date.UtcNow
+            End SyncLock
 
             Dim tempcookies As CookieContainer = cookies
 

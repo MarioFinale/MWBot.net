@@ -906,11 +906,14 @@ Namespace WikiBot
         ''' <returns></returns>
         Function GetExtractsFromApiResponse(ByVal queryresponse As String, ByVal charLimit As Integer, ByVal wiki As Boolean) As HashSet(Of WikiExtract)
             Dim ExtractsList As New HashSet(Of WikiExtract)
-
             Dim jsonResponse As JsonDocument = GetJsonDocument(queryresponse)
             Dim query As JsonElement = GetJsonElement(jsonResponse, "query")
-            Dim pages As JsonElement = query.GetProperty("pages")
-
+            Dim pages As JsonElement
+            Try
+                pages = query.GetProperty("pages")
+            Catch ex As KeyNotFoundException
+                Return ExtractsList
+            End Try
             For Each queryPage As JsonProperty In pages.EnumerateObject
                 Dim pageElement As JsonElement = queryPage.Value
                 Dim title As String = pageElement.GetProperty("title").GetString
@@ -943,7 +946,6 @@ Namespace WikiBot
                         .PageName = title}
                 ExtractsList.Add(ResultExtract)
             Next
-
             Return ExtractsList
         End Function
 
@@ -979,22 +981,24 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces.
+        ''' Obtiene la entradilla de varias páginas manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces. No evalua páginas que no existan.
         ''' </summary>
         ''' <returns></returns>
         Public Function GetWikiExtractFromPages(ByVal pages As Page(), ByVal charLimit As Integer) As HashSet(Of WikiExtract)
             Dim tset As New HashSet(Of WikiExtract)
             For Each page As Page In pages
-                Dim textract As WikiExtract = GetWikiExtractFromPage(page, charLimit)
-                If Not textract Is Nothing Then
-                    tset.Add(textract)
+                If page.Exists Then
+                    Dim textract As WikiExtract = GetWikiExtractFromPage(page, charLimit)
+                    If Not textract Is Nothing Then
+                        tset.Add(textract)
+                    End If
                 End If
             Next
             Return tset
         End Function
 
         ''' <summary>
-        ''' Obtiene la entradilla de una página manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces.
+        ''' Obtiene la entradilla de una página manteniendo el wikitexto pero eliminando plantillas y referencias, mantiene los enlaces. No evalua páginas que no existan.
         ''' </summary>
         ''' <param name="page"></param>
         ''' <param name="charLimit"></param>
