@@ -539,22 +539,6 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Entrega una versión acortada de la URL entregada. Hace uso de la extensión UrlShorneter en la Wiki consultada. 
-        ''' Ver: https://www.mediawiki.org/wiki/Extension:UrlShortener
-        ''' </summary>
-        ''' <param name="WikiUrl"></param>
-        ''' <returns></returns>
-        Public Function GetShortenWikiUrl(ByVal WikiUrl As String) As String
-            Dim result As String = String.Empty
-            Dim postResponse As String = Me.POSTQUERY(SStrings.UrlShortenerQuery & UrlWebEncode(WikiUrl))
-            Dim shortenedLink As String() = TextInBetween(postResponse, "shorturl"":""", """")
-            For Each s As String In shortenedLink
-                result = s
-            Next
-            Return result
-        End Function
-
-        ''' <summary>
         ''' Entrega una versión acortada de la URL entregada de proyectos Wikimedia. Hace la consulta a Meta Wiki.
         ''' Ver: https://meta.wikimedia.org/wiki/Special:UrlShortener
         ''' </summary>
@@ -563,6 +547,10 @@ Namespace WikiBot
         Public Function GetShortenMetaWikiUrl(ByVal WikiUrl As String) As String
             Dim result As String = String.Empty
             Dim postResponse As String = Me.POST(New Uri("https://meta.wikimedia.org/w/api.php?"), SStrings.UrlShortenerQuery & UrlWebEncode(WikiUrl))
+            If postResponse.Contains("""error"":{""") Then
+                EventLogger.EX_Log("API ERROR. CODE: " & TextInBetween(postResponse, "code"":""", """,")(0), "GetShortenMetaWikiUrl")
+                Return String.Empty
+            End If
             Dim shortenedLink As String() = TextInBetween(postResponse, "shorturl"":""", """")
             For Each s As String In shortenedLink
                 result = s

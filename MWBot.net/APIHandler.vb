@@ -1,11 +1,8 @@
-﻿Imports System.Globalization
-Imports System.IO
+﻿Imports System.IO
 Imports System.Net
-Imports System.Resources
 Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports MWBot.net.GlobalVars
-Imports MWBot.net.Utility
 Imports MWBot.net.Utility.Utils
 Imports MWBot.net.My.Resources
 Imports System.Net.Http
@@ -17,7 +14,6 @@ Namespace WikiBot
     Public Class ApiHandler
         Private ApiCookies As CookieContainer
         Private _userName As String = String.Empty
-
         Private _botUsername As String = String.Empty
         Private _botPassword As String = String.Empty
         Private _apiUri As Uri
@@ -118,15 +114,12 @@ Namespace WikiBot
                     token = GetWikiToken()
                     postdata = String.Format(SStrings.Login, _botUsername, _botPassword, UrlWebEncode(token))
                     postresponse = PostDataAndGetResult(turi, postdata, ApiCookies)
-
                     Dim jsonResponse As JsonDocument = GetJsonDocument(postresponse)
                     login = GetJsonElement(jsonResponse, "login")
                     result = GetJsonElement(login, "result").GetString
                     EventLogger.Log(Messages.LoginResult & result, SStrings.LocalSource)
-
                     Dim lguserid As Integer = GetJsonElement(login, "lguserid").GetInt32
                     EventLogger.Log(Messages.LoginID & lguserid, SStrings.LocalSource)
-
                     Dim lgusername As String = GetJsonElement(login, "lgusername").GetString
                     EventLogger.Log(Messages.UserName & lgusername, SStrings.LocalSource)
                     Return result
