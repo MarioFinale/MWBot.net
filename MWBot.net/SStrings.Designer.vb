@@ -423,7 +423,7 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}.
+        '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids|tags&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}.
         '''</summary>
         Public Shared ReadOnly Property PageInfo() As String
             Get

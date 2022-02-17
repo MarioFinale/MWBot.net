@@ -33,6 +33,12 @@ Namespace WikiBot
         Public ReadOnly Property Content As String
 
         ''' <summary>
+        ''' Entrega los Tags que aplican a la página
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property Tags As String()
+
+        ''' <summary>
         ''' Entrega el revid actual de la página.
         ''' </summary>
         ''' <returns></returns>
@@ -647,6 +653,7 @@ Namespace WikiBot
             Dim qpageComment As String = String.Empty
             Dim qpageThumbnail As String = String.Empty
             Dim qpageCategories As New List(Of String)
+            Dim qpageTags As New List(Of String)
             Dim qpageSize As Integer
             Dim qpageContent As String
             Dim qpageDeletedInfo As Boolean
@@ -666,6 +673,8 @@ Namespace WikiBot
                 _PageNamespace = qpageNS
                 _RootPage = qpageRoot
                 _Exists = False
+                _Tags = qpageTags.ToArray()
+                _Categories = qpageCategories.ToArray()
                 Return True
             End If
             If IsJsonPropertyPresent(pageElement, "pageimage") Then
@@ -696,6 +705,14 @@ Namespace WikiBot
             Else
                 qpageDeletedInfo = True
             End If
+
+            If IsJsonPropertyPresent(currentrevision, "tags") Then
+                Dim Tags As JsonElement.ArrayEnumerator = currentrevision.GetProperty("tags").EnumerateArray
+                For Each Element As JsonElement In Tags
+                    qpageTags.Add(Element.GetString)
+                Next
+            End If
+
             If IsJsonPropertyPresent(currentrevision, "user") Then
                 qpageLastUser = currentrevision.GetProperty("user").GetString
             Else
@@ -723,6 +740,8 @@ Namespace WikiBot
             _RootPage = qpageRoot
             _Extract = qpageExtract
             _PageID = qpageID
+            _Tags = qpageTags.ToArray()
+
             Return True
         End Function
 

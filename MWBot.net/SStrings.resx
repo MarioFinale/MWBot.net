@@ -203,7 +203,7 @@ ApiURL="{4}"</value>
     <value>https://ores.wikimedia.org/v3/scores/eswiki/?models=damaging|goodfaith&amp;format=json&amp;revids=</value>
   </data>
   <data name="PageInfo" xml:space="preserve">
-    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids|tags&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;titles={0}</value>
   </data>
   <data name="PageInfoRevid" xml:space="preserve">
     <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;revids={0}</value>

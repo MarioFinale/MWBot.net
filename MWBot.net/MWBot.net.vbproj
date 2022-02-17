@@ -4,8 +4,8 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>net5.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.1.2110.27707</AssemblyVersion>
-    <FileVersion>1.1.2110.27707</FileVersion>
+    <AssemblyVersion>1.1.2202.37636</AssemblyVersion>
+    <FileVersion>1.1.2202.37636</FileVersion>
     <OptionStrict>On</OptionStrict>
     <Authors>MarioFinale</Authors>
     <Company>MarioFinale</Company>

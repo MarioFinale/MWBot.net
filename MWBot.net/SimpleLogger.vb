@@ -345,7 +345,7 @@ Namespace Utility
                                 Exit For
                             Catch ex As IOException
                                 If i = 5 Then
-                                    Throw ex
+                                    Throw
                                 End If
                                 Threading.Thread.Sleep(10)
                             End Try
