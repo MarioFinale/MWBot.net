@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>MWBot.net</RootNamespace>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
     <AssemblyVersion>1.1.2202.37636</AssemblyVersion>
     <FileVersion>1.1.2202.37636</FileVersion>
