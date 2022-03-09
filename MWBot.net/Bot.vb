@@ -316,87 +316,6 @@ Namespace WikiBot
             Console.WriteLine("===================================== END TEST ==========================================")
             Console.WriteLine()
             Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Creating a TCP client", "StartUpCheck")
-            Dim tclient As TcpClient
-            Try
-#Disable Warning IDE0068 ' Use recommended dispose pattern
-                tclient = New TcpClient("chat.freenode.net", 6667) With {
-                .ReceiveTimeout = 10000,
-                .SendTimeout = 10000}
-#Enable Warning IDE0068 ' Use recommended dispose pattern
-            Catch ex As Exception
-                EventLogger.Log("Test failed", "StartUpCheck")
-                EventLogger.Log(ex.Source, "StartUpCheck")
-                EventLogger.Log(ex.Message, "StartUpCheck")
-                EventLogger.Log(ex.StackTrace, "StartUpCheck")
-                Return False
-            End Try
-            Console.WriteLine("===================================== END TEST ==========================================")
-            Console.WriteLine()
-            Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Creating a network stream", "StartUpCheck")
-            Dim netStream As NetworkStream
-            Try
-                netStream = tclient.GetStream()
-            Catch ex As Exception
-                EventLogger.Log("Test failed", "StartUpCheck")
-                EventLogger.Log(ex.Source, "StartUpCheck")
-                EventLogger.Log(ex.Message, "StartUpCheck")
-                EventLogger.Log(ex.StackTrace, "StartUpCheck")
-                Return False
-            End Try
-            Console.WriteLine("===================================== END TEST ==========================================")
-            Console.WriteLine()
-            Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Creating streamreader and streamwriter", "StartUpCheck")
-            Dim tReader As StreamReader
-            Dim tWriter As StreamWriter
-            Try
-#Disable Warning IDE0068 ' Use recommended dispose pattern
-                tReader = New StreamReader(netStream)
-                tWriter = New StreamWriter(netStream)
-#Enable Warning IDE0068 ' Use recommended dispose pattern
-            Catch ex As Exception
-                EventLogger.Log("Test failed", "StartUpCheck")
-                EventLogger.Log(ex.Source, "StartUpCheck")
-                EventLogger.Log(ex.Message, "StartUpCheck")
-                EventLogger.Log(ex.StackTrace, "StartUpCheck")
-                Return False
-            End Try
-            Console.WriteLine("===================================== END TEST ==========================================")
-            Console.WriteLine()
-            Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Reading and writting to the stream", "StartUpCheck")
-            Try
-                tReader.ReadLine()
-                tWriter.WriteLine("NICK MWBOTTEST")
-                tWriter.Flush()
-            Catch ex As Exception
-                EventLogger.Log("Test failed", "StartUpCheck")
-                EventLogger.Log(ex.Source, "StartUpCheck")
-                EventLogger.Log(ex.Message, "StartUpCheck")
-                EventLogger.Log(ex.StackTrace, "StartUpCheck")
-                Return False
-            End Try
-            Console.WriteLine("===================================== END TEST ==========================================")
-            Console.WriteLine()
-            Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Disposing Objects", "StartUpCheck")
-            Try
-                tReader.Dispose()
-                tWriter.Dispose()
-                netStream.Dispose()
-                tclient.Dispose()
-            Catch ex As Exception
-                EventLogger.Log("Test failed", "StartUpCheck")
-                EventLogger.Log(ex.Source, "StartUpCheck")
-                EventLogger.Log(ex.Message, "StartUpCheck")
-                EventLogger.Log(ex.StackTrace, "StartUpCheck")
-                Return False
-            End Try
-            Console.WriteLine("===================================== END TEST ==========================================")
-            Console.WriteLine()
-            Console.WriteLine("==================================== BEGIN TEST ========================================")
             EventLogger.Log("Logging in...", "StartUpCheck")
             Dim tbot As Bot
             Try
@@ -452,7 +371,7 @@ Namespace WikiBot
             Dim testpage As Page
             Try
                 testpage = tbot.Getpage(testpagename)
-                testpage.Save(testString, "Test")
+                testpage.Save(testString, "MWBot.net Test")
                 EventLogger.Log("Checking page edit", "StartUpCheck")
                 testpage = tbot.Getpage(testpagename)
                 If Not testpage.Content = testString Then
@@ -470,32 +389,8 @@ Namespace WikiBot
             Console.WriteLine("===================================== END TEST ==========================================")
             Console.WriteLine()
             Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Creating a new Func (RecentChanges Stream)", "StartUpCheck")
-            Dim tfunc As Func(Of Boolean)
-            Try
-                tfunc = New Func(Of Boolean)(Function()
-                                                 Dim ftclient As WebClient = New WebClient()
-                                                 Dim ftstream As Stream = ftclient.OpenRead(New Uri("https://stream.wikimedia.org/v2/stream/recentchange"))
-                                                 Dim ftstreamreader As StreamReader = New StreamReader(ftstream)
-                                                 For i As Integer = 0 To 20
-                                                     Dim currentLine As String = ftstreamreader.ReadLine()
-                                                     Console.WriteLine(currentLine)
-                                                 Next
-                                                 Return True
-                                             End Function)
-            Catch ex As Exception
-                EventLogger.Log("Test failed", "StartUpCheck")
-                EventLogger.Log(ex.Source, "StartUpCheck")
-                EventLogger.Log(ex.Message, "StartUpCheck")
-                EventLogger.Log(ex.StackTrace, "StartUpCheck")
-                Return False
-            End Try
-            Console.WriteLine("===================================== END TEST ==========================================")
-            Console.WriteLine()
-            Console.WriteLine("==================================== BEGIN TEST ========================================")
             EventLogger.Log("Creating a new taskadmin", "StartUpCheck")
             Dim taskadmin As TaskAdmin
-
             Try
                 taskadmin = New TaskAdmin()
             Catch ex As Exception
@@ -508,16 +403,34 @@ Namespace WikiBot
             Console.WriteLine("===================================== END TEST ==========================================")
             Console.WriteLine()
             Console.WriteLine("==================================== BEGIN TEST ========================================")
-            EventLogger.Log("Adding a func to the taskadmin and running it", "StartUpCheck")
-            Console.WriteLine("3...")
-            System.Threading.Thread.Sleep(1000)
-            Console.WriteLine("2...")
-            System.Threading.Thread.Sleep(1000)
-            Console.WriteLine("1...")
-            System.Threading.Thread.Sleep(1000)
+            EventLogger.Log("Creating a new Func for the TaskAdmin (RecentChanges Stream)", "StartUpCheck")
+            Dim tfunc As Func(Of Boolean)
+            Try
+                tfunc = New Func(Of Boolean)(Function()
+                                                 Dim ftclient As WebClient = New WebClient()
+                                                 Dim ftstream As Stream = ftclient.OpenRead(New Uri("https://stream.wikimedia.org/v2/stream/recentchange"))
+                                                 Dim ftstreamreader As StreamReader = New StreamReader(ftstream)
+                                                 EventLogger.Log("Reading 20 events from the RecentChanges Stream", "StartUpCheck")
+                                                 For i As Integer = 0 To 20
+                                                     Dim currentLine As String = ftstreamreader.ReadLine()
+                                                     Console.WriteLine(currentLine)
+                                                 Next
+                                                 EventLogger.Log("Finished reading from RecentChanges Stream", "StartUpCheck")
+                                                 Return True
+                                             End Function)
+            Catch ex As Exception
+                EventLogger.Log("Test failed", "StartUpCheck")
+                EventLogger.Log(ex.Source, "StartUpCheck")
+                EventLogger.Log(ex.Message, "StartUpCheck")
+                EventLogger.Log(ex.StackTrace, "StartUpCheck")
+                Return False
+            End Try
+            Console.WriteLine("===================================== END TEST ==========================================")
+            Console.WriteLine()
+            Console.WriteLine("==================================== BEGIN TEST ========================================")
+            EventLogger.Log("Adding the created func to the taskadmin and then running it", "StartUpCheck")
             Try
                 taskadmin.NewTask("Test func", "TEST", tfunc, 0, False)
-
             Catch ex As Exception
                 EventLogger.Log("Test failed", "StartUpCheck")
                 EventLogger.Log(ex.Source, "StartUpCheck")
