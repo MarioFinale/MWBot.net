@@ -4,18 +4,19 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>net6.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.1.2202.37636</AssemblyVersion>
-    <FileVersion>1.1.2202.37636</FileVersion>
+    <AssemblyVersion>1.2.2202.37636</AssemblyVersion>
+    <FileVersion>1.2.2202.37636</FileVersion>
     <OptionStrict>On</OptionStrict>
     <Authors>MarioFinale</Authors>
     <Company>MarioFinale</Company>
-    <Description>Base para crear herramientas para sitios basados en el software Mediawiki.</Description>
+    <Description>Library to create tools for MediaWiki based sites.</Description>
     <Copyright>MarioFinale</Copyright>
     <PackageLicenseExpression>LGPL-2.0-only</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MarioFinale/MWBot.net</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <OptionInfer>Off</OptionInfer>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

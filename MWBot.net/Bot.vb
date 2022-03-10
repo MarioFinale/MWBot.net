@@ -407,7 +407,9 @@ Namespace WikiBot
             Dim tfunc As Func(Of Boolean)
             Try
                 tfunc = New Func(Of Boolean)(Function()
+#Disable Warning SYSLIB0014 ' Type or member is obsolete
                                                  Dim ftclient As WebClient = New WebClient()
+#Enable Warning SYSLIB0014 ' Type or member is obsolete
                                                  Dim ftstream As Stream = ftclient.OpenRead(New Uri("https://stream.wikimedia.org/v2/stream/recentchange"))
                                                  Dim ftstreamreader As StreamReader = New StreamReader(ftstream)
                                                  EventLogger.Log("Reading 20 events from the RecentChanges Stream", "StartUpCheck")
