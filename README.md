@@ -1,9 +1,10 @@
 # MWBot.net
-Base para crear herramientas para sitios basados en el software Mediawiki.
+Base library to create tools for sites based on Mediawiki software. - Base para crear herramientas para sitios basados en el software Mediawiki.
 
-# Ejemplos simples de uso
 
-Cargar una página, editarla y guardarla.
+# Simple usage examples - Ejemplos simples de uso
+
+Loading a page, editing it and saving it. - Cargar una página, editarla y guardarla.
 
 * C#
 
