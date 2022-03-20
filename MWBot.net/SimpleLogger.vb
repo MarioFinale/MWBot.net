@@ -273,7 +273,7 @@ Namespace Utility
         ''' <param name="source">Origen del registro</param>
         ''' <param name="message">Mensaje de salida</param>
         Public Shared Sub WriteLine(ByVal type As String, ByVal source As String, message As String)
-            Dim msgstr As String = "[" & DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") & "]" & " [" & source & " " & type & "] " & message
+            Dim msgstr As String = "[" & DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") & "]" & " [" & source & " " & type & "] " & message.Replace(Environment.NewLine, " "c)
             Console.WriteLine(msgstr)
         End Sub
 
@@ -283,7 +283,7 @@ Namespace Utility
         ''' <param name="text">Texto a codificar</param>
         ''' <returns></returns>
         Public Shared Function PsvSafeEncode(ByVal text As String) As String
-            Return text.Replace("|"c, "%CHAR:U+007C%")
+            Return text.Replace("|"c, "%CHAR:U+007C%").Replace(Environment.NewLine, " "c)
         End Function
 
         ''' <summary>

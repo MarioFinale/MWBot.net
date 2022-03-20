@@ -299,7 +299,7 @@ Namespace WikiBot
                 additionalParams &= "&bot="
             End If
 
-            Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, _Title, UrlWebEncode(EditSummary), UrlWebEncode(pageContent), UrlWebEncode(EditToken))
+            Dim postdata As String = String.Format(SStrings.SavePage, additionalParams, UrlWebEncode(_Title), UrlWebEncode(EditSummary), UrlWebEncode(pageContent), UrlWebEncode(EditToken))
             Dim postresult As String = String.Empty
 
             Try

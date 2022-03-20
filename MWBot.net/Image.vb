@@ -109,11 +109,11 @@ Namespace WikiBot
                 End Using
                 Return img
             Catch ioex As IOException
-                EventLogger.EX_Log(ioex.Message, "DailyRes")
+                EventLogger.EX_Log(ioex.Message, "Image.PicFromUrl.ex1")
                 img.Dispose()
                 Return Nothing
             Catch webex As WebException
-                EventLogger.EX_Log(webex.Message, "DailyRes")
+                EventLogger.EX_Log(webex.Message, "Image.PicFromUrl.ex2")
                 img.Dispose()
                 Return Nothing
             End Try

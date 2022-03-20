@@ -1141,7 +1141,7 @@ Namespace WikiBot
 
 
         ''' <summary>
-        ''' Retorna un array de tipo string con todas las páginas donde la cadena de texto especificada haya sido encontrada en el contenido.
+        ''' Retorna un array de tipo string con todas las páginas donde la cadena de texto especificada haya sido encontrada en el contenido. Se pueden utilizar expresiones avanzadas de CirrusSearch.
         ''' </summary>
         ''' <param name="text">Cadena de texto a buscar</param>
         ''' <param name="limit">Limite de iteraciones de 'continue' en la API.</param>

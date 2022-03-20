@@ -4,8 +4,8 @@
     <RootNamespace>MWBot.net</RootNamespace>
     <TargetFramework>net6.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
-    <AssemblyVersion>1.2.2202.37636</AssemblyVersion>
-    <FileVersion>1.2.2202.37636</FileVersion>
+    <AssemblyVersion>1.3.2202.37636</AssemblyVersion>
+    <FileVersion>1.3.2202.37636</FileVersion>
     <OptionStrict>On</OptionStrict>
     <Authors>MarioFinale</Authors>
     <Company>MarioFinale</Company>
@@ -16,7 +16,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <OptionInfer>Off</OptionInfer>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.0</Version>
+    <Version>1.3.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -112,7 +112,7 @@ Namespace WikiBot
         ''' <param name="newlines"></param>
         ''' <returns></returns>
         Private Shared Function CreateTemplatetext(ByVal templatename As String, ByVal templateparams As List(Of Tuple(Of String, String)), ByVal newlines As Boolean) As String
-            Dim linechar As String = ""
+            Dim linechar As String = String.Empty
             If newlines Then linechar = Environment.NewLine
             Dim text As String = "{{" & templatename & linechar
             For Each t As Tuple(Of String, String) In templateparams
@@ -258,7 +258,7 @@ Namespace WikiBot
                 If ParamNamematch.Success Then
 
                     Dim ParamName As String = ParamNamematch.Value.Substring(1, ParamNamematch.Length - 2)
-                    Dim Paramvalue As String = m.Value.Replace(ParamNamematch.Value, "")
+                    Dim Paramvalue As String = m.Value.Replace(ParamNamematch.Value, String.Empty)
                     NamedParams.Add(New Tuple(Of String, String)(ParamName, Paramvalue))
 
                 Else
@@ -379,8 +379,8 @@ Namespace WikiBot
             Dim temps As List(Of String) = GetTemplateTextArray(text)
             Dim templateNames As New HashSet(Of String)
             For Each t As String In temps
-                Dim currentTemplate As New Template(t, False)
-                Dim name As String = currentTemplate.Name.Trim()
+                Dim nameMatch As Match = Regex.Match(t, "^{{((plantilla:|template:)*([a-zA-Z\u00C0-\u017F\s]+?))(\||}})", RegexOptions.IgnoreCase)
+                Dim name As String = If(nameMatch.Success, nameMatch.Groups(1).Value.Trim, String.Empty)
                 name = UppercaseFirstCharacter(name)
                 templateNames.Add(name)
             Next
@@ -400,7 +400,7 @@ Namespace WikiBot
             Dim templateNamesInText As String() = GetTemplatesNamesInText(text)
             Dim normalizedTemplateNames As New HashSet(Of String)
             For Each name As String In templateNamesInText
-                Dim normalizedName As String = Regex.Replace(name, ".+:", "").Trim()
+                Dim normalizedName As String = Regex.Replace(name, ".+:", String.Empty).Trim()
                 normalizedName = UppercaseFirstCharacter(normalizedName)
                 normalizedTemplateNames.Add(normalizedName)
             Next
@@ -420,7 +420,7 @@ Namespace WikiBot
             Dim templateNamesInText As String() = GetTemplatesNamesInText(text)
             Dim normalizedTemplateNames As New HashSet(Of String)
             For Each name As String In templateNamesInText
-                Dim normalizedName As String = Regex.Replace(name, Regex.Escape(ignoreNamespace) & " *:", "").Trim()
+                Dim normalizedName As String = Regex.Replace(name, Regex.Escape(ignoreNamespace) & " *:", String.Empty).Trim()
                 normalizedName = UppercaseFirstCharacter(normalizedName)
                 normalizedTemplateNames.Add(normalizedName)
             Next
@@ -434,7 +434,10 @@ Namespace WikiBot
         ''' <param name="templateName">Nombre de la plantilla, con primer carácter en mayúsculas.</param>
         ''' <returns></returns>
         Public Shared Function IsTemplatePresentInText(ByVal text As String, ByVal templateName As String) As Boolean
-            Return GetTemplatesNamesInText(text).Contains(templateName.Trim())
+
+            Dim a As String() = GetTemplatesNamesInText(text)
+
+            Return a.Contains(templateName.Trim())
         End Function
 
 
@@ -537,8 +540,8 @@ Namespace WikiBot
                             settingName = False
                             If settingParameter Then
                                 paramlist.Add(New Tuple(Of String, String)(currentParamName, currentParam))
-                                currentParam = ""
-                                currentParamName = ""
+                                currentParam = String.Empty
+                                currentParamName = String.Empty
                             Else
                                 settingParameter = True
                             End If
@@ -555,7 +558,7 @@ Namespace WikiBot
                         If settingParameter Then
                             If Depth = 0 AndAlso lDepth = 0 Then
                                 currentParamName = currentParam
-                                currentParam = ""
+                                currentParam = String.Empty
                             Else
                                 currentParam &= text(currentCharacter)
                             End If
@@ -685,7 +688,7 @@ Namespace WikiBot
         End Function
 
         Private Function CountString(ByVal text As String, stringToCount As String) As Integer
-            Dim newtext As String = text.Replace(stringToCount, "")
+            Dim newtext As String = text.Replace(stringToCount, String.Empty)
             Dim diff As Integer = text.Length - newtext.Length
             Dim Count As Integer = diff \ stringToCount.Length
             Return Count
@@ -714,7 +717,6 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="text"></param>
         ''' <returns></returns>
-        <CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification:="Text parser")>
         Public Shared Function GetTemplateTextArray(ByVal text As String) As List(Of String)
             Dim temptext As String
             Dim templist As New List(Of String)
@@ -806,10 +808,10 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="parameterName">Nombre del parámetro.</param>
         ''' <returns></returns>
-        Function AddParameter(ByVal parameterName As String) As Boolean
+        Function AppendParameter(ByVal parameterName As String) As Boolean
             If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
             _text = Regex.Replace(_text, "\}\}$", " |" & parameterName.Trim() & " }}")
-            _parameters.Add(New Tuple(Of String, String)(parameterName, ""))
+            _parameters.Add(New Tuple(Of String, String)(parameterName, String.Empty))
             Return True
         End Function
 
@@ -819,11 +821,343 @@ Namespace WikiBot
         ''' <param name="parameterName">Nombre del parámetro.</param>
         ''' <param name="parameterValue">Valor del parámetro.</param>
         ''' <returns></returns>
-        Function AddParameter(ByVal parameterName As String, ByVal parameterValue As String) As Boolean
+        Function AppendParameter(ByVal parameterName As String, ByVal parameterValue As String) As Boolean
             If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
             _text = Regex.Replace(_text, "\}\}$", " |" & parameterName.Trim() & " =" & parameterValue & " }}")
-            _parameters.Add(New Tuple(Of String, String)(parameterName, ""))
+            _parameters.Add(New Tuple(Of String, String)(parameterName, parameterValue))
             Return True
+        End Function
+
+        ''' <summary>
+        ''' Añade un parámetro de la plantilla, si ya existe lo reemplaza. Regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="parameterContent"></param>
+        ''' <returns></returns>
+        Function AddParameter(ByVal parameterName As String, ByVal parameterContent As String) As Boolean
+            If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    _parameters.Remove(p)
+                End If
+            Next
+            _parameters.Add(New Tuple(Of String, String)(parameterName, parameterContent))
+            Return True
+            _text = MakeTemplateText(_name, _parameters)
+        End Function
+
+        ''' <summary>
+        ''' Reemplaza el valor de un parámetro de la plantilla. Puede regenerar el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterContent"></param>
+        ''' <param name="regenerateText"></param>
+        ''' <returns></returns>
+        Function ReplaceParameterContent(ByVal parameterName As String, ByVal newParameterContent As String, ByVal regenerateText As Boolean) As Boolean
+            If regenerateText Then
+                Return ReplaceParameterContentRegen(parameterName, newParameterContent)
+            Else
+                Return ReplaceParameterContentNoRegen(parameterName, newParameterContent)
+            End If
+        End Function
+
+        ''' <summary>
+        ''' Reemplaza el contenido de un parámetro de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterContent"></param>
+        ''' <returns></returns>
+        Function ReplaceParameterContent(ByVal parameterName As String, ByVal newParameterContent As String) As Boolean
+            Return ReplaceParameterContentNoRegen(parameterName, newParameterContent)
+        End Function
+
+        ''' <summary>
+        ''' Reemplaza el contenido de un parámetro de la plantilla. Regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterContent"></param>
+        ''' <returns></returns>
+        Private Function ReplaceParameterContentRegen(ByVal parameterName As String, ByVal newParameterContent As String) As Boolean
+            If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    If _parameters.Contains(p) Then
+                        _parameters.Remove(p)
+                        _parameters.Add(New Tuple(Of String, String)(parameterName, newParameterContent))
+                    End If
+                End If
+            Next
+            Return True
+            _text = MakeTemplateText(_name, _parameters)
+        End Function
+
+        ''' <summary>
+        ''' Cambia el contenido de un parámetro de la plantilla. Si el nombre del parámetro nuevo ya existía, lo quita. No regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <returns></returns>
+        Private Function ReplaceParameterContentNoRegen(ByVal parameterName As String, ByVal newParameterContent As String) As Boolean
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            Dim parameterNameEscaped As String = Regex.Escape(parameterName.Trim())
+            Dim parameterString As New List(Of Tuple(Of String, String))
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    _parameters.Remove(p)
+                    Dim t As New Tuple(Of String, String)(p.Item1, p.Item2.Replace(p.Item2, newParameterContent))
+                    _parameters.Add(t)
+                    Dim oldString As String = "|" & p.Item1 & "=" & p.Item2
+                    Dim newString As String = "|" & t.Item1 & "=" & t.Item2
+                    Dim ps As New Tuple(Of String, String)(oldString, newString)
+                    parameterString.Add(ps)
+                End If
+            Next
+            For Each p As Tuple(Of String, String) In parameterString
+                _text = _text.Replace(p.Item1, p.Item2)
+            Next
+            Return True
+        End Function
+
+        ''' <summary>
+        ''' Añade al contenido de un parámetro nuevo texto. Puede regenerar el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterContent"></param>
+        ''' <param name="regenerateText"></param>
+        ''' <returns></returns>
+        Function AppendParameterContent(ByVal parameterName As String, ByVal newParameterContent As String, ByVal regenerateText As Boolean) As Boolean
+            If regenerateText Then
+                Return AppendParameterContentRegen(parameterName, newParameterContent)
+            Else
+                Return AppendParameterContentNoRegen(parameterName, newParameterContent)
+            End If
+        End Function
+
+        ''' <summary>
+        ''' Añade al contenido de un parámetro nuevo texto.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterContent"></param>
+        ''' <returns></returns>
+        Function AppendParameterContent(ByVal parameterName As String, ByVal newParameterContent As String) As Boolean
+            Return AppendParameterContentNoRegen(parameterName, newParameterContent)
+        End Function
+
+        ''' <summary>
+        ''' Añade al contenido de un parámetro nuevo texto. Regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterContent"></param>
+        ''' <returns></returns>
+        Private Function AppendParameterContentRegen(ByVal parameterName As String, ByVal newParameterContent As String) As Boolean
+            If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    If _parameters.Contains(p) Then
+                        _parameters.Remove(p)
+                        _parameters.Add(New Tuple(Of String, String)(parameterName, p.Item2 & newParameterContent))
+                    End If
+                End If
+            Next
+            Return True
+            _text = MakeTemplateText(_name, _parameters)
+        End Function
+
+        ''' <summary>
+        ''' Añade al contenido de un parámetro nuevo texto. No regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <returns></returns>
+        Private Function AppendParameterContentNoRegen(ByVal parameterName As String, ByVal newParameterContent As String) As Boolean
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            Dim parameterNameEscaped As String = Regex.Escape(parameterName.Trim())
+            Dim parameterString As New List(Of Tuple(Of String, String))
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    _parameters.Remove(p)
+                    Dim t As New Tuple(Of String, String)(p.Item1, p.Item2 & newParameterContent)
+                    _parameters.Add(t)
+                    Dim oldString As String = "|" & p.Item1 & "=" & p.Item2
+                    Dim newString As String = "|" & t.Item1 & "=" & t.Item2
+                    Dim ps As New Tuple(Of String, String)(oldString, newString)
+                    parameterString.Add(ps)
+                End If
+            Next
+            For Each p As Tuple(Of String, String) In parameterString
+                _text = _text.Replace(p.Item1, p.Item2)
+            Next
+            Return True
+        End Function
+
+        ''' <summary>
+        ''' Cambia el nombre de un parámetro de la plantilla manteniendo el contenido. Si el nombre del parámetro nuevo ya existía, lo quita.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterName"></param>
+        ''' <returns></returns>
+        Function ChangeNameOfParameter(ByVal parameterName As String, ByVal newParameterName As String) As Boolean
+            Return ChangeNameOfParameterNoRegen(parameterName, newParameterName)
+        End Function
+
+        ''' <summary>
+        ''' Cambia el nombre de un parámetro de la plantilla manteniendo el contenido. Si el nombre del parámetro nuevo ya existía, lo quita. Puede regenerar el texto completo de la plantilla
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterName"></param>
+        ''' <param name="regenerateText"></param>
+        ''' <returns></returns>
+        Function ChangeNameOfParameter(ByVal parameterName As String, ByVal newParameterName As String, ByVal regenerateText As Boolean) As Boolean
+            If regenerateText Then
+                Return ChangeNameOfParameterRegen(parameterName, newParameterName)
+            Else
+                Return ChangeNameOfParameterNoRegen(parameterName, newParameterName)
+            End If
+        End Function
+
+        ''' <summary>
+        ''' Cambia el nombre de un parámetro de la plantilla manteniendo el contenido. Si el nombre del parámetro nuevo ya existía, lo quita. Regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="newParameterName"></param>
+        ''' <returns></returns>
+        Private Function ChangeNameOfParameterRegen(ByVal parameterName As String, ByVal newParameterName As String) As Boolean
+            If ContainsParameter(parameterName) Then
+                If ContainsParameter(newParameterName) Then
+                    RemoveParameterNoRegen(newParameterName)
+                End If
+            End If
+            If Regex.Match(parameterName, "[=|{}:]").Success Then Throw New ArgumentException(My.Resources.Messages.InvalidParameterNameOnTemplateError)
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    If _parameters.Contains(p) Then
+                        _parameters.Remove(p)
+                        _parameters.Add(New Tuple(Of String, String)(newParameterName, p.Item2))
+                    End If
+                End If
+            Next
+            Return True
+            _text = MakeTemplateText(_name, _parameters)
+        End Function
+
+        ''' <summary>
+        ''' Cambia el nombre de un parámetro de la plantilla manteniendo el contenido. Si el nombre del parámetro nuevo ya existía, lo quita. No regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <returns></returns>
+        Private Function ChangeNameOfParameterNoRegen(ByVal parameterName As String, ByVal newParameterName As String) As Boolean
+            If ContainsParameter(parameterName) Then
+                If ContainsParameter(newParameterName) Then
+                    RemoveParameterNoRegen(newParameterName)
+                End If
+            End If
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            Dim parameterNameEscaped As String = Regex.Escape(parameterName.Trim())
+            Dim parameterString As New List(Of Tuple(Of String, String))
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    _parameters.Remove(p)
+                    Dim t As New Tuple(Of String, String)(p.Item1.Replace(parameterName, newParameterName), p.Item2)
+                    _parameters.Add(t)
+                    Dim oldString As String = "|" & p.Item1 & "=" & p.Item2
+                    Dim newString As String = "|" & t.Item1 & "=" & t.Item2
+                    Dim ps As New Tuple(Of String, String)(oldString, newString)
+                    parameterString.Add(ps)
+                End If
+            Next
+            For Each p As Tuple(Of String, String) In parameterString
+                _text = _text.Replace(p.Item1, p.Item2)
+            Next
+            Return True
+        End Function
+
+        ''' <summary>
+        ''' Quita un parámetro y su contenido de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <returns></returns>
+        Function RemoveParameter(ByVal parameterName As String) As Boolean
+            Return RemoveParameterNoRegen(parameterName)
+        End Function
+
+        ''' <summary>
+        ''' Quita un parámetro y su contenido de la plantilla. Opcionalmente puede regenerar el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <param name="regenText"></param>
+        ''' <returns></returns>
+        Function RemoveParameter(ByVal parameterName As String, ByVal regenText As Boolean) As Boolean
+            If regenText Then
+                Return RemoveParameterRegen(parameterName)
+            Else
+                Return RemoveParameterNoRegen(parameterName)
+            End If
+        End Function
+
+        ''' <summary>
+        ''' Quita un parámetro y su contenido de la plantilla. Regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <returns></returns>
+        Private Function RemoveParameterRegen(ByVal parameterName As String) As Boolean
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    _parameters.Remove(p)
+                End If
+            Next
+            Return True
+            _text = MakeTemplateText(_name, _parameters)
+        End Function
+
+        ''' <summary>
+        ''' Quita un parámetro y su contenido de la plantilla. No regenera el texto completo de la plantilla.
+        ''' </summary>
+        ''' <param name="parameterName"></param>
+        ''' <returns></returns>
+        Private Function RemoveParameterNoRegen(ByVal parameterName As String) As Boolean
+            Dim oldParameters As List(Of Tuple(Of String, String)) = New List(Of Tuple(Of String, String))(_parameters)
+            Dim parameterNameEscaped As String = Regex.Escape(parameterName.Trim())
+            Dim parameterString As New List(Of String)
+            For Each p As Tuple(Of String, String) In oldParameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    _parameters.Remove(p)
+                    parameterString.Add("|" & p.Item1 & "=" & p.Item2)
+                End If
+            Next
+            For Each p As String In parameterString
+                _text = _text.Replace(p, String.Empty)
+            Next
+            Return True
+        End Function
+
+        ''' <summary>
+        ''' Indica si la mayoría de parámetros comienzan con un espacio que los separa del caráter 'pipe' (|).
+        ''' </summary>
+        ''' <returns></returns>
+        Function MostParametersAreSeparatedFromPipes() As Boolean
+            Dim separated As Integer = 0
+            Dim notSeparated As Integer = 0
+            For Each p As Tuple(Of String, String) In _parameters
+                If p.Item1.StartsWith(" ") Then
+                    separated += 1
+                Else
+                    notSeparated += 1
+                End If
+            Next
+            Return separated > notSeparated
+        End Function
+
+        Function GetParameterContent(ByVal parameterName As String) As String
+            Dim content As String = String.Empty
+            For Each p As Tuple(Of String, String) In _parameters
+                If p.Item1.Trim().Equals(parameterName.Trim()) Then
+                    content = p.Item2
+                End If
+            Next
+            Return content
         End Function
 
 
