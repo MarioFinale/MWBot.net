@@ -934,7 +934,7 @@ Namespace Utility
         ''' Función base que obtiene los secciones de una página según la expresión regular que defina las secciones.
         ''' </summary>
         ''' <param name="pagetext">Texto</param>
-        ''' <param name="lvl">Nivel (= 1 = | == 2 == | === 3 === | ==== 4 ==== )</param>
+        ''' <param name="lvl">Nivel (= 1 = | == 2 == | === 3 === | ==== 4 ==== ), cualquier otro valor será ignorado y se trabajará con Nivel 2</param>
         ''' <returns></returns>
         Private Function GetLvlThread(ByVal pagetext As String, ByVal lvl As Integer) As String()
             Dim ThreadList As New List(Of String)

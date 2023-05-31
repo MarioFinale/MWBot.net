@@ -19,6 +19,7 @@ Namespace WikiBot
         Private _apiUri As Uri
         Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/User_talk:MarioFinale) .NET/MONO"
         Private _requestDelay As Double = 100
+        Private _exponentialBackOffDelayMs As Integer = 3000
 
 #Region "Properties"
         Public ReadOnly Property UserName As String
@@ -48,6 +49,15 @@ Namespace WikiBot
             End Get
             Set(value As Double)
                 _requestDelay = value
+            End Set
+        End Property
+
+        Public Property ExponentialBackOffDelayMs As Integer
+            Get
+                Return _exponentialBackOffDelayMs
+            End Get
+            Set(value As Integer)
+                _exponentialBackOffDelayMs = value
             End Set
         End Property
 #End Region
@@ -220,6 +230,7 @@ Namespace WikiBot
         ''' <param name="Cookies">Cookies sobre los que se trabaja.</param>
         Public Function GetDataAndResult(ByVal pageUri As Uri, ByRef cookies As CookieContainer) As String
             Dim tryCount As Integer = 0
+            Dim delay As Integer = _exponentialBackOffDelayMs
 
             Do Until tryCount = MaxRetry
 
@@ -264,9 +275,13 @@ Namespace WikiBot
 
                 Catch ex As System.Net.WebException
                     tryCount += 1
+                    delay = delay * 2 ' exponential backoff
+                    Thread.Sleep(delay)
 #Disable Warning CA1031
                 Catch ex2 As Exception
                     tryCount += 1
+                    delay = delay * 2 ' exponential backoff
+                    Thread.Sleep(delay)
 #Enable Warning CA1031
                 Finally
                     client.Dispose()
@@ -281,27 +296,27 @@ Namespace WikiBot
         End Function
 
         Private Function AdaptEncoding(ByVal proposedtext As String) As String
-            Dim responsebytes As Byte() = Encoding.UTF8.GetBytes(proposedtext)
-            Dim text As String
-            Using reader As New StreamReader(New MemoryStream(responsebytes), True)
-                text = reader.ReadToEnd
-                If text.Contains("�") Then
-                    If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-1"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
-                        Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
-                        text = iso.GetString(responsebytes)
-                    End If
-                    If Regex.Match(text, "<!doctype html[\s\S]+?<head>[\s\S]+?<meta .+; charset=iso-8859-9"" *\/>[\s\S]+?<\/head>", RegexOptions.IgnoreCase).Success Then
-                        Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28599)
-                        text = iso.GetString(responsebytes)
-                    End If
-                    If text.Contains("�") Then 'Try ISO/IEC 8859-1
-                        Dim iso As Text.Encoding = System.Text.Encoding.GetEncoding(28591)
-                        text = iso.GetString(responsebytes)
-                    End If
-                    'If it doesn't work, give up
-                End If
-            End Using
-            Return text
+            ' Convert the text to a byte array using UTF-8 encoding
+            Dim bytes As Byte() = Encoding.UTF8.GetBytes(proposedtext)
+
+            ' List of encodings to try
+            Dim encodings As Encoding() = {
+                Encoding.UTF8,
+                Encoding.GetEncoding(28591),
+                Encoding.Unicode,
+                Encoding.BigEndianUnicode,
+                Encoding.UTF32
+            }
+
+            For Each encoding As Encoding In encodings
+                Try
+                    Return encoding.GetString(bytes)
+                Catch ex As DecoderFallbackException
+                End Try
+            Next
+
+            ' Give up! return original text
+            Return proposedtext
         End Function
 
         ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto.</summary>
@@ -315,6 +330,8 @@ Namespace WikiBot
         ''' <param name="pageUri">URL absoluta del recurso web.</param>
         ''' <param name="postData">Cadena de texto que se envia en el POST.</param>
         Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer, Optional retrycount As Integer = 0) As String
+
+            Dim delay As Integer = _exponentialBackOffDelayMs
 
             If pageUri Is Nothing Then
                 Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
@@ -362,11 +379,13 @@ Namespace WikiBot
                 tempcookies.Add(cookies.GetCookies(pageUri))
             Catch ex As System.Net.WebException
                 If retrycount < 3 Then
+                    Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1)) ' exponential backoff
                     Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                 End If
 #Disable Warning CA1031
             Catch ex2 As Exception
                 If retrycount < 3 Then
+                    Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1)) ' exponential backoff
                     Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                 End If
 #Enable Warning CA1031

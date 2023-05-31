@@ -1,5 +1,6 @@
 ﻿Option Strict On
 Option Explicit On
+Imports System.Reflection.Metadata
 Imports System.Text.RegularExpressions
 Imports MWBot.net.Utility
 Imports MWBot.net.Utility.Utils
@@ -522,169 +523,85 @@ Namespace WikiBot
         ''' <param name="text"></param>
         ''' <returns></returns>
         Private Function AnalyzeTemplateParams(ByVal text As String) As Template
-            Dim settingName As Boolean = True
-            Dim settingParameter As Boolean = False
-            Dim paramlist As New List(Of Tuple(Of String, String))
             Dim templateName As String = String.Empty
-            Dim Depth As Integer = 0
-            Dim lDepth As Integer = 0
+            Dim paramList As New List(Of Tuple(Of String, String))
             Dim templateText As String = "{{"
-            Dim currentParam As String = String.Empty
-            Dim currentParamName As String = String.Empty
+            Dim stack As New Stack(Of Tuple(Of String, Integer, Boolean))
+
+            stack.Push(New Tuple(Of String, Integer, Boolean)("root", 0, False))
 
             For currentCharacter As Integer = 2 To text.Length - 1
+                Dim currentState As Tuple(Of String, Integer, Boolean) = stack.Peek()
                 templateText &= text(currentCharacter)
+
                 Select Case text(currentCharacter)
-                    Case "|"c
-                        If Not Depth > 0 AndAlso Not lDepth > 0 Then
-                            settingName = False
-                            If settingParameter Then
-                                paramlist.Add(New Tuple(Of String, String)(currentParamName, currentParam))
-                                currentParam = String.Empty
-                                currentParamName = String.Empty
-                            Else
-                                settingParameter = True
-                            End If
-                        Else
-                            If settingParameter Then
-                                currentParam &= text(currentCharacter)
-                            End If
-                        End If
-                    Case "="c
-                        If settingName Then
-                            templateName &= text(currentCharacter)
-                        End If
-
-                        If settingParameter Then
-                            If Depth = 0 AndAlso lDepth = 0 Then
-                                currentParamName = currentParam
-                                currentParam = String.Empty
-                            Else
-                                currentParam &= text(currentCharacter)
-                            End If
-                        End If
-
-                    Case "["c
-                        lDepth += 1
-                        If settingName Then
-                            templateName &= text(currentCharacter)
-                        End If
-                        If settingParameter Then
-                            currentParam &= text(currentCharacter)
-                        End If
-                    Case "]"c
-                        lDepth -= 1
-                        If settingName Then
-                            templateName &= text(currentCharacter)
-                        End If
-                        If settingParameter Then
-                            currentParam &= text(currentCharacter)
-                        End If
-
-                    Case "["c
-                        lDepth += 1
-                        If settingName Then
-                            templateName &= text(currentCharacter)
-                        End If
-                        If settingParameter Then
-                            currentParam &= text(currentCharacter)
-                        End If
-                    Case "]"c
-                        lDepth -= 1
-                        If settingName Then
-                            templateName &= text(currentCharacter)
-                        End If
-                        If settingParameter Then
-                            currentParam &= text(currentCharacter)
-                        End If
                     Case "{"c
-                        If settingName Then
-                            templateName &= text(currentCharacter)
-                        End If
-                        If settingParameter Then
-                            currentParam += text(currentCharacter)
-                        End If
-                        If text.Length > currentCharacter + 2 Then
-                            currentCharacter += 1
-                            templateText &= text(currentCharacter)
-                            If text(currentCharacter) = "{"c Then
-                                Depth += 1
-                            End If
-                            If settingName Then
-                                templateName &= text(currentCharacter)
-                            End If
-                            If settingParameter Then
-                                currentParam += text(currentCharacter)
+                        If Not currentState.Item3 Then
+                            If text(currentCharacter + 1) = "{"c Then
+                                stack.Push(New Tuple(Of String, Integer, Boolean)("template", currentCharacter, False))
+                            Else
+                                stack.Push(New Tuple(Of String, Integer, Boolean)("parameter", currentCharacter, False))
                             End If
                         End If
-                    Case "}"c
-                        If Depth = 0 Then
-                            If text.Length >= currentCharacter + 1 Then
-                                currentCharacter += 1
-                                If text(currentCharacter) = "}"c Then
-                                    templateText &= text(currentCharacter)
-                                    If settingParameter Then
-                                        paramlist.Add(New Tuple(Of String, String)(currentParamName, currentParam))
-                                    End If
-                                    Exit For
-                                Else
-                                    If settingName Then
-                                        templateName &= text(currentCharacter)
-                                    End If
-                                    currentCharacter -= 1
-                                End If
-                                templateText &= text(currentCharacter)
-                                If settingName Then
-                                    templateName &= text(currentCharacter)
-                                End If
-                                If settingParameter Then
-                                    currentParam += text(currentCharacter)
-                                End If
-                            End If
-                        End If
-                        If Depth > 0 Then
-                            If settingName Then
-                                templateName &= text(currentCharacter)
-                            End If
-                            If settingParameter Then
-                                currentParam += text(currentCharacter)
-                            End If
-                            If text.Length >= currentCharacter + 1 Then
-                                currentCharacter += 1
-                                templateText &= text(currentCharacter)
-                                If settingName Then
-                                    templateName &= text(currentCharacter)
-                                End If
-                                If settingParameter Then
-                                    currentParam += text(currentCharacter)
-                                End If
-                                If text(currentCharacter) = "}"c Then
-                                    Depth -= 1
-                                End If
 
+                    Case "}"c
+                        If currentState.Item1 = "template" AndAlso text(currentCharacter + 1) = "}"c Then
+                            Dim template As Template = AnalyzeTemplateParams(text.Substring(currentState.Item2 + 2, currentCharacter - currentState.Item2 - 2))
+                            templateText &= template.Text
+                            currentCharacter += template.Text.Length + 3
+                        ElseIf currentState.Item1 = "parameter" AndAlso text(currentCharacter + 1) = "}"c Then
+                            Dim parameter As String = text.Substring(currentState.Item2 + 1, currentCharacter - currentState.Item2 - 1).Trim()
+                            Dim parameterTuple As New Tuple(Of String, String)(parameter, "")
+                            paramList.Add(parameterTuple)
+                        End If
+                        stack.Pop()
+
+                    Case "="c
+                        If currentState.Item1 = "parameter" AndAlso Not currentState.Item3 Then
+                            stack.Push(New Tuple(Of String, Integer, Boolean)("parametername", currentCharacter, False))
+                        End If
+
+                    Case "|"c
+                        If currentState.Item1 = "parameter" AndAlso Not currentState.Item3 Then
+                            Dim parameterName As String = text.Substring(currentState.Item2 + 1, currentCharacter - currentState.Item2 - 1).Trim()
+                            currentState = stack.Pop()
+                            Dim parameterTuple As New Tuple(Of String, String)(parameterName, "")
+                            paramList.Add(parameterTuple)
+                            currentState = New Tuple(Of String, Integer, Boolean)(currentState.Item1, currentState.Item2, True)
+                            stack.Push(currentState)
+                        End If
+
+                    Case Else
+                        If currentState.Item1 = "template" OrElse currentState.Item1 = "parameter" Then
+                            If currentState.Item3 Then
+                                Dim parameterTuple As Tuple(Of String, String) = paramList.Last()
+                                paramList.RemoveAt(paramList.Count - 1)
+                                parameterTuple = New Tuple(Of String, String)(parameterTuple.Item1, parameterTuple.Item2 & text(currentCharacter))
+                                paramList.Add(parameterTuple)
+                            Else
+                                currentState = stack.Pop()
+                                currentState = New Tuple(Of String, Integer, Boolean)(currentState.Item1, currentState.Item2, False)
+                                stack.Push(currentState)
                             End If
                         End If
-                    Case Else
-                        If text(currentCharacter) = Environment.NewLine Then
-                            lDepth = 0
-                        End If
-                        If settingParameter Then
-                            currentParam += text(currentCharacter)
-                        End If
-                        If settingName Then
+
+                        If currentState.Item1 = "template" Then
                             templateName &= text(currentCharacter)
+                        End If
+
+                        If currentState.Item1 = "parametername" Then
+                            currentState = stack.Pop()
+                            Dim parameterName As String = text.Substring(currentState.Item2 + 1, currentCharacter - currentState.Item2 - 1).Trim()
+                            Dim parameterTuple As New Tuple(Of String, String)(parameterName, "")
+                            currentState = New Tuple(Of String, Integer, Boolean)("parameter", currentState.Item2, True)
+                            stack.Push(currentState)
+                            paramList.Add(parameterTuple)
                         End If
                 End Select
             Next
-            Dim NumeredParams As New List(Of Tuple(Of String, String, String))
-            For i As Integer = 0 To paramlist.Count - 1
-                NumeredParams.Add(New Tuple(Of String, String, String)(If(String.IsNullOrWhiteSpace(paramlist(i).Item1), i.ToString, paramlist(i).Item1.Trim()), paramlist(i).Item1, paramlist(i).Item2))
-            Next
-            Dim temp As New Template(templateName, paramlist, templateText)
+            Dim temp As New Template(templateName, paramList, templateText)
 
             Return temp
-
-
         End Function
 
         Private Function CountString(ByVal text As String, stringToCount As String) As Integer

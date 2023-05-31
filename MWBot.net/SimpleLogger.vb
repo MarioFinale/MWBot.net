@@ -283,7 +283,7 @@ Namespace Utility
         ''' <param name="text">Texto a codificar</param>
         ''' <returns></returns>
         Public Shared Function PsvSafeEncode(ByVal text As String) As String
-            Return text.Replace("|"c, "%CHAR:U+007C%").Replace(Environment.NewLine, " "c)
+            Return text.Replace("|"c, "%CHAR:U+007C%").Replace(vbCrLf, " "c).Replace(vbCr, " "c).Replace(vbLf, " "c).Replace(Environment.NewLine, " "c)
         End Function
 
         ''' <summary>
