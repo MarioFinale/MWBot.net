@@ -721,7 +721,14 @@ Namespace WikiBot
 
             Dim slots As JsonElement = currentrevision.GetProperty("slots")
             Dim mainslot As JsonElement = slots.GetProperty("main")
-            qpageContent = mainslot.GetProperty("*").GetString
+            Try
+                qpageContent = mainslot.GetProperty("*").GetString
+            Catch ex As KeyNotFoundException
+                qpageContent = String.Empty
+                qpageDeletedInfo = True
+            End Try
+
+
 
             _Title = qpageTitle
             _PageNamespace = qpageNS
