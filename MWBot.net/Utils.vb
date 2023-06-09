@@ -332,10 +332,7 @@ Namespace Utility
         ''' <param name="s">Texto a evaluar.</param>
         ''' <returns></returns>
         Public Shared Function RegexParser(ByVal s As String) As String
-            s = s.Replace("\", "\\")
-            Return s.Replace("[", "\[").Replace("/", "\/").Replace("^", "\^").Replace("$", "\$").Replace(".", "\.") _
-                .Replace("|", "\|").Replace("?", "\?").Replace("*", "\*").Replace("+", "\+").Replace("(", "\(").Replace(")", "\)") _
-                .Replace("{", "\{").Replace("}", "\}")
+            Return Regex.Escape(s)
         End Function
 
         ''' <summary>
@@ -597,7 +594,7 @@ Namespace Utility
         ''' Retorna una cadena de texto formateada de tal forma que muestra colores, para mas info ver https://github.com/myano/jenni/wiki/IRC-String-Formatting
         ''' </summary>
         ''' <param name="ForegroundColor">Color del texto</param>
-        ''' <param name="BackgroundColor">Color del fondo, i se omite se usa el color por defecto del cliente irc</param>
+        ''' <param name="BackgroundColor">Color del fondo, si se omite se usa el color por defecto del cliente irc</param>
         Public Shared Function ColoredText(ByVal text As String, ForegroundColor As Integer, Optional BackgroundColor As Integer = 99) As String
             Dim _foregroundColor As String = ForegroundColor.ToString("00")
             Dim _backgroundColor As String = BackgroundColor.ToString("00")
