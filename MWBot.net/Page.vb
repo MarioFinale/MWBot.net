@@ -114,6 +114,12 @@ Namespace WikiBot
         Public ReadOnly Property PageNamespace As Integer
 
         ''' <summary>
+        ''' Retorna el nombre del espacio de nombres al cual pertenece la página.
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property PageNamespaceString As String
+
+        ''' <summary>
         ''' Extracto de la intro de la pagina (segun wikipedia, largo completo).
         ''' </summary>
         ''' <returns></returns>
@@ -645,6 +651,7 @@ Namespace WikiBot
             '===Prop===
             Dim qpageTitle As String
             Dim qpageNS As Integer
+            Dim qpageNSString As String
             Dim qpageLastEdit As Date
             Dim qpageLastTimestamp As String
             Dim qpageRevID As Integer
@@ -665,12 +672,14 @@ Namespace WikiBot
             Dim pageElement As JsonElement = pageProperty.Value
 
             qpageTitle = pageElement.GetProperty("title").GetString
+            qpageNSString = qpageTitle.Split(":"c)(0).Trim()
             qpageRoot = qpageTitle.Split("/"c)(0).Trim()
             qpageNS = pageElement.GetProperty("ns").GetInt32
             Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
             If missing Then
                 _Title = qpageTitle
                 _PageNamespace = qpageNS
+                _PageNamespaceString = qpageNSString
                 _RootPage = qpageRoot
                 _Exists = False
                 _Tags = qpageTags.ToArray()
@@ -732,6 +741,7 @@ Namespace WikiBot
 
             _Title = qpageTitle
             _PageNamespace = qpageNS
+            _PageNamespaceString = qpageNSString
             _LastEdit = qpageLastEdit
             _Timestamp = qpageLastTimestamp
             _CurrentRevId = qpageRevID
