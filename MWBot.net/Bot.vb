@@ -8,6 +8,7 @@ Imports MWBot.net.My.Resources
 Imports System.Text.Json
 Imports System.IO
 Imports System.Net
+Imports System.Reflection
 
 Namespace WikiBot
 #Disable Warning CA1822
