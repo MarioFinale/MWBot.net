@@ -22,7 +22,7 @@ Namespace My.Resources
     '''<summary>
     '''  A strongly-typed resource class, for looking up localized strings, etc.
     '''</summary>
-    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0"),  _
+    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0"),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute()>  _
     Public Class SStrings
@@ -563,6 +563,15 @@ Namespace My.Resources
         Public Shared ReadOnly Property WarnArchiving() As String
             Get
                 Return ResourceManager.GetString("WarnArchiving", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized string similar to format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories&amp;rvprop=user|timestamp|size|comment|content|ids|tags&amp;rvslots=main&amp;titles={0}.
+        '''</summary>
+        Public Shared ReadOnly Property WikiDataPageInfo() As String
+            Get
+                Return ResourceManager.GetString("WikiDataPageInfo", resourceCulture)
             End Get
         End Property
         

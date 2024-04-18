@@ -65,9 +65,9 @@ Namespace WikiBot
         ''' <summary>
         ''' Inicializa una nueva instancia del bot.
         ''' </summary>
-        ''' <param name="BotUsername">Nombre de usuario del bot</param>
+        ''' <param name="BotUsername">Nombre de usuario del bot.</param>
         ''' <param name="BotPassword">Contraseña del bot (solo botpassword), más información ver https://www.mediawiki.org/wiki/Manual:Bot_passwords </param>
-        ''' <param name="tUri">Direccion de la API</param>
+        ''' <param name="tUri">Direccion de la API.</param>
         Sub New(ByVal botUserName As String, botPassword As String, tUri As Uri)
             If String.IsNullOrWhiteSpace(botUserName) Then
                 Throw New ArgumentException("No username")
@@ -161,7 +161,7 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Envía un POST a la url de la API con los datos indicados
+        ''' Envía un POST a la url de la API con los datos indicados.
         ''' </summary>
         ''' <param name="postData"></param>
         ''' <returns></returns>
@@ -171,7 +171,7 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
-        ''' Envía una solicitud GET a la api con los datos solicitados (luego del "?")
+        ''' Envía una solicitud GET a la api con los datos solicitados (luego del "?").
         ''' </summary>
         ''' <param name="getData"></param>
         ''' <returns></returns>
@@ -195,10 +195,10 @@ Namespace WikiBot
 
 
         ''' <summary>
-        ''' Envía una solicitud POST a la uri indicada
+        ''' Envía una solicitud POST a la uri indicada.
         ''' </summary>
-        ''' <param name="pageUri">Recurso al cual enviar la solicitud</param>
-        ''' <param name="postData">Datos en la solicitud POST como application/x-www-form-urlencoded</param>
+        ''' <param name="pageUri">Recurso al cual enviar la solicitud.</param>
+        ''' <param name="postData">Datos en la solicitud POST como application/x-www-form-urlencoded.</param>
         ''' <returns></returns>
         Public Overloads Function POST(ByVal pageUri As Uri, ByVal postData As String) As String
             If pageUri Is Nothing Then
@@ -296,10 +296,10 @@ Namespace WikiBot
         End Function
 
         Private Function AdaptEncoding(ByVal proposedtext As String) As String
-            ' Convert the text to a byte array using UTF-8 encoding
+            'Convierte el texto a un array de bytes usando UTF-8
             Dim bytes As Byte() = Encoding.UTF8.GetBytes(proposedtext)
 
-            ' List of encodings to try
+            'Lista de Encoding a probar
             Dim encodings As Encoding() = {
                 Encoding.UTF8,
                 Encoding.GetEncoding(28591),
@@ -315,7 +315,7 @@ Namespace WikiBot
                 End Try
             Next
 
-            ' Give up! return original text
+            'Rendirse! retornar el texto original
             Return proposedtext
         End Function
 
@@ -324,6 +324,13 @@ Namespace WikiBot
         ''' <param name="postData">Cadena de texto que se envia en el POST.</param>
         Public Function PostDataAndGetResult(pageUri As Uri, postData As String) As String
             Return PostDataAndGetResult(pageUri, postData, New CookieContainer)
+        End Function
+
+        ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto uando las cookies de sesión.</summary>
+        ''' <param name="pageURI">URI absoluta del recurso web.</param>
+        ''' <param name="postData">Cadena de texto que se envia en el POST.</param>
+        Public Function PostDataAndGetResultWithCookies(pageUri As Uri, postData As String) As String
+            Return PostDataAndGetResult(pageUri, postData, ApiCookies)
         End Function
 
         ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto.</summary>

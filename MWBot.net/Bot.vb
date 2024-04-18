@@ -6,10 +6,8 @@ Imports MWBot.net.Utility
 Imports MWBot.net.Utility.Utils
 Imports MWBot.net.My.Resources
 Imports System.Text.Json
-Imports System.Net.Sockets
 Imports System.IO
 Imports System.Net
-Imports System.Reflection
 
 Namespace WikiBot
 #Disable Warning CA1822
@@ -1362,6 +1360,28 @@ Namespace WikiBot
             Next
             Return results.ToArray()
         End Function
+
+        ''' <summary>
+        ''' Retorna los Q de wikidata que estén entre los resultados de una búsqueda por texto con un límite de 10 resultados.
+        ''' </summary>
+        ''' <param name="searchString">Texto de búsqueda</param>
+        ''' <returns></returns>
+        Function WikiDataSearch(ByVal searchString As String) As String()
+            Dim queryString As String = SStrings.Search & UrlWebEncode(searchString)
+            Dim queryRawResponse As String = Api.PostDataAndGetResultWithCookies(New Uri("https://www.wikidata.org/w/api.php?"), queryString)
+            Return GetTitlesFromQueryText(queryRawResponse)
+        End Function
+
+        ''' <summary>
+        ''' Retorna una página Wikidata como texto json en bruto.
+        ''' </summary>
+        ''' <param name="QName"></param>
+        ''' <returns></returns>
+        Function WikiDataGetQRaw(ByVal QName As String) As String
+            Dim queryString As String = String.Format(SStrings.WikiDataPageInfo, UrlWebEncode(QName))
+            Return Api.PostDataAndGetResultWithCookies(New Uri("https://www.wikidata.org/w/api.php?"), queryString)
+        End Function
+
 #End Region
 
 #Region "Subs"

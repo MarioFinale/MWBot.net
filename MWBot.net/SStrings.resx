@@ -295,4 +295,7 @@ ApiURL="{4}"</value>
   <data name="PressKey" xml:space="preserve">
     <value>Presiona cualquier tecla para continuar...</value>
   </data>
+  <data name="WikiDataPageInfo" xml:space="preserve">
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories&amp;rvprop=user|timestamp|size|comment|content|ids|tags&amp;rvslots=main&amp;titles={0}</value>
+  </data>
 </root>
