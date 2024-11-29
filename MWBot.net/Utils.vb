@@ -8,6 +8,7 @@ Imports MWBot.net.My.Resources
 
 Namespace Utility
     Public NotInheritable Class Utils
+
 #Region "Properties"
         Public Shared Codename As String = "Utils"
         Public Shared DirSeparator As String = IO.Path.DirectorySeparatorChar
@@ -52,6 +53,7 @@ Namespace Utility
             Next
             Return False
         End Function
+
         ''' <summary>
         ''' Crea una cadena de texto concatenado según los parámetros entregados
         ''' </summary>

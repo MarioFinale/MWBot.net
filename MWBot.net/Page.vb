@@ -2,6 +2,7 @@
 Option Explicit On
 Imports System.Net
 Imports System.Text.Json
+Imports System.Text.Json.Nodes
 Imports System.Text.RegularExpressions
 Imports MWBot.net.GlobalVars
 Imports MWBot.net.My.Resources
@@ -349,11 +350,11 @@ Namespace WikiBot
                     Dim errorElement As JsonElement = GetJsonElement(jsondoc, "error")
                     Dim spamBlackListElement As JsonElement = GetJsonElement(errorElement, "spamblacklist")
                     Dim matchesElement As JsonElement = spamBlackListElement.GetProperty("matches")
-                    Dim tmatches As MatchCollection = Regex.Matches(matchesElement.GetRawText, "(\"")(.+?)(\"")")
+                    Dim matchesList As String() = matchesElement.EnumerateArray.Select(Function(x) x.GetString()).ToArray()
                     Dim newtext As String = pageContent
-                    For Each s As Match In tmatches
-                        newtext = newtext.Replace(s.Groups(2).Value, "deleted-link")
-                        EventLogger.Log(String.Format(Messages.DeletedLink, s), Reflection.MethodBase.GetCurrentMethod().Name, Username)
+                    For Each blacklistedLink As String In matchesList
+                        newtext = newtext.Replace(blacklistedLink, "blacklisted-link-deleted")
+                        EventLogger.Log(String.Format(Messages.DeletedLink, blacklistedLink), Reflection.MethodBase.GetCurrentMethod().Name, Username)
                     Next
                     If Not RetryCount > MaxRetry Then
                         Return SavePage(newtext, EditSummary, IsMinor, IsBot, True, RetryCount + 1)
