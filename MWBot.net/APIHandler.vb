@@ -193,6 +193,28 @@ Namespace WikiBot
             Return getresponse
         End Function
 
+        ''' <summary>
+        ''' Performs a GET request to the specified web address and returns the response as a MemoryStream.
+        ''' </summary>
+        ''' <param name="address">The URL as a string to which the GET request will be made.</param>
+        ''' <returns>A MemoryStream containing the response data.</returns>
+        Public Overloads Function GetAsStream(ByVal address As String) As MemoryStream
+            Return GetAsStream(New Uri(address))
+        End Function
+
+        ''' <summary>
+        ''' Performs a GET request to the specified web address and returns the response as a MemoryStream.
+        ''' </summary>
+        ''' <param name="pageUri">The URI to which the GET request will be made.</param>
+        ''' <returns>A MemoryStream containing the response data or Nothing if the URI is null.</returns>
+        Public Overloads Function GetAsStream(ByVal pageUri As Uri) As MemoryStream
+            If pageUri Is Nothing Then
+                Return Nothing
+            End If
+            Dim getResponse As MemoryStream = GetDataAsStream(pageUri, ApiCookies)
+            Return getResponse
+        End Function
+
 
         ''' <summary>
         ''' Envía una solicitud POST a la uri indicada.
@@ -290,6 +312,87 @@ Namespace WikiBot
                     cookies = tempcookies
                     Return AdaptEncoding(response)
                 End If
+                Return Nothing
+            Loop
+            Throw New MaxRetriesExeption
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud de tipo GET a un recurso web y retorna el contenido como un MemoryStream.
+        ''' </summary>
+        ''' <param name="pageUri">URL absoluta del recurso web.</param>
+        ''' <param name="Cookies">Cookies sobre los que se trabaja.</param>
+        ''' <returns>Un MemoryStream con el contenido del recurso web.</returns>
+        Public Function GetDataAsStream(ByVal pageUri As Uri, ByRef cookies As CookieContainer) As MemoryStream
+            Dim tryCount As Integer = 0
+            Dim delay As Integer = _exponentialBackOffDelayMs
+
+            Do Until tryCount = MaxRetry
+
+                If pageUri Is Nothing Then
+                    Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
+                End If
+
+                If cookies Is Nothing Then
+                    cookies = New CookieContainer
+                End If
+
+                Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                While (RequestDelayInMS < _requestDelay) 'Limit post requests per second
+                    Thread.Sleep(1)
+                    SyncLock RequestLock
+                        RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                    End SyncLock
+                End While
+                SyncLock RequestLock
+                    LastRequestTimestamp = Date.UtcNow
+                End SyncLock
+
+                Dim tempcookies As CookieContainer = cookies
+
+                Dim handler As HttpClientHandler = New HttpClientHandler With {
+            .CookieContainer = cookies,
+            .UseCookies = True
+        }
+                Dim client As HttpClient = New HttpClient(handler)
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.DefaultRequestHeaders.Add("Method", "GET")
+
+                Dim response As MemoryStream = Nothing
+
+                Try
+                    Dim message As Task(Of HttpResponseMessage) = client.GetAsync(pageUri)
+                    Dim res As HttpResponseMessage = message.Result
+                    Dim theaders As Headers.HttpResponseHeaders = res.Headers
+
+                    ' Read the content as a byte array and then convert to MemoryStream
+                    Dim contentBytes As Byte() = res.Content.ReadAsByteArrayAsync().Result
+                    response = New MemoryStream(contentBytes)
+
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+
+                Catch ex As System.Net.WebException
+                    tryCount += 1
+                    delay = delay * 2 ' exponential backoff
+                    Thread.Sleep(delay)
+#Disable Warning CA1031
+                Catch ex2 As Exception
+                    tryCount += 1
+                    delay = delay * 2 ' exponential backoff
+                    Thread.Sleep(delay)
+#Enable Warning CA1031
+                Finally
+                    client.Dispose()
+                End Try
+
+                If Not response Is Nothing Then
+                    cookies = tempcookies
+                    Return response
+                End If
+
+                ' If we get here, it means the response was Nothing, which shouldn't happen with MemoryStream
+                ' but we'll handle it just in case
                 Return Nothing
             Loop
             Throw New MaxRetriesExeption

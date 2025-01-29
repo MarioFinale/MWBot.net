@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>MWBot.net</RootNamespace>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
     <FileVersion>1.3.2404.17</FileVersion>
     <OptionStrict>On</OptionStrict>
@@ -53,8 +53,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>

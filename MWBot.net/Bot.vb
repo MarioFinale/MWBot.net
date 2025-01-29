@@ -277,6 +277,24 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
+        ''' Envía una solicitud GET a la uri indicada y retorna un MemoryStream.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <returns></returns>
+        Overloads Function GetAsStream(ByVal turi As Uri) As MemoryStream
+            Return Api.GetAsStream(turi)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud GET a la uri indicada y retorna un MemoryStream.
+        ''' </summary>
+        ''' <param name="tstring">url string.</param>
+        ''' <returns></returns>
+        Overloads Function GetAsStream(ByVal tstring As String) As MemoryStream
+            Return Api.GetAsStream(tstring)
+        End Function
+
+        ''' <summary>
         ''' Envía una solicitud POST a la uri indicada.
         ''' </summary>
         ''' <param name="turi">Uri.</param>
