@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>MWBot.net</RootNamespace>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <OptionCompare>Text</OptionCompare>
     <FileVersion>1.3.2404.17</FileVersion>
     <OptionStrict>On</OptionStrict>
@@ -15,7 +15,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <OptionInfer>Off</OptionInfer>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.3.2</Version>
+    <Version>1.3.3</Version>
     <AssemblyVersion>1.3.2404.17</AssemblyVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/MarioFinale/MWBot.net</RepositoryUrl>
@@ -53,8 +53,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
