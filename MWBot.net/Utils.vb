@@ -1171,6 +1171,9 @@ Namespace Utility
                 End Try
             Next
             dates.Sort()
+            If (dates.Count = 0) Then 'Match was found but malformed
+                Return New DateTime(9999, 12, 31, 23, 59, 59)
+            End If
             Return dates.Last
         End Function
 
