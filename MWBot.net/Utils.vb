@@ -1154,7 +1154,8 @@ Namespace Utility
                 .Replace("mar", "03").Replace("abr", "04").Replace("may", "05") _
                 .Replace("jun", "06").Replace("jul", "07").Replace("ago", "08") _
                 .Replace("sep", "09").Replace("oct", "10").Replace("nov", "11") _
-                .Replace("dic", "12")
+                .Replace("dic", "12").Replace("jan", "01").Replace("apr", "04") _
+                .Replace("aug", "08").Replace("dec", "12")
 
                     parsedtxt = Regex.Replace(parsedtxt, "([^0-9/])", "")
                     Dim datesInt As New List(Of Integer)
