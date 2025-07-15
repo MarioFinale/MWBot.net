@@ -182,6 +182,7 @@ Namespace WikiBot
         ''' <param name="wbot">Bot logueado a la wiki</param>
         Public Sub New(ByVal pageTitle As String, ByRef wbot As Bot)
             If wbot Is Nothing Then Throw New ArgumentNullException(NameOf(wbot), "Worker bot is is nothing")
+            If pageTitle Is Nothing Then Throw New ArgumentNullException(NameOf(pageTitle), "Page Title is is nothing")
             WorkerBot = wbot
             Username = WorkerBot.UserName
             Loadpage(pageTitle, WorkerBot.WikiUri)
@@ -193,6 +194,7 @@ Namespace WikiBot
         ''' <param name="wbot">Bot logueado a la wiki</param>
         Public Sub New(ByVal revid As Integer, ByRef wbot As Bot)
             If wbot Is Nothing Then Throw New ArgumentNullException(NameOf(wbot), "Worker bot is is nothing")
+            If revid <= 0 Then Throw New ArgumentNullException(NameOf(wbot), "Revid is invalid")
             WorkerBot = wbot
             Username = WorkerBot.UserName
             Loadpage(revid, WorkerBot.WikiUri)
