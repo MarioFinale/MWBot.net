@@ -1,10 +1,11 @@
 ﻿Option Strict On
 Option Explicit On
-Imports System.Text.RegularExpressions
 Imports System.Net
 Imports System.Runtime.InteropServices
 Imports System.Text.Json
+Imports System.Text.RegularExpressions
 Imports MWBot.net.My.Resources
+Imports MWBot.net.WikiBot
 
 Namespace Utility
     Public NotInheritable Class Utils
@@ -1249,6 +1250,64 @@ Namespace Utility
             Dim second As Integer = Integer.Parse(timeArray(5))
             Dim parsedDate As Date = New Date(year, month, day, hour, minute, second)
             Return parsedDate
+        End Function
+
+        Public Shared Function GetTemplate(ByVal text As String, templatename As String, removenamespace As Boolean) As Template
+            If removenamespace Then
+                If templatename.Contains(":"c) Then
+                    templatename = templatename.Split(":"c)(1)
+                End If
+            End If
+            Return GetTemplate(text, templatename)
+        End Function
+
+        Public Shared Function GetTemplate(ByVal text As String, templatename As String) As Template
+            Dim tlist As List(Of Template) = Template.GetTemplates(text)
+            For Each t As Template In tlist
+                If t.Valid AndAlso (t.Name.Trim.Substring(0, 1).ToUpper & t.Name.Trim.Substring(1).ToLower) = (templatename.Trim.Substring(0, 1).ToUpper & templatename.Trim.Substring(1).ToLower) Then
+                    Return t
+                End If
+            Next
+            Return New Template
+        End Function
+
+        Public Shared Function IsTemplatePresent(ByVal text As String, templatename As String) As Boolean
+            Return IsTemplatePresent(text, templatename, True)
+        End Function
+
+        Public Shared Function IsTemplatePresent(ByVal text As String, templatename As String, removenamespace As Boolean) As Boolean
+            If removenamespace Then
+                If templatename.Contains(":") Then
+                    templatename = templatename.Split(":"c)(1).Trim
+                End If
+            End If
+            Dim tlist As List(Of Template) = Template.GetTemplates(text)
+            For Each t As Template In tlist
+                If t.Valid AndAlso (t.Name.Trim.Substring(0, 1).ToUpper & t.Name.Trim.Substring(1).ToLower) = (templatename.Trim.Substring(0, 1).ToUpper & templatename.Trim.Substring(1).ToLower) Then
+                    Return True
+                End If
+            Next
+            Return False
+        End Function
+
+        ''' <summary>
+        ''' Entrega el comienzo de la plantilla (sin su espacio de nombres) si se encuentra en el texto
+        ''' </summary>
+        ''' <param name="text">Texto a analizar</param>
+        ''' <param name="PageName">Nombre de la plantilla (con su espacio de nombres, para funcionar correctamente debe estar en el espacio de nombres "Template" o su equivalente en la wiki.</param>
+        ''' <returns></returns>
+        Public Shared Function GetTemplateBeggining(ByVal text As String, PageName As String) As String
+            Dim templatelist As List(Of Template) = Template.GetTemplates(text)
+            For Each temp As Template In templatelist
+                Dim PageNameWithoutNamespace As String = PageName.Split(":"c)(1).Trim
+                Dim PageNameRegex As String = "[" & PageNameWithoutNamespace.Substring(0, 1).ToUpper & PageNameWithoutNamespace.Substring(0, 1).ToLower & "]" & PageNameWithoutNamespace.Substring(1)
+                Dim templateregex As String = "{{ *" & PageNameRegex & " *"
+                Dim IsPresent As Boolean = Regex.Match(temp.Text, templateregex).Success
+                If IsPresent Then
+                    Return Regex.Match(temp.Text, templateregex).Value
+                End If
+            Next
+            Return String.Empty
         End Function
 
 #End Region

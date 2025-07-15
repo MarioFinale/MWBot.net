@@ -20,7 +20,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/MarioFinale/MWBot.net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>1.3.2</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/MarioFinale/MWBot.net/commits/master/ for changes</PackageReleaseNotes>
     <PackageTags>wikipedia; mediawiki; wiki; wikibot; wikipedia bot; mwbot; mwbot dotnet; dotnet</PackageTags>
   </PropertyGroup>
 

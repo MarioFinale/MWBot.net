@@ -670,13 +670,19 @@ Namespace WikiBot
             Dim qpageID As Integer
 
             Dim pageProperty As JsonProperty = pages.EnumerateObject(0)
+
+
             Dim pageElement As JsonElement = pageProperty.Value
 
             qpageTitle = pageElement.GetProperty("title").GetString
             qpageNSString = qpageTitle.Split(":"c)(0).Trim()
             qpageRoot = qpageTitle.Split("/"c)(0).Trim()
-            qpageNS = pageElement.GetProperty("ns").GetInt32
             Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
+            If (IsJsonPropertyPresent(pageElement, "ns")) Then
+                qpageNS = pageElement.GetProperty("ns").GetInt32
+            Else
+                missing = True
+            End If
             If missing Then
                 _Title = qpageTitle
                 _PageNamespace = qpageNS
