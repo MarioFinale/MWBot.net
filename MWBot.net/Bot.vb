@@ -1115,46 +1115,49 @@ Namespace WikiBot
             '        TRY TO UNDERSTAND IT UNDER YOUR OWN RISK
             '         BLAME THE MINDBENDING MW DOCUMENTATION
             '===============================================================================
+        Dim pages As New HashSet(Of String)
+        Dim queries As Integer = 0
+        Dim queryString As String = SStrings.GetPageInclusions & pageName
 
-            Dim pages As New HashSet(Of String)
-            Dim queries As Integer = 1
-            Dim queryString As String = SStrings.GetPageInclusions & pageName
+        Do While queries < limit
+            queries += 1
+
             Dim rawQueryResponse As String = POSTQUERY(queryString)
+
             Dim queryResponse As JsonDocument = GetJsonDocument(rawQueryResponse)
-            Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
-            If mustContinue Then
-                Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-                Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString
-                queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
+            If queryResponse Is Nothing Then
+                EventLogger.EX_Log($"Failed to get valid JSON for inclusions of '{pageName}' (query #{queries}). Continuing with partial results. Response: {rawQueryResponse}", "GetallInclusions")
+                Exit Do
             End If
 
-            Dim query As JsonElement = GetJsonElement(queryResponse, "query")
-            Dim embeddedin As JsonElement = query.GetProperty("embeddedin")
-
-            For Each qresult As JsonElement In embeddedin.EnumerateArray
-                Dim title As String = qresult.GetProperty("title").GetString
-                pages.Add(title)
-            Next
-
-            While mustContinue And queries < limit
-                queries += 1
-                rawQueryResponse = POSTQUERY(queryString)
-                queryResponse = GetJsonDocument(rawQueryResponse)
-                mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
-                If mustContinue Then
-                    Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-                    Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString
-                    queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
+            ' Process this page of results
+            If IsJsonPropertyPresent(queryResponse.RootElement, "query") Then
+                Dim query As JsonElement = GetJsonElement(queryResponse, "query")
+                If query.TryGetProperty("embeddedin", Nothing) Then
+                    Dim embeddedin As JsonElement = query.GetProperty("embeddedin")
+                    For Each qresult As JsonElement In embeddedin.EnumerateArray
+                        If qresult.TryGetProperty("title", Nothing) Then
+                            pages.Add(qresult.GetProperty("title").GetString())
+                        End If
+                    Next
                 End If
-                query = GetJsonElement(queryResponse, "query")
-                embeddedin = query.GetProperty("embeddedin")
-                For Each qresult As JsonElement In embeddedin.EnumerateArray
-                    Dim title As String = qresult.GetProperty("title").GetString
-                    pages.Add(title)
-                Next
-            End While
-            Return pages.ToArray()
-        End Function
+            End If
+
+            ' Check for continuation
+            If Not IsJsonPropertyPresent(queryResponse.RootElement, "continue") Then
+                Exit Do
+            End If
+
+            Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+            If Not qcontinue.TryGetProperty("eicontinue", Nothing) Then Exit Do
+
+            Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString()
+            queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
+        Loop
+
+        EventLogger.Log($"GetallInclusions for '{pageName}' completed. Found {pages.Count} pages.", Reflection.MethodBase.GetCurrentMethod().Name)
+        Return pages.ToArray()
+    End Function
 
 
         ''' <summary>

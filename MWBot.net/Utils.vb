@@ -6,6 +6,7 @@ Imports System.Text.Json
 Imports System.Text.RegularExpressions
 Imports MWBot.net.My.Resources
 Imports MWBot.net.WikiBot
+Imports MWBot.net.GlobalVars
 
 Namespace Utility
     Public NotInheritable Class Utils
@@ -30,9 +31,49 @@ Namespace Utility
 #Region "Text Functions"
         Public Shared signpattern As String = "([0-9]{2}):([0-9]{2}) ([0-9]{2}|[0-9]) ([A-z]{3})([\.,])* [0-9]{4}( \([A-z]{3,4}\))*"
 
-        Public Shared Function GetJsonDocument(ByVal jsonString As String) As JsonDocument
-            Return JsonDocument.Parse(jsonString)
-        End Function
+''' <summary>
+''' Safely parses a JSON string returned by the MediaWiki API.
+''' Returns Nothing (and logs the problem) if the response is invalid, empty, or contains an API error.
+''' </summary>
+Public Shared Function GetJsonDocument(ByVal jsonString As String) As JsonDocument
+    If String.IsNullOrWhiteSpace(jsonString) Then
+        EventLogger.Debug_Log("API returned empty or whitespace response", Reflection.MethodBase.GetCurrentMethod().Name)
+        Return Nothing
+    End If
+
+    Try
+        Dim doc as JsonDocument = JsonDocument.Parse(jsonString.Trim())
+
+        ' MediaWiki often returns {"error": {...}} on problems — treat it as failure
+        If IsJsonPropertyPresent(doc.RootElement, "error") Then
+            Try
+                Dim err as JsonElement = doc.RootElement.GetProperty("error")
+                Dim code as String = If(err.TryGetProperty("code", Nothing), err.GetProperty("code").GetString(), "unknown")
+                Dim info as String = If(err.TryGetProperty("info", Nothing), err.GetProperty("info").GetString(), "")
+                EventLogger.Log($"MediaWiki API error [{code}]: {info}", Reflection.MethodBase.GetCurrentMethod().Name)
+            Catch
+                EventLogger.EX_Log("MediaWiki returned error object (could not read details)", Reflection.MethodBase.GetCurrentMethod().Name)
+            End Try
+            Return Nothing
+        End If
+
+        Return doc
+
+    Catch ex As JsonException
+        ' Log a useful preview of what we actually received
+        Dim preview As String = If(jsonString.Length > 400, jsonString.Substring(0, 400) & "...", jsonString)
+        If preview.TrimStart().StartsWith("<") Then
+            EventLogger.EX_Log("API returned HTML instead of JSON (Cloudflare/maintenance/rate-limit page)", Reflection.MethodBase.GetCurrentMethod().Name)
+        Else
+            EventLogger.EX_Log($"Invalid JSON received. Preview: {preview}", Reflection.MethodBase.GetCurrentMethod().Name)
+        End If
+        Return Nothing
+
+    Catch ex As Exception
+        EventLogger.EX_Log($"Unexpected error parsing JSON: {ex.Message}", Reflection.MethodBase.GetCurrentMethod().Name)
+        Return Nothing
+    End Try
+End Function
 
         Public Shared Function GetJsonElement(ByVal jsonDocument As JsonDocument, ByVal propertyName As String) As JsonElement
             Dim element As JsonElement
