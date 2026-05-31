@@ -117,20 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+
   <data name="AddThread" xml:space="preserve">
-    <value>format=json&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;section=new&amp;sectiontitle={3}&amp;text={4}&amp;token={5}</value>
+    <value>format=json&amp;maxlag=5&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;section=new&amp;sectiontitle={3}&amp;text={4}&amp;token={5}</value>
   </data>
   <data name="AssertBotData" xml:space="preserve">
-    <value>action=query&amp;assert=bot&amp;format=json</value>
-  </data>
-  <data name="AssertBotFailed" xml:space="preserve">
-    <value>assertbotfailed</value>
+    <value>action=query&amp;assert=bot&amp;format=json&amp;maxlag=5</value>
   </data>
   <data name="AssertUserData" xml:space="preserve">
-    <value>action=query&amp;assert=user&amp;format=json</value>
-  </data>
-  <data name="AssertUserFailed" xml:space="preserve">
-    <value>assertuserfailed</value>
+    <value>action=query&amp;assert=user&amp;format=json&amp;maxlag=5</value>
   </data>
   <data name="BoxMessage" xml:space="preserve">
     <value>&lt;!-- Caja generada por PeriodiBOT, puedes editarla cuanto quieras, pero los nuevos enlaces siempre se añadirán al final. --&gt;</value>
@@ -144,13 +139,13 @@ PageURL="{3}"
 ApiURL="{4}"</value>
   </data>
   <data name="EditToken" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;meta=tokens</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;meta=tokens</value>
   </data>
   <data name="GetDiffQuery" xml:space="preserve">
-    <value>format=json&amp;action=compare&amp;fromrev={0}&amp;torev={1}</value>
+    <value>format=json&amp;maxlag=5&amp;action=compare&amp;fromrev={0}&amp;torev={1}</value>
   </data>
   <data name="GetLastRevIds" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;prop=revisions&amp;titles=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions&amp;titles=</value>
   </data>
   <data name="GetLastTimestamp" xml:space="preserve">
     <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions&amp;rvprop=timestamp&amp;titles={0}</value>
@@ -159,13 +154,13 @@ ApiURL="{4}"</value>
     <value>https://ores.wikimedia.org/v3/scores/eswiki/?models=damaging|goodfaith&amp;format=json&amp;revids=</value>
   </data>
   <data name="GetPageInclusions" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;list=embeddedin&amp;eilimit=1000&amp;eititle=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;list=embeddedin&amp;eilimit=1000&amp;eititle=</value>
   </data>
   <data name="GetPagesExtract" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;prop=extracts&amp;exintro=&amp;explaintext=&amp;titles=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=extracts&amp;exintro=&amp;explaintext=&amp;titles=</value>
   </data>
   <data name="GetPagesImage" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;formatversion=2&amp;prop=pageimages&amp;titles=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;formatversion=2&amp;prop=pageimages&amp;titles=</value>
   </data>
   <data name="GetPageViews" xml:space="preserve">
     <value>https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{0}/all-access/all-agents/{1}/daily/{2}{4}{6}00/{3}{5}{7}00</value>
@@ -209,16 +204,16 @@ ApiURL="{4}"</value>
     <value>format=json&amp;maxlag=5&amp;action=query&amp;prop=revisions|pageimages|categories|extracts&amp;rvprop=user|timestamp|size|comment|content|ids&amp;rvslots=main&amp;exlimit=1&amp;explaintext&amp;exintro&amp;revids={0}</value>
   </data>
   <data name="PrefixSearchQuery" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;pslimit=max&amp;list=prefixsearch&amp;pssearch=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;pslimit=max&amp;list=prefixsearch&amp;pssearch=</value>
   </data>
   <data name="SavePage" xml:space="preserve">
-    <value>format=json&amp;assert=user&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}</value>
+    <value>format=json&amp;maxlag=5&amp;assert=user&amp;action=edit{0}&amp;title={1}&amp;summary={2}&amp;text={3}&amp;token={4}</value>
   </data>
   <data name="Search" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;list=search&amp;utf8=1&amp;srsearch=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;list=search&amp;utf8=1&amp;srsearch=</value>
   </data>
   <data name="SearchForUser" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;list=search&amp;utf8=1&amp;srnamespace=2&amp;srsearch=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;list=search&amp;utf8=1&amp;srnamespace=2&amp;srsearch=</value>
   </data>
   <data name="ArchiveDestiny" xml:space="preserve">
     <value>Destino</value>
@@ -263,10 +258,10 @@ ApiURL="{4}"</value>
     <value>Wikipedia:Mediación informal/Participantes/Lista</value>
   </data>
   <data name="LastUserEditQuery" xml:space="preserve">
-    <value>action=query&amp;list=usercontribs&amp;uclimit=1&amp;format=json&amp;ucuser=</value>
+    <value>action=query&amp;maxlag=5&amp;list=usercontribs&amp;uclimit=1&amp;format=json&amp;ucuser=</value>
   </data>
   <data name="LoadUserQuery" xml:space="preserve">
-    <value>action=query&amp;format=json&amp;list=users&amp;usprop=blockinfo|groups|editcount|registration|gender&amp;ususers=</value>
+    <value>action=query&amp;format=json&amp;maxlag=5&amp;list=users&amp;usprop=blockinfo|groups|editcount|registration|gender&amp;ususers=</value>
   </data>
   <data name="ResumePageName" xml:space="preserve">
     <value>Usuario:PeriodiBOT/Resumen página</value>
@@ -281,13 +276,13 @@ ApiURL="{4}"</value>
     <value>Plantilla:Tema</value>
   </data>
   <data name="UserFirstEditQuery" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;uclimit=1&amp;ucdir=newer&amp;list=usercontribs&amp;ucuser=</value>
   </data>
   <data name="RandomPageQuery" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;generator=random&amp;grnnamespace={0}&amp;grnlimit=1</value>
   </data>
   <data name="GetTextInclusions" xml:space="preserve">
-    <value>format=json&amp;action=query&amp;list=search&amp;srwhat=text&amp;srlimit=500&amp;srsearch=</value>
+    <value>format=json&amp;maxlag=5&amp;action=query&amp;list=search&amp;srwhat=text&amp;srlimit=500&amp;srsearch=</value>
   </data>
   <data name="UrlShortenerQuery" xml:space="preserve">
     <value>format=json&amp;action=shortenurl&amp;url=</value>

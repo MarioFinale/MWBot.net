@@ -18,7 +18,7 @@ Namespace WikiBot
         Private _botPassword As String = String.Empty
         Private _apiUri As Uri
         Private _userAgent As String = "MWBot.net/" & MwBotVersion & " (http://es.wikipedia.org/wiki/User_talk:MarioFinale) .NET/MONO"
-        Private _requestDelay As Double = 100
+        Private _requestDelay As Double = 250
         Private _exponentialBackOffDelayMs As Integer = 3000
 
 #Region "Properties"
@@ -247,28 +247,27 @@ Namespace WikiBot
             Return GetDataAndResult(pageUri, New CookieContainer)
         End Function
 
-        ''' <summary>Realiza una solicitud de tipo GET a un recurso web y retorna el texto.</summary>
-        ''' <param name="pageUri">URL absoluta del recurso web.</param>
-        ''' <param name="Cookies">Cookies sobre los que se trabaja.</param>
+        ''' <summary>
+        ''' Realiza una solicitud de tipo GET a un recurso web y retorna el texto.
+        ''' Incluye manejo de rate limits (429 y mensaje textual de Wikimedia).
+        ''' </summary>
+        ''' <param name="pageURI">URI absoluta del recurso web.</param>
+        ''' <param name="cookies">Contenedor de cookies para la solicitud.</param>
         Public Function GetDataAndResult(ByVal pageUri As Uri, ByRef cookies As CookieContainer) As String
+            If pageUri Is Nothing Then Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
+
             Dim tryCount As Integer = 0
-            Dim delay As Integer = _exponentialBackOffDelayMs
+            Const MaxAttempts As Integer = 6 ' Puedes ajustar según tu MaxRetry existente
 
-            Do Until tryCount = MaxRetry
+            Do While tryCount < MaxAttempts
+                If cookies Is Nothing Then cookies = New CookieContainer()
 
-                If pageUri Is Nothing Then
-                    Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
-                End If
-
-                If cookies Is Nothing Then
-                    cookies = New CookieContainer
-                End If
-
-                Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
-                While (RequestDelayInMS < _requestDelay) 'Limit post requests per second
+                ' === Throttling (respetar _requestDelay) ===
+                Dim requestDelayMs As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                While requestDelayMs < _requestDelay
                     Thread.Sleep(1)
                     SyncLock RequestLock
-                        RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                        requestDelayMs = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
                     End SyncLock
                 End While
                 SyncLock RequestLock
@@ -277,44 +276,76 @@ Namespace WikiBot
 
                 Dim tempcookies As CookieContainer = cookies
 
-                Dim encoding As New Text.UTF8Encoding
-                Dim handler As HttpClientHandler = New HttpClientHandler With {
+                Dim handler As New HttpClientHandler With {
                     .CookieContainer = cookies,
                     .UseCookies = True
                 }
-                Dim client As HttpClient = New HttpClient(handler)
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
-                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
-                client.DefaultRequestHeaders.Add("Method", "GET")
-                Dim response As String = Nothing
 
-                Try
-                    Dim message As Task(Of HttpResponseMessage) = client.GetAsync(pageUri)
-                    Dim res As HttpResponseMessage = message.Result
-                    Dim theaders As Headers.HttpResponseHeaders = res.Headers
-                    response = res.Content.ReadAsStringAsync.Result()
-                    tempcookies.Add(cookies.GetCookies(pageUri))
+                Using client As New HttpClient(handler)
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                    client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
 
-                Catch ex As System.Net.WebException
-                    tryCount += 1
-                    delay = delay * 2 ' exponential backoff
-                    Thread.Sleep(delay)
-#Disable Warning CA1031
-                Catch ex2 As Exception
-                    tryCount += 1
-                    delay = delay * 2 ' exponential backoff
-                    Thread.Sleep(delay)
-#Enable Warning CA1031
-                Finally
-                    client.Dispose()
-                End Try
-                If Not response Is Nothing Then
-                    cookies = tempcookies
-                    Return AdaptEncoding(response)
-                End If
-                Return Nothing
+                    Try
+                        Dim responseTask As Task(Of HttpResponseMessage) = client.GetAsync(pageUri)
+                        Dim res As HttpResponseMessage = responseTask.Result
+
+                        ' === RATE LIMIT DETECTION ===
+                        If res.StatusCode = HttpStatusCode.TooManyRequests OrElse
+                        Not res.IsSuccessStatusCode Then
+
+                            Dim bodyPreview As String = res.Content.ReadAsStringAsync().Result
+
+                            If res.StatusCode = HttpStatusCode.TooManyRequests OrElse
+                            bodyPreview.Contains("too many requests to the API", StringComparison.OrdinalIgnoreCase) OrElse
+                            bodyPreview.Contains("rate limit", StringComparison.OrdinalIgnoreCase) OrElse
+                            bodyPreview.Contains("Wikimedia_APIs/Rate_limits", StringComparison.OrdinalIgnoreCase) Then
+
+                                Dim retryAfterSeconds As Integer = 10 ' valor por defecto seguro
+                                Dim retryValues As IEnumerable(Of String) = Nothing
+                                If res.Headers.TryGetValues("Retry-After", retryValues) Then
+                                    Dim headerValue As String = retryValues.FirstOrDefault()
+                                    If Not String.IsNullOrEmpty(headerValue) Then
+                                        Integer.TryParse(headerValue, retryAfterSeconds)
+                                    End If
+                                End If
+
+                                retryAfterSeconds = Math.Max(retryAfterSeconds, 5) ' mínimo 5 segundos
+
+                                EventLogger.Log(String.Format("API Rate Limit (429) detectado. Esperando {0} segundos...", retryAfterSeconds), "ApiHandler")
+                                Thread.Sleep(retryAfterSeconds * 1000)
+
+                                tryCount += 1
+                                Continue Do ' reintentar
+                            End If
+
+                            ' Otro error HTTP
+                            EventLogger.EX_Log(String.Format("HTTP Error {0}: {1}", CInt(res.StatusCode), bodyPreview), "ApiHandler")
+                            Return Nothing
+                        End If
+
+                        ' === ÉXITO ===
+                        Dim response As String = res.Content.ReadAsStringAsync().Result
+                        tempcookies.Add(cookies.GetCookies(pageUri))
+                        cookies = tempcookies
+
+                        Return AdaptEncoding(response)
+
+                    Catch ex As WebException
+                        tryCount += 1
+                        EventLogger.EX_Log("WebException en GET: " & ex.Message, "ApiHandler")
+                    Catch ex2 As Exception
+                        tryCount += 1
+                        EventLogger.EX_Log("Excepción en GET: " & ex2.Message, "ApiHandler")
+                    End Try
+                End Using
+
+                ' Backoff exponencial entre reintentos
+                Dim backoff As Integer = _exponentialBackOffDelayMs * (tryCount + 1)
+                Thread.Sleep(backoff)
             Loop
-            Throw New MaxRetriesExeption
+
+            EventLogger.EX_Log("Máximo de reintentos alcanzado en GET.", "ApiHandler")
+            Throw New MaxRetriesExeption()
         End Function
 
         ''' <summary>
@@ -436,23 +467,23 @@ Namespace WikiBot
             Return PostDataAndGetResult(pageUri, postData, ApiCookies)
         End Function
 
-        ''' <summary>Realiza una solicitud de tipo POST a un recurso web y retorna el texto.</summary>
-        ''' <param name="pageUri">URL absoluta del recurso web.</param>
+        ''' <summary>
+        ''' Realiza una solicitud de tipo POST a un recurso web y retorna el texto.
+        ''' Incluye manejo de rate limits (429 y mensaje textual de Wikimedia).
+        ''' </summary>
+        ''' <param name="pageURI">URI absoluta del recurso web.</param>
         ''' <param name="postData">Cadena de texto que se envia en el POST.</param>
+        ''' <param name="cookies">Contenedor de cookies para la solicitud.</param>
+        ''' <param name="retrycount">Número de intentos de reintentar la solicitud.</param>
         Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer, Optional retrycount As Integer = 0) As String
+            If pageUri Is Nothing Then Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
+            If String.IsNullOrEmpty(postData) Then Return String.Empty
 
             Dim delay As Integer = _exponentialBackOffDelayMs
 
-            If pageUri Is Nothing Then
-                Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
-            End If
-
-            If cookies Is Nothing Then
-                cookies = New CookieContainer
-            End If
-
+            ' Throttling
             Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
-            While (RequestDelayInMS < _requestDelay) 'Limit post requests per second
+            While RequestDelayInMS < _requestDelay
                 Thread.Sleep(1)
                 SyncLock RequestLock
                     RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
@@ -466,49 +497,85 @@ Namespace WikiBot
 
             Dim encoding As New Text.UTF8Encoding
             Dim byteData As Byte() = encoding.GetBytes(postData)
-            Dim handler As HttpClientHandler = New HttpClientHandler With {
+
+            Dim handler As New HttpClientHandler With {
                 .CookieContainer = cookies,
                 .UseCookies = True
             }
 
-            Dim client As HttpClient = New HttpClient(handler)
-            Dim content As StringContent = New StringContent(postData)
-            content.Headers.Add("Method", "POST")
-            content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
-            content.Headers.ContentLength = byteData.Length
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
-            client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
-            client.DefaultRequestHeaders.Add("Method", "POST")
-            client.Timeout = New TimeSpan(0, 0, 30)
-            Dim response As String = Nothing
-            Try
-                Dim message As Task(Of HttpResponseMessage) = client.PostAsync(pageUri, content)
-                Dim res As HttpResponseMessage = message.Result
-                Dim theaders As Headers.HttpResponseHeaders = res.Headers
-                response = res.Content.ReadAsStringAsync.Result()
-                tempcookies.Add(cookies.GetCookies(pageUri))
-            Catch ex As System.Net.WebException
-                If retrycount < 3 Then
-                    Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1)) ' exponential backoff
-                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
-                End If
-#Disable Warning CA1031
-            Catch ex2 As Exception
-                If retrycount < 3 Then
-                    Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1)) ' exponential backoff
-                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
-                End If
-#Enable Warning CA1031
-            Finally
-                client.Dispose()
-                content.Dispose()
-            End Try
-            If Not response Is Nothing Then
-                cookies = tempcookies
-                Return AdaptEncoding(response)
-            End If
+            Using client As New HttpClient(handler)
+                Dim content As New StringContent(postData)
+                content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
+                content.Headers.ContentLength = byteData.Length
+
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.Timeout = New TimeSpan(0, 0, 30)
+
+                Try
+                    Dim message As Task(Of HttpResponseMessage) = client.PostAsync(pageUri, content)
+                    Dim res As HttpResponseMessage = message.Result
+
+                    ' === RATE LIMIT DETECTION ===
+                    If res.StatusCode = HttpStatusCode.TooManyRequests OrElse Not res.IsSuccessStatusCode Then
+                        Dim bodyPreview As String = res.Content.ReadAsStringAsync().Result
+
+                        If res.StatusCode = HttpStatusCode.TooManyRequests OrElse
+                        bodyPreview.Contains("too many requests to the API", StringComparison.OrdinalIgnoreCase) OrElse
+                        bodyPreview.Contains("rate limit", StringComparison.OrdinalIgnoreCase) OrElse
+                        bodyPreview.Contains("Wikimedia_APIs/Rate_limits", StringComparison.OrdinalIgnoreCase) Then
+
+                            Dim retryAfterSeconds As Integer = 10
+                            Dim retryValues As IEnumerable(Of String) = Nothing
+                            If res.Headers.TryGetValues("Retry-After", retryValues) Then
+                                Dim headerValue As String = retryValues.FirstOrDefault()
+                                If Not String.IsNullOrEmpty(headerValue) Then
+                                    Integer.TryParse(headerValue, retryAfterSeconds)
+                                End If
+                            End If
+                            retryAfterSeconds = Math.Max(retryAfterSeconds, 5)
+
+                            EventLogger.Log(String.Format("API Rate Limit (429) detectado en POST. Esperando {0} segundos...", retryAfterSeconds), "ApiHandler")
+                            Thread.Sleep(retryAfterSeconds * 1000)
+
+                            If retrycount < 5 Then
+                                Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                            Else
+                                EventLogger.EX_Log("Máximo de reintentos por rate limit alcanzado.", "ApiHandler")
+                                Return Nothing
+                            End If
+                        End If
+
+                        EventLogger.EX_Log(String.Format("HTTP Error {0}: {1}", CInt(res.StatusCode), bodyPreview), "ApiHandler")
+                        Return Nothing
+                    End If
+
+                    ' === ÉXITO ===
+                    Dim response As String = res.Content.ReadAsStringAsync().Result
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+                    cookies = tempcookies
+
+                    Return AdaptEncoding(response)
+
+                Catch ex As WebException
+                    If retrycount < 3 Then
+                        Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1))
+                        Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                    End If
+                    EventLogger.EX_Log("WebException en POST: " & ex.Message, "ApiHandler")
+                Catch ex2 As Exception
+                    If retrycount < 3 Then
+                        Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1))
+                        Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                    End If
+                    EventLogger.EX_Log("Excepción en POST: " & ex2.Message, "ApiHandler")
+                Finally
+                    content.Dispose()
+                End Try
+            End Using
             Return Nothing
         End Function
+
     End Class
 
 End Namespace
