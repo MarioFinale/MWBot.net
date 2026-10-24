@@ -14,7 +14,4 @@ Public Class MaxRetriesExeption : Inherits System.Exception
     Public Sub New(ByVal message As String, ByVal innerException As System.Exception)
         MyBase.New(message, innerException)
     End Sub
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
-        MyBase.New(info, context)
-    End Sub
 End Class
