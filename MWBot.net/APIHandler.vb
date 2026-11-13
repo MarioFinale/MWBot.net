@@ -332,10 +332,10 @@ Namespace WikiBot
 
                     Catch ex As WebException
                         tryCount += 1
-                        EventLogger.EX_Log("WebException en GET: " & ex.Message, "ApiHandler")
+                        EventLogger.EX_Log("WebException en GET: " & SafeExceptionMessage(ex, 250), "ApiHandler")
                     Catch ex2 As Exception
                         tryCount += 1
-                        EventLogger.EX_Log("Excepción en GET: " & ex2.Message, "ApiHandler")
+                        EventLogger.EX_Log("Excepción en GET: " & SafeExceptionMessage(ex2, 250), "ApiHandler")
                     End Try
                 End Using
 
@@ -562,18 +562,44 @@ Namespace WikiBot
                         Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1))
                         Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                     End If
-                    EventLogger.EX_Log("WebException en POST: " & ex.Message, "ApiHandler")
+                    EventLogger.EX_Log("WebException en POST: " & SafeExceptionMessage(ex, 250), "ApiHandler")
                 Catch ex2 As Exception
                     If retrycount < 3 Then
                         Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1))
                         Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
                     End If
-                    EventLogger.EX_Log("Excepción en POST: " & ex2.Message, "ApiHandler")
+                    EventLogger.EX_Log("Excepción en POST: " & SafeExceptionMessage(ex2, 250), "ApiHandler")
                 Finally
                     content.Dispose()
                 End Try
             End Using
             Return Nothing
+        End Function
+        
+        ''' <summary>
+        ''' Genera un mensaje de excepción seguro para el registro, truncando cuerpos de respuesta HTML
+        ''' excesivamente largos (por ejemplo páginas de error de Wayback Machine o Cloudflare).
+        ''' Si el mensaje contiene una etiqueta "title", incluye solo el título en lugar del HTML completo.
+        ''' </summary>
+        ''' <param name="ex">Excepción de la cual se extraerá el mensaje. Puede ser Nothing.</param>
+        ''' <param name="maxLen">Longitud máxima permitida para el mensaje resultante. Por defecto 250 caracteres.</param>
+        ''' <returns>
+        ''' Cadena vacía si la excepción o su mensaje son Nothing o vacíos.
+        ''' El mensaje original si su longitud es menor o igual a maxLen.
+        ''' Un mensaje truncado con indicación de truncamiento o con el título HTML extraído en caso contrario.
+        ''' </returns>
+        Private Function SafeExceptionMessage(ByVal ex As Exception, Optional maxLen As Integer = 250) As String
+            If ex Is Nothing OrElse String.IsNullOrEmpty(ex.Message) Then Return String.Empty
+            Dim msg As String = ex.Message
+            If msg.Length <= maxLen Then Return msg
+
+            ' Si es HTML sacamos solo el título
+            Dim titleMatch as Match = Regex.Match(msg, "<title>([^<]+)</title>", RegexOptions.IgnoreCase)
+            If titleMatch.Success then
+                Return msg.Substring(0, Math.Min(80, msg.Length)) & " [HTML truncado - " & titleMatch.Groups(1).Value.Trim() & "]"
+            End If
+
+            Return msg.Substring(0, maxLen) & " ... [truncado]"
         End Function
 
     End Class
