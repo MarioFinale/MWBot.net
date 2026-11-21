@@ -1,6 +1,8 @@
 ﻿Imports System.IO
 Imports System.Net
+Imports System.Text.RegularExpressions
 Imports System.Threading
+Imports System.Collections.Generic
 Imports MWBot.net.GlobalVars
 Imports MWBot.net.Utility.Utils
 Imports MWBot.net.My.Resources
@@ -233,6 +235,30 @@ Namespace WikiBot
         End Function
 
         ''' <summary>
+        ''' Envía una solicitud POST con cabeceras personalizadas a la URI indicada, sin utilizar cookies persistentes.
+        ''' </summary>
+        ''' <param name="pageUri">URI del recurso al cual enviar la solicitud.</param>
+        ''' <param name="postData">Datos del cuerpo de la solicitud POST (application/x-www-form-urlencoded por defecto).</param>
+        ''' <param name="customHeaders">Diccionario de cabeceras HTTP personalizadas a incluir en la solicitud. Puede ser Nothing.</param>
+        ''' <returns>El cuerpo de la respuesta como cadena de texto, o Nothing si la solicitud falla.</returns>
+        Public Function POSTWithHeaders(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As String
+            Dim tempCookies As CookieContainer = New CookieContainer
+            Return POSTWithHeaders(pageUri, postData, customHeaders, tempCookies)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud POST con cabeceras personalizadas a la URI indicada, utilizando y actualizando el contenedor de cookies proporcionado.
+        ''' </summary>
+        ''' <param name="pageUri">URI del recurso al cual enviar la solicitud.</param>
+        ''' <param name="postData">Datos del cuerpo de la solicitud POST (application/x-www-form-urlencoded por defecto).</param>
+        ''' <param name="customHeaders">Diccionario de cabeceras HTTP personalizadas a incluir en la solicitud. Puede ser Nothing.</param>
+        ''' <param name="cookies">Contenedor de cookies que se utiliza en la solicitud y se actualiza con las cookies recibidas en la respuesta.</param>
+        ''' <returns>El cuerpo de la respuesta como cadena de texto, o Nothing si la solicitud falla.</returns>
+        Public Function POSTWithHeaders(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As String
+            Return PostDataAndGetResultInternal(pageUri, postData, customHeaders, cookies, 0)
+        End Function
+
+        ''' <summary>
         ''' Limpia todas las cookies, retorna "true" si finaliza correctamente.
         ''' </summary>
         Public Function CleanCookies() As Boolean
@@ -439,74 +465,338 @@ Namespace WikiBot
         ''' <param name="pageUri">URL absoluta del recurso web.</param>
         ''' <param name="postData">Cadena de texto que se envia en el POST.</param>
         Public Function PostDataAndGetResult(pageUri As Uri, postData As String, ByRef cookies As CookieContainer, Optional retrycount As Integer = 0) As String
+            Return PostDataAndGetResultInternal(pageUri, postData, Nothing, cookies, retrycount)
+        End Function
 
+        ''' <summary>
+        ''' Implementación interna común para todas las solicitudes POST (con o sin cabeceras personalizadas).
+        ''' Usa el mismo patrón de reintentos con backoff exponencial que los métodos GET de la clase.
+        ''' </summary>
+        ''' <param name="pageUri">URI del recurso.</param>
+        ''' <param name="postData">Datos del cuerpo de la solicitud.</param>
+        ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
+        ''' <param name="cookies">Contenedor de cookies (se actualiza).</param>
+        ''' <param name="retrycount">Reservado por compatibilidad de firma (el control de reintentos es interno).</param>
+        ''' <returns>Cuerpo de la respuesta o Nothing.</returns>
+        Private Function PostDataAndGetResultInternal(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer, retrycount As Integer) As String
+            Dim tryCount As Integer = 0
             Dim delay As Integer = _exponentialBackOffDelayMs
 
-            If pageUri Is Nothing Then
-                Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
-            End If
+            Do Until tryCount = MaxRetry
+                If pageUri Is Nothing Then
+                    Throw New ArgumentNullException(NameOf(pageUri), "Empty uri.")
+                End If
 
-            If cookies Is Nothing Then
-                cookies = New CookieContainer
-            End If
+                If cookies Is Nothing Then
+                    cookies = New CookieContainer
+                End If
 
-            Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
-            While (RequestDelayInMS < _requestDelay) 'Limit post requests per second
-                Thread.Sleep(1)
+                Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                While (RequestDelayInMS < _requestDelay)
+                    Thread.Sleep(1)
+                    SyncLock RequestLock
+                        RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                    End SyncLock
+                End While
                 SyncLock RequestLock
-                    RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                    LastRequestTimestamp = Date.UtcNow
                 End SyncLock
-            End While
-            SyncLock RequestLock
-                LastRequestTimestamp = Date.UtcNow
-            End SyncLock
 
-            Dim tempcookies As CookieContainer = cookies
+                Dim tempcookies As CookieContainer = cookies
 
-            Dim encoding As New Text.UTF8Encoding
-            Dim byteData As Byte() = encoding.GetBytes(postData)
-            Dim handler As HttpClientHandler = New HttpClientHandler With {
-                .CookieContainer = cookies,
-                .UseCookies = True
-            }
+                Dim encoding As New Text.UTF8Encoding
+                Dim byteData As Byte() = encoding.GetBytes(If(postData, String.Empty))
+                Dim handler As HttpClientHandler = New HttpClientHandler With {
+                    .CookieContainer = cookies,
+                    .UseCookies = True
+                }
 
-            Dim client As HttpClient = New HttpClient(handler)
-            Dim content As StringContent = New StringContent(postData)
-            content.Headers.Add("Method", "POST")
-            content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
-            content.Headers.ContentLength = byteData.Length
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
-            client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
-            client.DefaultRequestHeaders.Add("Method", "POST")
-            client.Timeout = New TimeSpan(0, 0, 30)
-            Dim response As String = Nothing
-            Try
-                Dim message As Task(Of HttpResponseMessage) = client.PostAsync(pageUri, content)
-                Dim res As HttpResponseMessage = message.Result
-                Dim theaders As Headers.HttpResponseHeaders = res.Headers
-                response = res.Content.ReadAsStringAsync.Result()
-                tempcookies.Add(cookies.GetCookies(pageUri))
-            Catch ex As System.Net.WebException
-                If retrycount < 3 Then
-                    Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1)) ' exponential backoff
-                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
+                Dim client As HttpClient = New HttpClient(handler)
+                Dim content As StringContent = New StringContent(If(postData, String.Empty))
+                content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
+                content.Headers.ContentLength = byteData.Length
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.DefaultRequestHeaders.Add("Method", "POST")
+                client.Timeout = New TimeSpan(0, 0, 30)
+
+                If customHeaders IsNot Nothing Then
+                    For Each header As KeyValuePair(Of String, String) In customHeaders
+                        If String.Equals(header.Key, "Content-Type", StringComparison.OrdinalIgnoreCase) Then
+                            content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse(header.Value)
+                        ElseIf Not String.Equals(header.Key, "Content-Length", StringComparison.OrdinalIgnoreCase) Then
+                            client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value)
+                        End If
+                    Next
                 End If
+
+                Dim response As String = Nothing
+                Try
+                    Dim message As Task(Of HttpResponseMessage) = client.PostAsync(pageUri, content)
+                    Dim res As HttpResponseMessage = message.Result
+                    response = res.Content.ReadAsStringAsync.Result()
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+                Catch ex As System.Net.WebException
+                    tryCount += 1
+                    delay = delay * 2
+                    Thread.Sleep(delay)
 #Disable Warning CA1031
-            Catch ex2 As Exception
-                If retrycount < 3 Then
-                    Thread.Sleep(_exponentialBackOffDelayMs * (retrycount + 1)) ' exponential backoff
-                    Return PostDataAndGetResult(pageUri, postData, cookies, retrycount + 1)
-                End If
+                Catch ex2 As Exception
+                    tryCount += 1
+                    delay = delay * 2
+                    Thread.Sleep(delay)
 #Enable Warning CA1031
-            Finally
-                client.Dispose()
-                content.Dispose()
-            End Try
-            If Not response Is Nothing Then
-                cookies = tempcookies
-                Return AdaptEncoding(response)
-            End If
+                Finally
+                    client.Dispose()
+                    content.Dispose()
+                End Try
+
+                If response IsNot Nothing Then
+                    cookies = tempcookies
+                    Return AdaptEncoding(response)
+                End If
+            Loop
+
             Return Nothing
+        End Function
+
+        ''' <summary>
+        ''' Extrae los headers de la respuesta HTTP en un diccionario (valores múltiples unidos por coma).
+        ''' </summary>
+        Private Function ExtractResponseHeaders(response As HttpResponseMessage) As Dictionary(Of String, String)
+            Dim headers As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+            If response Is Nothing Then
+                Return headers
+            End If
+
+            For Each header As KeyValuePair(Of String, IEnumerable(Of String)) In response.Headers
+                headers(header.Key) = String.Join(", ", header.Value)
+            Next
+
+            If response.Content IsNot Nothing Then
+                For Each header As KeyValuePair(Of String, IEnumerable(Of String)) In response.Content.Headers
+                    headers(header.Key) = String.Join(", ", header.Value)
+                Next
+            End If
+
+            Return headers
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' </summary>
+        Public Function GetWithDetails(ByVal address As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            If String.IsNullOrWhiteSpace(address) Then
+                Throw New ArgumentException("Address cannot be null or empty", NameOf(address))
+            End If
+            Return GetWithDetails(New Uri(address))
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' </summary>
+        Public Function GetWithDetails(ByVal pageUri As Uri) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return GetWithDetails(pageUri, New CookieContainer)
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="pageUri">URI absoluta del recurso.</param>
+        ''' <param name="cookies">Cookies (se actualizan con la respuesta).</param>
+        Public Function GetWithDetails(ByVal pageUri As Uri, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Dim tryCount As Integer = 0
+            Dim delay As Integer = _exponentialBackOffDelayMs
+
+            Do Until tryCount = MaxRetry
+                If pageUri Is Nothing Then
+                    Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
+                End If
+
+                If cookies Is Nothing Then
+                    cookies = New CookieContainer
+                End If
+
+                Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                While (RequestDelayInMS < _requestDelay)
+                    Thread.Sleep(1)
+                    SyncLock RequestLock
+                        RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                    End SyncLock
+                End While
+                SyncLock RequestLock
+                    LastRequestTimestamp = Date.UtcNow
+                End SyncLock
+
+                Dim tempcookies As CookieContainer = cookies
+                Dim handler As HttpClientHandler = New HttpClientHandler With {
+                    .CookieContainer = cookies,
+                    .UseCookies = True
+                }
+                Dim client As HttpClient = New HttpClient(handler)
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.DefaultRequestHeaders.Add("Method", "GET")
+
+                Dim responseContent As String = Nothing
+                Dim finalUri As Uri = pageUri
+                Dim statusCode As HttpStatusCode = HttpStatusCode.OK
+                Dim headersDict As Dictionary(Of String, String) = Nothing
+
+                Try
+                    Dim message As Task(Of HttpResponseMessage) = client.GetAsync(pageUri)
+                    Dim res As HttpResponseMessage = message.Result
+                    If res.RequestMessage IsNot Nothing AndAlso res.RequestMessage.RequestUri IsNot Nothing Then
+                        finalUri = res.RequestMessage.RequestUri
+                    End If
+                    statusCode = res.StatusCode
+                    headersDict = ExtractResponseHeaders(res)
+                    responseContent = res.Content.ReadAsStringAsync().Result()
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+                Catch ex As System.Net.WebException
+                    tryCount += 1
+                    delay = delay * 2
+                    Thread.Sleep(delay)
+#Disable Warning CA1031
+                Catch ex2 As Exception
+                    tryCount += 1
+                    delay = delay * 2
+                    Thread.Sleep(delay)
+#Enable Warning CA1031
+                Finally
+                    client.Dispose()
+                End Try
+
+                If responseContent IsNot Nothing Then
+                    cookies = tempcookies
+                    Return (AdaptEncoding(responseContent), finalUri, statusCode, If(headersDict, New Dictionary(Of String, String)))
+                End If
+            Loop
+
+            Throw New MaxRetriesExeption
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud POST y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' </summary>
+        Public Function PostWithDetails(pageUri As Uri, postData As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return PostWithDetails(pageUri, postData, New CookieContainer)
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud POST y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="pageUri">URI absoluta del recurso.</param>
+        ''' <param name="postData">Datos del cuerpo.</param>
+        ''' <param name="cookies">Cookies (se actualizan con la respuesta).</param>
+        Public Function PostWithDetails(pageUri As Uri, postData As String, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return PostWithDetails(pageUri, postData, Nothing, cookies)
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud POST (con cabeceras personalizadas opcionales) y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="pageUri">URI absoluta del recurso.</param>
+        ''' <param name="postData">Datos del cuerpo.</param>
+        ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
+        Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return PostWithDetails(pageUri, postData, customHeaders, New CookieContainer)
+        End Function
+
+        ''' <summary>
+        ''' Realiza una solicitud POST (con cabeceras personalizadas opcionales) y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="pageUri">URI absoluta del recurso.</param>
+        ''' <param name="postData">Datos del cuerpo.</param>
+        ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
+        ''' <param name="cookies">Cookies (se actualizan con la respuesta).</param>
+        Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Dim tryCount As Integer = 0
+            Dim delay As Integer = _exponentialBackOffDelayMs
+
+            Do Until tryCount = MaxRetry
+                If pageUri Is Nothing Then
+                    Throw New ArgumentNullException(NameOf(pageUri), "Null uri")
+                End If
+
+                If cookies Is Nothing Then
+                    cookies = New CookieContainer
+                End If
+
+                Dim RequestDelayInMS As Double = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                While (RequestDelayInMS < _requestDelay)
+                    Thread.Sleep(1)
+                    SyncLock RequestLock
+                        RequestDelayInMS = (Date.UtcNow - LastRequestTimestamp).TotalMilliseconds
+                    End SyncLock
+                End While
+                SyncLock RequestLock
+                    LastRequestTimestamp = Date.UtcNow
+                End SyncLock
+
+                Dim tempcookies As CookieContainer = cookies
+                Dim encoding As New Text.UTF8Encoding
+                Dim byteData As Byte() = encoding.GetBytes(If(postData, String.Empty))
+                Dim handler As HttpClientHandler = New HttpClientHandler With {
+                    .CookieContainer = cookies,
+                    .UseCookies = True
+                }
+                Dim client As HttpClient = New HttpClient(handler)
+                Dim content As StringContent = New StringContent(If(postData, String.Empty))
+                content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded")
+                content.Headers.ContentLength = byteData.Length
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent)
+                client.DefaultRequestHeaders.Connection.ParseAdd("keep-alive")
+                client.DefaultRequestHeaders.Add("Method", "POST")
+                client.Timeout = New TimeSpan(0, 0, 30)
+
+                If customHeaders IsNot Nothing Then
+                    For Each header As KeyValuePair(Of String, String) In customHeaders
+                        If String.Equals(header.Key, "Content-Type", StringComparison.OrdinalIgnoreCase) Then
+                            content.Headers.ContentType = Headers.MediaTypeHeaderValue.Parse(header.Value)
+                        ElseIf Not String.Equals(header.Key, "Content-Length", StringComparison.OrdinalIgnoreCase) Then
+                            client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value)
+                        End If
+                    Next
+                End If
+
+                Dim responseContent As String = Nothing
+                Dim finalUri As Uri = pageUri
+                Dim statusCode As HttpStatusCode = HttpStatusCode.OK
+                Dim headersDict As Dictionary(Of String, String) = Nothing
+
+                Try
+                    Dim message As Task(Of HttpResponseMessage) = client.PostAsync(pageUri, content)
+                    Dim res As HttpResponseMessage = message.Result
+                    If res.RequestMessage IsNot Nothing AndAlso res.RequestMessage.RequestUri IsNot Nothing Then
+                        finalUri = res.RequestMessage.RequestUri
+                    End If
+                    statusCode = res.StatusCode
+                    headersDict = ExtractResponseHeaders(res)
+                    responseContent = res.Content.ReadAsStringAsync().Result()
+                    tempcookies.Add(cookies.GetCookies(pageUri))
+                Catch ex As System.Net.WebException
+                    tryCount += 1
+                    delay = delay * 2
+                    Thread.Sleep(delay)
+#Disable Warning CA1031
+                Catch ex2 As Exception
+                    tryCount += 1
+                    delay = delay * 2
+                    Thread.Sleep(delay)
+#Enable Warning CA1031
+                Finally
+                    client.Dispose()
+                    content.Dispose()
+                End Try
+
+                If responseContent IsNot Nothing Then
+                    cookies = tempcookies
+                    Return (AdaptEncoding(responseContent), finalUri, statusCode, If(headersDict, New Dictionary(Of String, String)))
+                End If
+            Loop
+
+            Throw New MaxRetriesExeption
         End Function
     End Class
 
