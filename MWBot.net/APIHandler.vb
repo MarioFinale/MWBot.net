@@ -1,6 +1,5 @@
 ﻿Imports System.IO
 Imports System.Net
-Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports MWBot.net.GlobalVars
 Imports MWBot.net.Utility.Utils
