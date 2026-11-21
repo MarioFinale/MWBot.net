@@ -46,12 +46,20 @@ jobs:
       with:
         user: MarioFinale
 
-    - name: Publish to NuGet
+    - name: Publish to NuGet.org
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       run: |
         dotnet nuget push ./nupkg/*.nupkg \
           --api-key ${{ steps.login.outputs.NUGET_API_KEY }} \
           --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+
+    - name: Publish to GitHub Packages
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      run: |
+        dotnet nuget push ./nupkg/*.nupkg \
+          --api-key ${{ secrets.GITHUB_TOKEN }} \
+          --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
           --skip-duplicate
 
     - name: Upload DLL artifact
