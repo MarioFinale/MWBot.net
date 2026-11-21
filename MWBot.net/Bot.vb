@@ -539,7 +539,7 @@ Namespace WikiBot
                 For Each pageinfo As JsonProperty In pages.EnumerateObject
                     Dim pageElement As JsonElement = pageinfo.Value
                     Dim ns As Integer = pageElement.GetProperty("ns").GetInt32
-                    Dim title As String = NormalizeUnicodetext(pageElement.GetProperty("title").GetString).Replace(" ", "_")
+                    Dim title As String = NormalizeUnicodetext(If(pageElement.GetProperty("title").GetString(), String.Empty)).Replace(" ", "_")
                     Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
 
                     If missing Then
@@ -555,9 +555,9 @@ Namespace WikiBot
                     Dim revid As Integer = revisions.GetProperty("revid").GetInt32()
                     Dim parentid As Integer = revisions.GetProperty("parentid").GetInt32()
                     Dim minor As Boolean = IsJsonPropertyPresent(revisions, "minor")
-                    Dim user As String = revisions.GetProperty("user").GetString
-                    Dim comment As String = revisions.GetProperty("comment").GetString
-                    Dim timestamp As Date = GetDateFromMWTimestamp(revisions.GetProperty("timestamp").GetString)
+                    Dim user As String = If(revisions.GetProperty("user").GetString(), String.Empty)
+                    Dim comment As String = If(revisions.GetProperty("comment").GetString(), String.Empty)
+                    Dim timestamp As Date = GetDateFromMWTimestamp(If(revisions.GetProperty("timestamp").GetString(), String.Empty))
                     Dim revision As New WikiRevision With {
                         .NS = ns,
                         .Comment = comment,
@@ -567,7 +567,7 @@ Namespace WikiBot
                         .ParentID = parentid,
                         .RevID = revid,
                         .Timestamp = timestamp,
-                        .Title = title,
+                        .Title = If(title, String.Empty),
                         .User = user
                         }
                     RevisionSet.Add(revision)
@@ -639,7 +639,13 @@ Namespace WikiBot
                 Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(QueryString))
                 Dim apiRawResponse As String = Api.GET(apiuri)
                 Dim response As JsonDocument = GetJsonDocument(apiRawResponse)
-                Dim eswiki As JsonElement = GetJsonElement(response, "eswiki")
+                ' ORES is currently Wikipedia-oriented; the root key is the wiki dbname.
+                ' Fall back gracefully if the expected key is absent (other wikis or temporary errors).
+                Dim eswiki As JsonElement
+                If Not response.RootElement.TryGetProperty("eswiki", eswiki) Then
+                    EventLogger.Debug_Log("ORES response missing 'eswiki' key; skipping batch.", Reflection.MethodBase.GetCurrentMethod().Name)
+                    Continue For
+                End If
                 Dim scores As JsonElement = eswiki.GetProperty("scores")
                 For Each revid As JsonProperty In scores.EnumerateObject
                     Dim editID As Integer = 0
@@ -684,13 +690,13 @@ Namespace WikiBot
                 Dim pages As JsonElement = query.GetProperty("pages")
 
                 For Each pageProperty As JsonElement In pages.EnumerateArray
-                    Dim title As String = pageProperty.GetProperty("title").GetString
+                    Dim title As String = If(pageProperty.GetProperty("title").GetString(), String.Empty)
                     Dim hasImage As Boolean = IsJsonPropertyPresent(pageProperty, "pageimage")
                     If Not hasImage Then
-                        PagenameAndImage.Add(title, "")
+                        PagenameAndImage.Add(title, String.Empty)
                         Continue For
                     End If
-                    Dim pageimage As String = pageProperty.GetProperty("pageimage").GetString
+                    Dim pageimage As String = If(pageProperty.GetProperty("pageimage").GetString(), String.Empty)
                     PagenameAndImage.Add(title, pageimage)
                 Next
             Next
@@ -836,7 +842,7 @@ Namespace WikiBot
             End Try
             For Each queryPage As JsonProperty In pages.EnumerateObject
                 Dim pageElement As JsonElement = queryPage.Value
-                Dim title As String = pageElement.GetProperty("title").GetString
+                Dim title As String = If(pageElement.GetProperty("title").GetString(), String.Empty)
                 Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
                 If missing Then
                     Dim WExtract As New WikiExtract With {

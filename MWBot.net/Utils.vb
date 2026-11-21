@@ -978,6 +978,9 @@ End Function
         ''' <param name="lvl">Nivel (= 1 = | == 2 == | === 3 === | ==== 4 ==== ), cualquier otro valor será ignorado y se trabajará con Nivel 2</param>
         ''' <returns></returns>
         Private Function GetLvlThread(ByVal pagetext As String, ByVal lvl As Integer) As String()
+            If String.IsNullOrEmpty(pagetext) Then
+                Return Array.Empty(Of String)()
+            End If
             Dim ThreadList As New List(Of String)
             Dim temptext As String = pagetext
             Dim commentMatch As MatchCollection = Regex.Matches(temptext, "(<!--)[\s\S]*?(-->)")

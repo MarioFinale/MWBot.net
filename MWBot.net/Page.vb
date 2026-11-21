@@ -225,6 +225,9 @@ Namespace WikiBot
             If Exists AndAlso Not String.IsNullOrWhiteSpace(_Content) Then
                 _Threads = GetPageThreads(_Content)
             End If
+            If _Threads Is Nothing Then
+                _Threads = Array.Empty(Of String)()
+            End If
             EventLogger.Debug_Log(String.Format(Messages.PageLoaded, PageTitle), Reflection.MethodBase.GetCurrentMethod().Name, Username)
             Return True
         End Function
@@ -245,6 +248,9 @@ Namespace WikiBot
             SiteUri = site
             PageInfoData(Revid)
             _Threads = GetPageThreads(_Content)
+            If _Threads Is Nothing Then
+                _Threads = Array.Empty(Of String)()
+            End If
             EventLogger.Debug_Log(String.Format(Messages.PRevLoaded, Revid.ToString), Reflection.MethodBase.GetCurrentMethod().Name, Username)
             Return True
         End Function
@@ -676,7 +682,7 @@ Namespace WikiBot
 
             Dim pageElement As JsonElement = pageProperty.Value
 
-            qpageTitle = pageElement.GetProperty("title").GetString
+            qpageTitle = If(pageElement.GetProperty("title").GetString(), String.Empty)
             qpageNSString = qpageTitle.Split(":"c)(0).Trim()
             qpageRoot = qpageTitle.Split("/"c)(0).Trim()
             Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
@@ -686,13 +692,20 @@ Namespace WikiBot
                 missing = True
             End If
             If missing Then
-                _Title = qpageTitle
+                _Title = If(qpageTitle, String.Empty)
                 _PageNamespace = qpageNS
-                _PageNamespaceString = qpageNSString
-                _RootPage = qpageRoot
+                _PageNamespaceString = If(qpageNSString, String.Empty)
+                _RootPage = If(qpageRoot, String.Empty)
                 _Exists = False
+                _Lastuser = String.Empty
+                _Comment = String.Empty
+                _Timestamp = String.Empty
+                _Content = String.Empty
+                _Extract = String.Empty
+                _Thumbnail = String.Empty
                 _Tags = qpageTags.ToArray()
                 _Categories = qpageCategories.ToArray()
+                _Threads = Array.Empty(Of String)()
                 Return True
             End If
             If IsJsonPropertyPresent(pageElement, "pageimage") Then
@@ -705,8 +718,10 @@ Namespace WikiBot
             If IsJsonPropertyPresent(pageElement, "categories") Then
                 Dim categories As JsonElement = pageElement.GetProperty("categories")
                 For Each category As JsonElement In categories.EnumerateArray
-                    Dim categoryname As String = category.GetProperty("title").GetString
-                    qpageCategories.Add(categoryname)
+                    Dim categoryname As String = If(category.GetProperty("title").GetString(), String.Empty)
+                    If Not String.IsNullOrEmpty(categoryname) Then
+                        qpageCategories.Add(categoryname)
+                    End If
                 Next
             End If
 
@@ -719,22 +734,29 @@ Namespace WikiBot
             qpageSize = currentrevision.GetProperty("size").GetInt32
 
             If IsJsonPropertyPresent(currentrevision, "comment") Then
-                qpageComment = currentrevision.GetProperty("comment").GetString
+                Dim rawComment As String = currentrevision.GetProperty("comment").GetString()
+                qpageComment = If(rawComment, String.Empty)
             Else
                 qpageDeletedInfo = True
+                qpageComment = String.Empty
             End If
 
             If IsJsonPropertyPresent(currentrevision, "tags") Then
                 Dim Tags As JsonElement.ArrayEnumerator = currentrevision.GetProperty("tags").EnumerateArray
                 For Each Element As JsonElement In Tags
-                    qpageTags.Add(Element.GetString)
+                    Dim tagValue As String = Element.GetString()
+                    If Not String.IsNullOrEmpty(tagValue) Then
+                        qpageTags.Add(tagValue)
+                    End If
                 Next
             End If
 
             If IsJsonPropertyPresent(currentrevision, "user") Then
-                qpageLastUser = currentrevision.GetProperty("user").GetString
+                Dim rawUser As String = currentrevision.GetProperty("user").GetString()
+                qpageLastUser = If(rawUser, String.Empty)
             Else
                 qpageDeletedInfo = True
+                qpageLastUser = String.Empty
             End If
 
             Dim slots As JsonElement = currentrevision.GetProperty("slots")
@@ -748,25 +770,25 @@ Namespace WikiBot
 
 
 
-            _Title = qpageTitle
+            _Title = If(qpageTitle, String.Empty)
             _PageNamespace = qpageNS
-            _PageNamespaceString = qpageNSString
+            _PageNamespaceString = If(qpageNSString, String.Empty)
             _LastEdit = qpageLastEdit
-            _Timestamp = qpageLastTimestamp
+            _Timestamp = If(qpageLastTimestamp, String.Empty)
             _CurrentRevId = qpageRevID
             _ParentRevId = qpageParentRevID
-            _Lastuser = qpageLastUser
-            _Comment = qpageComment
-            _Thumbnail = qpageThumbnail
-            _Categories = qpageCategories.ToArray
+            _Lastuser = If(qpageLastUser, String.Empty)
+            _Comment = If(qpageComment, String.Empty)
+            _Thumbnail = If(qpageThumbnail, String.Empty)
+            _Categories = If(qpageCategories.ToArray(), Array.Empty(Of String)())
             _Size = qpageSize
-            _Content = qpageContent
+            _Content = If(qpageContent, String.Empty)
             _Exists = True
             _HasHiddenInfo = qpageDeletedInfo
-            _RootPage = qpageRoot
-            _Extract = qpageExtract
+            _RootPage = If(qpageRoot, String.Empty)
+            _Extract = If(qpageExtract, String.Empty)
             _PageID = qpageID
-            _Tags = qpageTags.ToArray()
+            _Tags = If(qpageTags.ToArray(), Array.Empty(Of String)())
 
             Return True
         End Function
