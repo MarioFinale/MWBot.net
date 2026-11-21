@@ -584,6 +584,7 @@ Namespace WikiBot
 
         ''' <summary>
         ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
         Public Function GetWithDetails(ByVal address As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
             If String.IsNullOrWhiteSpace(address) Then
@@ -594,9 +595,10 @@ Namespace WikiBot
 
         ''' <summary>
         ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
         Public Function GetWithDetails(ByVal pageUri As Uri) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
-            Return GetWithDetails(pageUri, New CookieContainer)
+            Return GetWithDetails(pageUri, ApiCookies)
         End Function
 
         ''' <summary>
@@ -678,9 +680,10 @@ Namespace WikiBot
 
         ''' <summary>
         ''' Realiza una solicitud POST y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
         Public Function PostWithDetails(pageUri As Uri, postData As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
-            Return PostWithDetails(pageUri, postData, New CookieContainer)
+            Return PostWithDetails(pageUri, postData, ApiCookies)
         End Function
 
         ''' <summary>
@@ -695,12 +698,13 @@ Namespace WikiBot
 
         ''' <summary>
         ''' Realiza una solicitud POST (con cabeceras personalizadas opcionales) y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
         ''' <param name="pageUri">URI absoluta del recurso.</param>
         ''' <param name="postData">Datos del cuerpo.</param>
         ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
         Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
-            Return PostWithDetails(pageUri, postData, customHeaders, New CookieContainer)
+            Return PostWithDetails(pageUri, postData, customHeaders, ApiCookies)
         End Function
 
         ''' <summary>

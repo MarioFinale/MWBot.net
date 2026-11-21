@@ -9,6 +9,7 @@ Imports System.Text.Json
 Imports System.IO
 Imports System.Net
 Imports System.Reflection
+Imports System.Collections.Generic
 
 Namespace WikiBot
 #Disable Warning CA1822
@@ -303,6 +304,75 @@ Namespace WikiBot
         Function POST(ByVal turi As Uri, postData As String) As String
             Return Api.POST(turi, postData)
         End Function
+
+        ''' <summary>
+        ''' Envía una solicitud GET y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot. Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
+        ''' </summary>
+        ''' <param name="address">URL como cadena.</param>
+        Function GetWithDetails(ByVal address As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.GetWithDetails(address)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud GET y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot. Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        Function GetWithDetails(ByVal turi As Uri) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.GetWithDetails(turi)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud GET y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <param name="cookies">Cookies (se actualizan).</param>
+        Function GetWithDetails(ByVal turi As Uri, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.GetWithDetails(turi, cookies)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud POST y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot. Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <param name="postData">Cuerpo de la solicitud POST.</param>
+        Function PostWithDetails(ByVal turi As Uri, postData As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.PostWithDetails(turi, postData)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud POST y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <param name="postData">Cuerpo de la solicitud POST.</param>
+        ''' <param name="cookies">Cookies (se actualizan).</param>
+        Function PostWithDetails(ByVal turi As Uri, postData As String, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.PostWithDetails(turi, postData, cookies)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud POST con cabeceras personalizadas y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' Usa las cookies de sesión actuales del bot. Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <param name="postData">Cuerpo de la solicitud POST.</param>
+        ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
+        Function PostWithDetails(ByVal turi As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.PostWithDetails(turi, postData, customHeaders)
+        End Function
+
+        ''' <summary>
+        ''' Envía una solicitud POST con cabeceras personalizadas y retorna el contenido junto con la URI final, el código de estado y los headers.
+        ''' </summary>
+        ''' <param name="turi">Uri.</param>
+        ''' <param name="postData">Cuerpo de la solicitud POST.</param>
+        ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
+        ''' <param name="cookies">Cookies (se actualizan).</param>
+        Function PostWithDetails(ByVal turi As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+            Return Api.PostWithDetails(turi, postData, customHeaders, cookies)
+        End Function
 #End Region
 
 #Region "BotFunctions"
@@ -539,7 +609,7 @@ Namespace WikiBot
                 For Each pageinfo As JsonProperty In pages.EnumerateObject
                     Dim pageElement As JsonElement = pageinfo.Value
                     Dim ns As Integer = pageElement.GetProperty("ns").GetInt32
-                    Dim title As String = NormalizeUnicodetext(If(pageElement.GetProperty("title").GetString(), String.Empty)).Replace(" ", "_")
+                    Dim title As String = NormalizeUnicodetext(pageElement.GetProperty("title").GetString).Replace(" ", "_")
                     Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
 
                     If missing Then
@@ -555,9 +625,9 @@ Namespace WikiBot
                     Dim revid As Integer = revisions.GetProperty("revid").GetInt32()
                     Dim parentid As Integer = revisions.GetProperty("parentid").GetInt32()
                     Dim minor As Boolean = IsJsonPropertyPresent(revisions, "minor")
-                    Dim user As String = If(revisions.GetProperty("user").GetString(), String.Empty)
-                    Dim comment As String = If(revisions.GetProperty("comment").GetString(), String.Empty)
-                    Dim timestamp As Date = GetDateFromMWTimestamp(If(revisions.GetProperty("timestamp").GetString(), String.Empty))
+                    Dim user As String = revisions.GetProperty("user").GetString
+                    Dim comment As String = revisions.GetProperty("comment").GetString
+                    Dim timestamp As Date = GetDateFromMWTimestamp(revisions.GetProperty("timestamp").GetString)
                     Dim revision As New WikiRevision With {
                         .NS = ns,
                         .Comment = comment,
@@ -567,7 +637,7 @@ Namespace WikiBot
                         .ParentID = parentid,
                         .RevID = revid,
                         .Timestamp = timestamp,
-                        .Title = If(title, String.Empty),
+                        .Title = title,
                         .User = user
                         }
                     RevisionSet.Add(revision)
@@ -639,13 +709,7 @@ Namespace WikiBot
                 Dim apiuri As Uri = New Uri(SStrings.OresScoresApiQueryUrl & UrlWebEncode(QueryString))
                 Dim apiRawResponse As String = Api.GET(apiuri)
                 Dim response As JsonDocument = GetJsonDocument(apiRawResponse)
-                ' ORES is currently Wikipedia-oriented; the root key is the wiki dbname.
-                ' Fall back gracefully if the expected key is absent (other wikis or temporary errors).
-                Dim eswiki As JsonElement
-                If Not response.RootElement.TryGetProperty("eswiki", eswiki) Then
-                    EventLogger.Debug_Log("ORES response missing 'eswiki' key; skipping batch.", Reflection.MethodBase.GetCurrentMethod().Name)
-                    Continue For
-                End If
+                Dim eswiki As JsonElement = GetJsonElement(response, "eswiki")
                 Dim scores As JsonElement = eswiki.GetProperty("scores")
                 For Each revid As JsonProperty In scores.EnumerateObject
                     Dim editID As Integer = 0
@@ -690,13 +754,13 @@ Namespace WikiBot
                 Dim pages As JsonElement = query.GetProperty("pages")
 
                 For Each pageProperty As JsonElement In pages.EnumerateArray
-                    Dim title As String = If(pageProperty.GetProperty("title").GetString(), String.Empty)
+                    Dim title As String = pageProperty.GetProperty("title").GetString
                     Dim hasImage As Boolean = IsJsonPropertyPresent(pageProperty, "pageimage")
                     If Not hasImage Then
-                        PagenameAndImage.Add(title, String.Empty)
+                        PagenameAndImage.Add(title, "")
                         Continue For
                     End If
-                    Dim pageimage As String = If(pageProperty.GetProperty("pageimage").GetString(), String.Empty)
+                    Dim pageimage As String = pageProperty.GetProperty("pageimage").GetString
                     PagenameAndImage.Add(title, pageimage)
                 Next
             Next
@@ -842,7 +906,7 @@ Namespace WikiBot
             End Try
             For Each queryPage As JsonProperty In pages.EnumerateObject
                 Dim pageElement As JsonElement = queryPage.Value
-                Dim title As String = If(pageElement.GetProperty("title").GetString(), String.Empty)
+                Dim title As String = pageElement.GetProperty("title").GetString
                 Dim missing As Boolean = IsJsonPropertyPresent(pageElement, "missing")
                 If missing Then
                     Dim WExtract As New WikiExtract With {
@@ -1121,49 +1185,46 @@ Namespace WikiBot
             '        TRY TO UNDERSTAND IT UNDER YOUR OWN RISK
             '         BLAME THE MINDBENDING MW DOCUMENTATION
             '===============================================================================
-        Dim pages As New HashSet(Of String)
-        Dim queries As Integer = 0
-        Dim queryString As String = SStrings.GetPageInclusions & pageName
 
-        Do While queries < limit
-            queries += 1
-
+            Dim pages As New HashSet(Of String)
+            Dim queries As Integer = 1
+            Dim queryString As String = SStrings.GetPageInclusions & pageName
             Dim rawQueryResponse As String = POSTQUERY(queryString)
-
             Dim queryResponse As JsonDocument = GetJsonDocument(rawQueryResponse)
-            If queryResponse Is Nothing Then
-                EventLogger.EX_Log($"Failed to get valid JSON for inclusions of '{pageName}' (query #{queries}). Continuing with partial results. Response: {rawQueryResponse}", "GetallInclusions")
-                Exit Do
+            Dim mustContinue As Boolean = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+            If mustContinue Then
+                Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString
+                queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
             End If
 
-            ' Process this page of results
-            If IsJsonPropertyPresent(queryResponse.RootElement, "query") Then
-                Dim query As JsonElement = GetJsonElement(queryResponse, "query")
-                If query.TryGetProperty("embeddedin", Nothing) Then
-                    Dim embeddedin As JsonElement = query.GetProperty("embeddedin")
-                    For Each qresult As JsonElement In embeddedin.EnumerateArray
-                        If qresult.TryGetProperty("title", Nothing) Then
-                            pages.Add(qresult.GetProperty("title").GetString())
-                        End If
-                    Next
+            Dim query As JsonElement = GetJsonElement(queryResponse, "query")
+            Dim embeddedin As JsonElement = query.GetProperty("embeddedin")
+
+            For Each qresult As JsonElement In embeddedin.EnumerateArray
+                Dim title As String = qresult.GetProperty("title").GetString
+                pages.Add(title)
+            Next
+
+            While mustContinue And queries < limit
+                queries += 1
+                rawQueryResponse = POSTQUERY(queryString)
+                queryResponse = GetJsonDocument(rawQueryResponse)
+                mustContinue = IsJsonPropertyPresent(queryResponse.RootElement, "continue")
+                If mustContinue Then
+                    Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
+                    Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString
+                    queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
                 End If
-            End If
-
-            ' Check for continuation
-            If Not IsJsonPropertyPresent(queryResponse.RootElement, "continue") Then
-                Exit Do
-            End If
-
-            Dim qcontinue As JsonElement = GetJsonElement(queryResponse, "continue")
-            If Not qcontinue.TryGetProperty("eicontinue", Nothing) Then Exit Do
-
-            Dim eicontinue As String = qcontinue.GetProperty("eicontinue").GetString()
-            queryString = SStrings.GetPageInclusions & pageName & "&eicontinue=" & eicontinue
-        Loop
-
-        EventLogger.Log($"GetallInclusions for '{pageName}' completed. Found {pages.Count} pages.", Reflection.MethodBase.GetCurrentMethod().Name)
-        Return pages.ToArray()
-    End Function
+                query = GetJsonElement(queryResponse, "query")
+                embeddedin = query.GetProperty("embeddedin")
+                For Each qresult As JsonElement In embeddedin.EnumerateArray
+                    Dim title As String = qresult.GetProperty("title").GetString
+                    pages.Add(title)
+                Next
+            End While
+            Return pages.ToArray()
+        End Function
 
 
         ''' <summary>
