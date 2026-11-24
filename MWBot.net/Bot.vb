@@ -310,7 +310,7 @@ Namespace WikiBot
         ''' Usa las cookies de sesión actuales del bot. Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
         ''' <param name="address">URL como cadena.</param>
-        Function GetWithDetails(ByVal address As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function GetWithDetails(ByVal address As String) As HttpResult
             Return Api.GetWithDetails(address)
         End Function
 
@@ -319,7 +319,7 @@ Namespace WikiBot
         ''' Usa las cookies de sesión actuales del bot. Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
         ''' <param name="turi">Uri.</param>
-        Function GetWithDetails(ByVal turi As Uri) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function GetWithDetails(ByVal turi As Uri) As HttpResult
             Return Api.GetWithDetails(turi)
         End Function
 
@@ -328,7 +328,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="turi">Uri.</param>
         ''' <param name="cookies">Cookies (se actualizan).</param>
-        Function GetWithDetails(ByVal turi As Uri, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function GetWithDetails(ByVal turi As Uri, ByRef cookies As CookieContainer) As HttpResult
             Return Api.GetWithDetails(turi, cookies)
         End Function
 
@@ -338,7 +338,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="turi">Uri.</param>
         ''' <param name="postData">Cuerpo de la solicitud POST.</param>
-        Function PostWithDetails(ByVal turi As Uri, postData As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function PostWithDetails(ByVal turi As Uri, postData As String) As HttpResult
             Return Api.PostWithDetails(turi, postData)
         End Function
 
@@ -348,7 +348,7 @@ Namespace WikiBot
         ''' <param name="turi">Uri.</param>
         ''' <param name="postData">Cuerpo de la solicitud POST.</param>
         ''' <param name="cookies">Cookies (se actualizan).</param>
-        Function PostWithDetails(ByVal turi As Uri, postData As String, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function PostWithDetails(ByVal turi As Uri, postData As String, ByRef cookies As CookieContainer) As HttpResult
             Return Api.PostWithDetails(turi, postData, cookies)
         End Function
 
@@ -359,7 +359,7 @@ Namespace WikiBot
         ''' <param name="turi">Uri.</param>
         ''' <param name="postData">Cuerpo de la solicitud POST.</param>
         ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
-        Function PostWithDetails(ByVal turi As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function PostWithDetails(ByVal turi As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As HttpResult
             Return Api.PostWithDetails(turi, postData, customHeaders)
         End Function
 
@@ -370,7 +370,7 @@ Namespace WikiBot
         ''' <param name="postData">Cuerpo de la solicitud POST.</param>
         ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
         ''' <param name="cookies">Cookies (se actualizan).</param>
-        Function PostWithDetails(ByVal turi As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Function PostWithDetails(ByVal turi As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As HttpResult
             Return Api.PostWithDetails(turi, postData, customHeaders, cookies)
         End Function
 #End Region

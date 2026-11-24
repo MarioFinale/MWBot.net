@@ -586,7 +586,7 @@ Namespace WikiBot
         ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
         ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
-        Public Function GetWithDetails(ByVal address As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function GetWithDetails(ByVal address As String) As HttpResult
             If String.IsNullOrWhiteSpace(address) Then
                 Throw New ArgumentException("Address cannot be null or empty", NameOf(address))
             End If
@@ -597,7 +597,7 @@ Namespace WikiBot
         ''' Realiza una solicitud GET y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
         ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
-        Public Function GetWithDetails(ByVal pageUri As Uri) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function GetWithDetails(ByVal pageUri As Uri) As HttpResult
             Return GetWithDetails(pageUri, ApiCookies)
         End Function
 
@@ -606,7 +606,7 @@ Namespace WikiBot
         ''' </summary>
         ''' <param name="pageUri">URI absoluta del recurso.</param>
         ''' <param name="cookies">Cookies (se actualizan con la respuesta).</param>
-        Public Function GetWithDetails(ByVal pageUri As Uri, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function GetWithDetails(ByVal pageUri As Uri, ByRef cookies As CookieContainer) As HttpResult
             Dim tryCount As Integer = 0
             Dim delay As Integer = _exponentialBackOffDelayMs
 
@@ -671,7 +671,7 @@ Namespace WikiBot
 
                 If responseContent IsNot Nothing Then
                     cookies = tempcookies
-                    Return (AdaptEncoding(responseContent), finalUri, statusCode, If(headersDict, New Dictionary(Of String, String)))
+                    Return New HttpResult(AdaptEncoding(responseContent), finalUri, statusCode, headersDict)
                 End If
             Loop
 
@@ -682,7 +682,7 @@ Namespace WikiBot
         ''' Realiza una solicitud POST y retorna el contenido junto con la URI final (tras redirecciones), el código de estado y los headers.
         ''' Usa las cookies de sesión actuales del bot (ApiCookies). Si se requiere una solicitud sin cookies de sesión, use la sobrecarga que recibe un CookieContainer.
         ''' </summary>
-        Public Function PostWithDetails(pageUri As Uri, postData As String) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function PostWithDetails(pageUri As Uri, postData As String) As HttpResult
             Return PostWithDetails(pageUri, postData, ApiCookies)
         End Function
 
@@ -692,7 +692,7 @@ Namespace WikiBot
         ''' <param name="pageUri">URI absoluta del recurso.</param>
         ''' <param name="postData">Datos del cuerpo.</param>
         ''' <param name="cookies">Cookies (se actualizan con la respuesta).</param>
-        Public Function PostWithDetails(pageUri As Uri, postData As String, ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function PostWithDetails(pageUri As Uri, postData As String, ByRef cookies As CookieContainer) As HttpResult
             Return PostWithDetails(pageUri, postData, Nothing, cookies)
         End Function
 
@@ -703,7 +703,7 @@ Namespace WikiBot
         ''' <param name="pageUri">URI absoluta del recurso.</param>
         ''' <param name="postData">Datos del cuerpo.</param>
         ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
-        Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String)) As HttpResult
             Return PostWithDetails(pageUri, postData, customHeaders, ApiCookies)
         End Function
 
@@ -714,7 +714,7 @@ Namespace WikiBot
         ''' <param name="postData">Datos del cuerpo.</param>
         ''' <param name="customHeaders">Cabeceras personalizadas o Nothing.</param>
         ''' <param name="cookies">Cookies (se actualizan con la respuesta).</param>
-        Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As (Content As String, FinalUri As Uri, StatusCode As HttpStatusCode, Headers As Dictionary(Of String, String))
+        Public Function PostWithDetails(pageUri As Uri, postData As String, customHeaders As Dictionary(Of String, String), ByRef cookies As CookieContainer) As HttpResult
             Dim tryCount As Integer = 0
             Dim delay As Integer = _exponentialBackOffDelayMs
 
@@ -796,7 +796,7 @@ Namespace WikiBot
 
                 If responseContent IsNot Nothing Then
                     cookies = tempcookies
-                    Return (AdaptEncoding(responseContent), finalUri, statusCode, If(headersDict, New Dictionary(Of String, String)))
+                    Return New HttpResult(AdaptEncoding(responseContent), finalUri, statusCode, headersDict)
                 End If
             Loop
 
